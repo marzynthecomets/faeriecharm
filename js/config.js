@@ -29,6 +29,21 @@ const CONFIG = {
     stall: { x: 96, y: 232 }                   // top-left corner of the floating Charm Stall
   },
 
+  // ----- maze art -----
+  // ground + walls are seamless square textures; tileSize is how big one repeat looks on screen (px).
+  // The colors are used for edges/fog, and as a fallback if an image is missing.
+  mazeArt: {
+    ground: 'art/dirt.webp',
+    walls: 'art/vines.webp',
+    tileSize: 256,
+    groundColor: '#4a3426',     // flat floor color if the ground image is missing
+    wallEdge: '#0b1a0e',        // dark rim around every wall
+    thorn: '#d7c6f2',           // thorn spikes on the wall between you and your friend
+    fog: '#0d1610',             // the dark that hides the maze outside your light
+    footprints: '#f3e6d4',      // footprint color (they fade on their own)
+    friendTint: 'rgba(40,20,60,.55)'  // tint over the friend's half
+  },
+
   // ----- levels (seed = maze layout; change it to get a new maze) -----
   levels: [
     { name: 'Thorn Maze',   blurb: 'Enter the Thorn Maze and find the key to free the forest.', width: 7, height: 12, seed: 2718, friendSeed: 9001 },

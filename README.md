@@ -39,7 +39,9 @@ Most tweaks only need `js/config.js`. For example, change a charm's price or Bra
 
 ## Art
 
-Art lives in `art/`. Right now that's the forest map (`art/map.webp`).
+Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), and the maze walls (`vines.webp`).
+
+**Swapping maze textures:** they must be seamless square tiles (Midjourney's `--tile`). Save over `art/dirt.webp` or `art/vines.webp`, or point `mazeArt` in `js/config.js` at new files. `tileSize` sets how big one repeat looks on screen, and the colors there control the fog, the dark rim around walls, footprints, and the tint on the friend's side.
 
 **Swapping the map:** export the new image (portrait, about 816×1456 or the same shape), save it over `art/map.webp`, or add a new file and point `map.image` in `js/config.js` at it. If the gates move, update `map.gates`. Each gate's `x`/`y` is its center in the image's own pixels, and `w`/`h` is the tap area. Keep tappable things at least ~90px from the left and right edges, because tall phones crop the sides slightly. To shrink a big PNG, save it as WebP or JPG (around 85–90% quality).
 

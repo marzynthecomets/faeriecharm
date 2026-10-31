@@ -3,7 +3,7 @@
 (() => {
 const screen = $('#scr-game'), canvas = $('#world'), ctx = canvas.getContext('2d');
 const FRIEND = CONFIG.friendName;
-const C = 64, WALL = 16;
+const C = 64, WALL = 22;
 const DIRS = { up:{bit:1,dx:0,dy:-1,opp:4}, right:{bit:2,dx:1,dy:0,opp:8}, down:{bit:4,dx:0,dy:1,opp:1}, left:{bit:8,dx:-1,dy:0,opp:2} };
 const DLIST = ['up','right','down','left'];
 const MESSAGES = CONFIG.messages, EMOJIS = CONFIG.emojis, REPLIES = CONFIG.replies;
@@ -333,8 +333,20 @@ function resize(){ const r = screen.getBoundingClientRect(); if (!r.width) retur
 addEventListener('resize', () => { if (active) resize(); });
 function playTop(){ const el = S.duo ? $('#status') : $('#gameTop'); const r = el.getBoundingClientRect(), a = screen.getBoundingClientRect(); return r.bottom - a.top; }
 
+// ---------- art (textures from CONFIG.mazeArt; falls back to flat colors if a file is missing) ----------
+const ART = {}, PATTERN = {};
+function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; }; im.src = src; }
+loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls);
+function pattern(key){
+  const im = ART[key]; if (!im) return null;
+  if (!PATTERN[key]){ const p = ctx.createPattern(im, 'repeat'), s = CONFIG.mazeArt.tileSize / im.width; if (p.setTransform) p.setTransform(new DOMMatrix([s,0,0,s,0,0])); PATTERN[key] = p; }
+  return PATTERN[key];
+}
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+
 function drawMazeWalls(open, ox, color, isFriend){
-  ctx.strokeStyle = color; ctx.lineWidth = WALL; ctx.lineCap = 'round'; ctx.beginPath();
+  const tex = pattern('walls'), A = CONFIG.mazeArt;
+  ctx.lineCap = 'round';
   const segs = [];
   for (let y=0;y<H;y++) for (let x=0;x<W;x++){
     const o = open[y*W+x], X = ox + x*C, Y = y*C;
@@ -343,8 +355,13 @@ function drawMazeWalls(open, ox, color, isFriend){
     if (y === H-1 && !(o & 4)) segs.push([X,Y+C,X+C,Y+C,x,y,4]);
     if (x === W-1 && !(o & 2) && isFriend) segs.push([X+C,Y,X+C,Y+C,x,y,2]);
   }
-  for (const s of segs){ ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); }
-  ctx.stroke();
+  const trace = () => { ctx.beginPath(); for (const s of segs){ ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); } };
+  if (tex){
+    trace(); ctx.strokeStyle = A.wallEdge; ctx.lineWidth = WALL + 6; ctx.stroke();      // dark rim so walls pop off the ground
+    trace(); ctx.strokeStyle = tex; ctx.lineWidth = WALL; ctx.stroke();                  // the vine texture
+    return;
+  }
+  trace(); ctx.strokeStyle = color; ctx.lineWidth = WALL; ctx.stroke();
   if (isFriend) return;
   ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2; ctx.beginPath();
   for (const s of segs){
@@ -370,17 +387,17 @@ function drawDoor(){
   ctx.restore();
 }
 function drawThornWall(){
-  const x = W*C; ctx.strokeStyle = '#1a1a1a'; ctx.lineCap = 'round';
-  ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(x, 4); ctx.lineTo(x, H*C + 16); ctx.stroke();
-  ctx.lineWidth = 2.5; ctx.beginPath();
-  for (let y = 24; y < H*C; y += 40){ ctx.moveTo(x, y); ctx.lineTo(x-13, y-8); ctx.moveTo(x, y); ctx.lineTo(x+13, y-8); }
+  const x = W*C, A = CONFIG.mazeArt; ctx.lineCap = 'round';
+  ctx.strokeStyle = A.wallEdge; ctx.lineWidth = 16; ctx.beginPath(); ctx.moveTo(x, 4); ctx.lineTo(x, H*C + 16); ctx.stroke();
+  ctx.strokeStyle = A.thorn; ctx.lineWidth = 3; ctx.beginPath();
+  for (let y = 24; y < H*C; y += 40){ ctx.moveTo(x, y); ctx.lineTo(x-15, y-9); ctx.moveTo(x, y); ctx.lineTo(x+15, y-9); }
   ctx.stroke();
 }
 function drawFoot(){
   const n = S.foot.length;
   S.foot.forEach((f, i) => {
     const a = 0.06 + 0.8*(i+1)/n, d = DIRS[f.dir], px = -d.dy, py = d.dx, ang = Math.atan2(d.dy, d.dx) + Math.PI/2;
-    ctx.fillStyle = `rgba(26,26,26,${a})`;
+    ctx.fillStyle = rgba(CONFIG.mazeArt.footprints, a);
     for (const s of [1,-1]){ ctx.beginPath(); ctx.ellipse(f.x + px*5*s - d.dx*5*s, f.y + py*5*s - d.dy*5*s, 4, 6, ang, 0, Math.PI*2); ctx.fill(); }
   });
 }
@@ -404,6 +421,8 @@ function drawKey(){
 }
 function drawPlayer(){
   const p = playerPix(), d = DIRS[S.facing];
+  ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc(p.x, p.y, 27, 0, Math.PI*2); ctx.fill();   // soft glow so you never lose yourself
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#ffffff';
   const off = d.dy !== 0 ? [[-6,0],[6,0]] : [[0,-5],[0,5]];
@@ -419,11 +438,16 @@ function render(dt){
   cam.x += (p.x - cam.x) * (1 - Math.exp(-dt*8)); cam.y += (p.y - cam.y) * (1 - Math.exp(-dt*8));
   if (S.won) S.door = Math.min(1, S.door + dt*1.2);
   const cx = vw/2, cy = top + (vh - top)/2, z = cam.z;
-  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = '#e2e2e2'; ctx.fillRect(0,0,vw,vh);
+  const A = CONFIG.mazeArt, ground = pattern('ground'), hedge = pattern('walls');
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = A.fog; ctx.fillRect(0,0,vw,vh);
   ctx.setTransform(dpr*z, 0, 0, dpr*z, dpr*(cx - cam.x*z), dpr*(cy - cam.y*z));
-  ctx.fillStyle = '#efefef'; ctx.fillRect(0, 0, W*C, H*C);
-  ctx.fillStyle = '#d3d3d3'; ctx.fillRect(W*C, 0, W*C, H*C);
+  // everything outside the maze is solid hedge, so the paths look carved out of it
+  ctx.fillStyle = hedge || A.wallEdge; ctx.fillRect(-1500, -1500, W*C*2 + 3000, H*C + 3000);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(-1500, -1500, W*C*2 + 3000, H*C + 3000);
+  ctx.fillStyle = ground || A.groundColor; ctx.fillRect(0, 0, W*C, H*C);
+  ctx.fillStyle = ground || A.groundColor; ctx.fillRect(W*C, 0, W*C, H*C);
   if (S.duo) drawMazeWalls(theirs, W*C, '#b4b4b4', true);
+  ctx.fillStyle = A.friendTint; ctx.fillRect(W*C, 0, W*C, H*C);      // the friend's side is dimmed: you can't go there
   drawFoot(); drawGems(); drawKey();
   drawMazeWalls(mine, 0, '#9a9a9a', false);
   drawThornWall(); drawDoor(); drawPlayer();
@@ -431,7 +455,7 @@ function render(dt){
   const sx = cx + (p.x - cam.x)*z, sy = cy + (p.y - cam.y)*z, fogA = 0.96 * (1 - cam.peek), grow = 1 + (CONFIG.glowBoost - 1) * cam.glow;
   if (fogA > 0.01){
     const g = ctx.createRadialGradient(sx, sy, CONFIG.fogClear*grow, sx, sy, CONFIG.fogEdge*grow);
-    g.addColorStop(0, 'rgba(226,226,226,0)'); g.addColorStop(1, `rgba(226,226,226,${fogA})`);
+    g.addColorStop(0, rgba(A.fog, 0)); g.addColorStop(1, rgba(A.fog, fogA));
     ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
   }
 }
