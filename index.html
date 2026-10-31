@@ -9,31 +9,115 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="world" aria-label="The Thorn Maze. Drag anywhere to move."></canvas>
 
+<!-- ================= LOAD ================= -->
+<section class="screen" id="scr-load" aria-label="Loading">
+  <svg class="load-art" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="#c4c4c4" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"><path d="M-10 844l30 -110 30 110Z"/><path d="M30 844l36 -150 36 150Z"/><path d="M290 844l34 -140 34 140Z"/><path d="M340 844l30 -100 30 100Z"/><path d="M250 844l22 -80 22 80Z"/><path d="M96 844l22 -70 22 70Z"/></g>
+    <path d="M0 844V800Q195 770 390 800V844Z" fill="#d9d9d9"/>
+    <g stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"><path d="M95 330H82M101 300l-12 -5M115 272l-10 -9M137 250l-6 -11M165 236l-3 -12M195 232V219M225 236l3 -12M253 250l6 -11M275 272l10 -9M289 300l12 -5M295 330H308M95 370l-13 -5M95 410l-13 -5M95 450l-13 -5M95 490l-13 -5M295 370l13 -5M295 410l13 -5M295 450l13 -5M295 490l13 -5"/></g>
+    <path d="M95 520V330A100 100 0 0 1 295 330V520Z" fill="#fff" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M110 520V330A85 85 0 0 1 280 330V520" fill="none" stroke="#c4c4c4" stroke-width="2"/>
+    <g class="bob" transform="translate(195 400)">
+      <ellipse cx="-26" cy="-2" rx="24" ry="12" transform="rotate(-25 -26 -2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="-22" cy="20" rx="18" ry="8" transform="rotate(20 -22 20)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="26" cy="-2" rx="24" ry="12" transform="rotate(25 26 -2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="22" cy="20" rx="18" ry="8" transform="rotate(-20 22 20)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M-15 46Q0 10 15 46Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><path d="M-5 46v10M5 46v8M-9 26l-12 6M9 26l12 -10" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><path d="M21 16 30 -6" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/><path d="M30 -16l2 5 5 1 -4 3 1 5 -4 -3 -4 3 1 -5 -4 -3 5 -1Z" fill="#1a1a1a"/>
+      <circle r="17" fill="#fff" stroke="#1a1a1a" stroke-width="2.2"/><path d="M-17 -1Q-17 -20 0 -20Q17 -20 17 -1Q11 -10 0 -10Q-11 -10 -17 -1Z" fill="#1a1a1a"/><circle cy="-24" r="7" fill="#1a1a1a"/><path d="M6 -28q10 -9 15 0q-9 6 -15 0Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M-17 1l-8 -6 3 10Z M17 1l8 -6 -3 10Z" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/><circle cx="-6" cy="1" r="2.2" fill="#1a1a1a"/><circle cx="6" cy="1" r="2.2" fill="#1a1a1a"/><path d="M-5 8Q0 12 5 8" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+  </svg>
+  <div class="load-title"><h1>FaerieCharm</h1><p>A faerie maze adventure</p></div>
+  <div class="load-bottom">
+    <div class="loadbar" role="progressbar" aria-label="Loading"><div id="loadBar"></div></div>
+    <div>Bramble is gathering charms…</div>
+    <small>Tap to skip</small>
+  </div>
+</section>
+
+<!-- ================= MAP ================= -->
+<section class="screen" id="scr-map" aria-label="Forest map">
+  <div id="mapStage">
+    <svg width="390" height="844" viewBox="0 0 390 844" aria-hidden="true">
+      <path d="M150 900C150 820 110 760 120 700C130 640 250 620 280 560C310 500 150 470 130 410C110 350 140 320 200 290C260 260 300 240 270 180C250 140 200 120 200 -20" fill="none" stroke="#fff" stroke-width="64" stroke-linecap="round"/>
+      <path d="M150 900C150 820 110 760 120 700C130 640 250 620 280 560C310 500 150 470 130 410C110 350 140 320 200 290C260 260 300 240 270 180C250 140 200 120 200 -20" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
+      <g fill="#c4c4c4" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"><path d="M40 620l22 -50 22 50Z"/><path d="M62 620v14" fill="none"/><path d="M320 760l24 -54 24 54Z"/><path d="M344 760v14" fill="none"/><path d="M30 330l20 -46 20 46Z"/><path d="M50 330v12" fill="none"/><path d="M330 420l22 -50 22 50Z"/><path d="M352 420v12" fill="none"/><path d="M150 250l22 -50 22 50Z"/><path d="M172 250v12" fill="none"/><path d="M320 140l20 -44 20 44Z"/><path d="M340 140v12" fill="none"/><path d="M230 800l18 -40 18 40Z"/><path d="M248 800v10" fill="none"/><path d="M340 650l18 -40 18 40Z"/><path d="M358 650v10" fill="none"/></g>
+    </svg>
+    <div id="levelSpots"></div>
+    <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
+      <svg width="150" height="122" viewBox="0 0 150 122" aria-hidden="true">
+        <ellipse cx="75" cy="116" rx="42" ry="4" fill="#1a1a1a" opacity="0.12"/>
+        <svg x="38" y="-2" width="74" height="61" viewBox="0 0 92 76"><path d="M14 4H78L90 26H2Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round"/><path d="M10 26V72M82 26V72" stroke="#1a1a1a" stroke-width="3"/><path d="M10 36Q46 46 82 36" fill="none" stroke="#1a1a1a" stroke-width="2"/><circle cx="26" cy="46" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2.4"/><circle cx="46" cy="48" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2.4"/><circle cx="66" cy="46" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2.4"/><rect x="6" y="56" width="80" height="16" fill="#efefef" stroke="#1a1a1a" stroke-width="3"/></svg>
+        <path d="M24 100C8 100 8 78 26 76C26 60 48 54 58 64C64 48 92 48 98 62C110 54 130 62 126 78C142 80 140 100 124 100Z" fill="#fff" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>
+      <span>Charm Stall</span>
+    </button>
+  </div>
+  <header class="topbar">
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2.5v4M14 21.5v4M2.5 14h4M21.5 14h4M5.9 5.9l2.8 2.8M19.3 19.3l2.8 2.8M5.9 22.1l2.8-2.8M19.3 8.7l2.8-2.8" stroke="#1a1a1a" stroke-width="3.6" stroke-linecap="round"/><circle cx="14" cy="14" r="7.5" fill="#fff" stroke="#1a1a1a" stroke-width="3.2"/><circle cx="14" cy="14" r="2.6" fill="#1a1a1a"/></svg></button>
+    <button class="arc arc-link" id="mapArc" data-go="bracelet" aria-label="My bracelet"></button>
+    <div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div>
+  </header>
+  <div class="overlay" id="settingsOv" hidden>
+    <div class="card">
+      <h1>Settings</h1>
+      <p>Your gems, charms, and finished levels are saved on this phone.</p>
+      <button class="secondary" id="resetBtn">Reset my progress</button>
+      <button class="primary" id="settingsClose">Done</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVEL ENTRY ================= -->
+<section class="screen pad" id="scr-entry" aria-label="Level">
+  <button class="round back" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="entry-wrap">
+    <div class="entry-card">
+      <svg class="entry-arch" viewBox="0 0 320 340" aria-hidden="true">
+        <g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M12.3 133.9 3.4 132.3M30.1 85 22.3 80.5M63.6 45.1 57.8 38.2M108.7 19 105.6 10.5M160 10V1M211.3 19 214.4 10.5M256.4 45.1 262.2 38.2M289.9 85 297.7 80.5M307.7 133.9 316.6 132.3"/><path d="M10 180 1 175M10 220 1 215M10 260 1 255M10 300 1 295M310 180 319 175M310 220 319 215M310 260 319 255M310 300 319 295"/><path d="M60 330 56 339M100 330 104 339M220 330 216 339M260 330 264 339"/></g>
+        <path d="M10 306V160A150 150 0 0 1 310 160V306Q310 330 286 330H34Q10 330 10 306Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round"/>
+      </svg>
+      <div class="entry-text">
+        <div class="eyebrow" id="entryNum">Level 1</div>
+        <h1 id="entryName">Thorn Maze</h1>
+        <p id="entryBlurb"></p>
+        <svg width="120" height="16" viewBox="0 0 120 16" aria-hidden="true"><path d="M4 8H50M70 8H116" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/><path d="M60 2l6 6-6 6-6-6Z" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/></svg>
+        <div class="reward-line">Reward: <span id="entryReward">5</span> <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+      </div>
+      <button class="play-btn" id="entryPlay" aria-label="Play solo"><svg width="30" height="34" viewBox="0 0 30 34" aria-hidden="true"><path d="M8 4l18 13L8 30Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></button>
+    </div>
+    <button class="outline-pill" data-go="friend">Play with Friend?</button>
+  </div>
+</section>
+
+<!-- ================= PICK A FRIEND ================= -->
+<section class="screen pad" id="scr-friend" aria-label="Play with a friend">
+  <div class="col">
+    <div class="titlebar"><button class="round" data-go="entry" aria-label="Back"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Play with a friend</h2></div>
+    <div class="bramble-tip">
+      <svg width="64" height="70" viewBox="-34 -36 68 74" role="img" aria-label="Bramble the faerie"><ellipse cx="-22" cy="4" rx="16" ry="8" transform="rotate(-25 -22 4)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="22" cy="4" rx="16" ry="8" transform="rotate(25 22 4)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><path d="M-15 38Q0 10 15 38Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><circle r="17" fill="#fff" stroke="#1a1a1a" stroke-width="2.2"/><path d="M-17 -1Q-17 -20 0 -20Q17 -20 17 -1Q11 -10 0 -10Q-11 -10 -17 -1Z" fill="#1a1a1a"/><circle cy="-24" r="7" fill="#1a1a1a"/><path d="M6 -28q10 -9 15 0q-9 6 -15 0Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M-17 1l-8 -6 3 10Z M17 1l8 -6 -3 10Z" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/><circle cx="-6" cy="1" r="2.2" fill="#1a1a1a"/><circle cx="6" cy="1" r="2.2" fill="#1a1a1a"/><path d="M-5 8Q0 12 5 8" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div class="bubble">Pick a friend to team up with! You'll each find <b>half of the key</b>.</div>
+    </div>
+    <div class="label">YOUR FRIENDS</div>
+    <div class="friend-row main">
+      <div class="avatar big online" id="friendAnjInitial">A</div>
+      <div class="friend-info"><b id="friendAnjName">Anjalie</b><span class="online-text">Online now</span></div>
+      <button class="pill-btn dark" id="friendPlay">Play</button>
+    </div>
+    <div id="otherFriends" class="col tight"></div>
+    <div class="grow"></div>
+    <button class="dashed-btn" id="addFriend"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><g fill="none" stroke="#1a1a1a" stroke-width="2"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="13" y="2" width="7" height="7" rx="1"/><rect x="2" y="13" width="7" height="7" rx="1"/></g><path d="M13 13h3v3h-3ZM17 17h3v3h-3Z" fill="#1a1a1a"/></svg>Add a friend in person</button>
+    <div class="caption">Scan each other's codes when you're together.</div>
+  </div>
+</section>
+
+<!-- ================= GAME ================= -->
+<section class="screen" id="scr-game" aria-label="Maze">
+  <canvas id="world" aria-label="The maze. Drag anywhere to move."></canvas>
   <div id="stick" class="idle" aria-hidden="true"><span class="arr up"></span><span class="arr down"></span><span class="arr left"></span><span class="arr right"></span><div id="knob"></div></div>
   <div id="hint">Drag anywhere to move · arrow keys work too</div>
+  <div class="gem-pill" id="gameGems" role="status" aria-label="Gems"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div>
 
-  <div id="gems" role="status" aria-label="Gems"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="gemCount">4</span></div>
-
-  <div id="top">
-    <button id="pauseBtn" aria-label="Pause"><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v18M16 3v18" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/></svg></button>
-    <div id="bracelet" role="group" aria-label="Bracelet charms">
-      <svg width="230" height="70" viewBox="0 0 230 70" aria-hidden="true">
-        <path d="M10 0Q115 56 220 0" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
-        <g fill="#ffffff" stroke="#1a1a1a" stroke-width="2"><circle cx="39.4" cy="13.5" r="5"/><circle cx="77.2" cy="24.4" r="5"/><circle cx="115" cy="28" r="5"/><circle cx="152.8" cy="24.4" r="5"/><circle cx="190.6" cy="13.5" r="5"/></g>
-        <circle cx="39.4" cy="33" r="16" fill="#ffffff" stroke="#1a1a1a" stroke-width="3"/>
-        <circle cx="77.2" cy="43.4" r="16" fill="#ffffff" stroke="#1a1a1a" stroke-width="3"/>
-        <g fill="#ffffff" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="4 3"><circle cx="115" cy="47" r="15"/><circle cx="152.8" cy="43.4" r="15"/><circle cx="190.6" cy="32.5" r="15"/></g>
-      </svg>
-      <button class="charm" id="peekBtn" style="left:17px;top:11px" aria-label="Use Peek: see more of the maze for 3 seconds">
-        <svg width="20" height="20" viewBox="0 0 34 34" aria-hidden="true"><path d="M3 17C8 9 13 6 17 6s9 3 14 11c-5 8-10 11-14 11S8 25 3 17Z" fill="none" stroke="#1a1a1a" stroke-width="3.2" stroke-linejoin="round"/><circle cx="17" cy="17" r="5" fill="#1a1a1a"/></svg>
-        <span class="badge" id="peekBadge" hidden>2</span>
-      </button>
-      <button class="charm" id="dashBtn" style="left:55px;top:21px" aria-label="Use Dash: zip two spaces">
-        <svg width="22" height="22" viewBox="0 0 56 56" aria-hidden="true"><path d="M16 28h18M28 21l7 7-7 7M10 22h6M10 34h6" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
+  <header class="topbar" id="gameTop">
+    <button class="icon-btn" id="pauseBtn" aria-label="Pause"><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v18M16 3v18" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/></svg></button>
+    <div class="arc" id="gameArc" role="group" aria-label="Bracelet charms"></div>
     <button id="keyBtn" aria-label="Key status">
       <svg width="48" height="48" viewBox="0 0 44 44" aria-hidden="true">
         <defs><clipPath id="kl"><rect x="0" y="0" width="22" height="44"/></clipPath><clipPath id="kr"><rect x="22" y="0" width="22" height="44"/></clipPath></defs>
@@ -42,15 +126,13 @@
         <g class="half" id="keyR" opacity="0" clip-path="url(#kr)" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="33" r="7"/><path d="M22 26V5H32M22 13H30"/></g>
       </svg>
     </button>
-  </div>
+  </header>
 
-  <div id="status" role="status">
+  <div id="status" class="duo-only" role="status">
     <span id="statusDot"></span>
-    <span id="statusText"><b class="friend-name">Anjalie</b> is solving…</span>
+    <span id="statusText"></span>
     <button id="scrollBtn"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/><path d="M4 3a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2ZM5 16a2 2 0 0 1-2-2V6M7 7h5M7 10h5" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Send a Scroll</button>
   </div>
-
-  <div id="callout" role="status"></div>
   <div id="toast" role="status" aria-live="polite"></div>
 
   <div id="scrim"></div>
@@ -73,10 +155,9 @@
           <b>Gems</b>
           <div class="stepper"><button id="gemMinus" aria-label="Fewer gems">−</button><span id="gemGift">0</span><button id="gemPlus" aria-label="More gems">+</button></div>
         </div>
-        <button class="gift" id="giftDash" aria-pressed="false">
+        <button class="gift" id="giftLend" aria-pressed="false">
           <svg class="check" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1a1a1a"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <svg width="28" height="28" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="#fff" stroke="#1a1a1a" stroke-width="4"/><path d="M16 28h18M28 21l7 7-7 7M12 22h6M12 34h6" fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <b>Dash</b><small id="dashNote">Lend for this level</small>
+          <span id="lendIcon"></span><b id="lendName">Dash</b><small id="lendNote">Lend for this level</small>
         </button>
       </div>
     </div>
@@ -86,59 +167,129 @@
 
   <div class="overlay" id="intro">
     <div class="card">
-      <div style="display:flex;justify-content:center;gap:6px" aria-hidden="true">
-        <svg width="56" height="56" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#efefef" stroke="#1a1a1a" stroke-width="2"/><path d="M21 9a13 13 0 0 0 0 26Z" fill="#fff" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/><path d="M23 9a13 13 0 0 1 0 26Z" fill="#fff" stroke="#9a9a9a" stroke-width="2.5" stroke-dasharray="3 3" stroke-linejoin="round"/></svg>
-      </div>
-      <h1>Level One · with <span class="friend-name">Anjalie</span></h1>
-      <p>You and <span class="friend-name">Anjalie</span> each have half of the Thorn Maze. Find <b>your half of the key</b>. When both halves are found, meet at the door.</p>
+      <h1 id="introTitle">Level 1</h1>
+      <p id="introText"></p>
       <div class="tips">
         <div><i>↕</i>Drag anywhere on the maze to move.</div>
         <div><i>👁</i>Tap a charm on your bracelet to use it.</div>
-        <div><i>✉</i>Send <span class="friend-name">Anjalie</span> a Scroll to cheer her on or help.</div>
+        <div id="introScrollTip"><i>✉</i>Send <span class="friend-name">Anjalie</span> a Scroll to cheer her on or help.</div>
       </div>
       <button class="primary" id="startBtn">Start</button>
     </div>
   </div>
-
   <div class="overlay" id="pauseOv" hidden>
     <div class="card">
       <h1>Paused</h1>
       <button class="primary" id="resumeBtn">Resume</button>
       <button class="secondary" id="restartBtn">Restart level</button>
+      <button class="secondary" id="leaveBtn">Back to map</button>
     </div>
   </div>
-
   <div class="overlay" id="facOv" hidden>
     <div class="card fac">
       <h1>Facilitator</h1>
       <p style="font-size:13px">Control <span class="friend-name">Anjalie</span> during a playtest.</p>
-      <button data-fac="cheer">Anjalie sends a cheer</button>
-      <button data-fac="stuck">Anjalie gets stuck</button>
-      <button data-fac="half">Anjalie finds her half</button>
+      <button data-fac="cheer"><span class="friend-name">Anjalie</span> sends a cheer</button>
+      <button data-fac="stuck"><span class="friend-name">Anjalie</span> gets stuck</button>
+      <button data-fac="half"><span class="friend-name">Anjalie</span> finds her half</button>
+      <button data-fac="finish">Finish the level now</button>
       <button data-fac="restart">Restart level</button>
       <button data-fac="close" class="primary" style="color:#fff">Back to game</button>
     </div>
   </div>
+</section>
 
-  <div class="overlay" id="winOv" hidden>
-    <div class="card">
-      <div style="display:flex;justify-content:center" aria-hidden="true"><svg width="80" height="80" viewBox="0 0 80 80"><g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M10 40H3M14 24 8 20M26 12l-4 -6M40 8V1M54 12l4 -6M66 24l6 -4M70 40h7"/></g><path d="M10 78V40A30 30 0 0 1 70 40V78Z" fill="#fff" stroke="#1a1a1a" stroke-width="3"/><path d="M18 78V42Q18 22 32 18V74Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="2"/><path d="M50 36l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z" fill="#1a1a1a"/></svg></div>
-      <h1>You and <span class="friend-name">Anjalie</span> did it!</h1>
-      <p>The Thorn Maze is open. The forest is a little more free.</p>
-      <div class="reward">
-        <div class="r"><svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1" stroke-linejoin="round"/></svg>Gems<b>+5</b></div>
-        <div class="r"><svg width="30" height="30" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/><path d="M21 10a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M23 10a12 12 0 0 1 0 24Z" fill="#9a9a9a"/></svg>Friendship charm<b style="font-size:12px;border:1.5px solid #1a1a1a;border-radius:8px;padding:2px 6px">Style</b></div>
+<!-- ================= LEVEL COMPLETE ================= -->
+<section class="screen pad" id="scr-win" aria-label="Level complete">
+  <div class="col center-col">
+    <svg class="win-art" viewBox="40 60 330 220" aria-hidden="true">
+      <g fill="#1a1a1a"><rect x="60" y="80" width="8" height="14" rx="2" transform="rotate(25 64 87)"/><rect x="330" y="90" width="8" height="14" rx="2" transform="rotate(-30 334 97)"/><rect x="80" y="170" width="7" height="12" rx="2" transform="rotate(-15 83 176)"/><circle cx="110" cy="70" r="4"/><circle cx="280" cy="76" r="5"/><circle cx="350" cy="160" r="4"/><path d="M70 120l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2Z"/><path d="M196 64l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2Z"/></g>
+      <g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M128 160H119M133 136l-8 -4M146 116l-7 -6M165 102l-4 -8M195 96V87M225 102l4 -8M244 116l7 -6M257 136l8 -4M262 160H271M128 190l-9 -4M128 220l-9 -4M262 190l9 -4M262 220l9 -4"/></g>
+      <path d="M128 260V160A67 67 0 0 1 262 160V260Z" fill="#fff" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/><path d="M140 260V162A55 55 0 0 1 250 162V260Z" fill="#efefef"/><path d="M140 260V162Q140 120 168 112V250Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><circle cx="160" cy="190" r="3" fill="#1a1a1a"/><path d="M110 260H280" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+      <g class="bob" transform="translate(300 214) scale(0.9)"><ellipse cx="-26" cy="-2" rx="24" ry="12" transform="rotate(-25 -26 -2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="26" cy="-2" rx="24" ry="12" transform="rotate(25 26 -2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><path d="M-15 46Q0 10 15 46Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><path d="M-5 46v10M5 46v8M-9 26l-14 -14M9 26l14 -14" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/><circle r="17" fill="#fff" stroke="#1a1a1a" stroke-width="2.2"/><path d="M-17 -1Q-17 -20 0 -20Q17 -20 17 -1Q11 -10 0 -10Q-11 -10 -17 -1Z" fill="#1a1a1a"/><circle cy="-24" r="7" fill="#1a1a1a"/><path d="M6 -28q10 -9 15 0q-9 6 -15 0Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M-17 1l-8 -6 3 10Z M17 1l8 -6 -3 10Z" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/><path d="M-9 0q3 -3 6 0M3 0q3 -3 6 0" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/><path d="M-6 7Q0 14 6 7Z" fill="#1a1a1a"/></g>
+    </svg>
+    <div class="faces" id="winDuoFaces"><span class="face you">You</span><span class="face" id="winFaceB">A</span></div>
+    <h1 class="win-title" id="winTitle">Level complete!</h1>
+    <p class="win-sub" id="winSub"></p>
+    <div class="reward">
+      <div class="r"><svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1" stroke-linejoin="round"/></svg><span>Gems</span><b id="winGems">+5</b></div>
+      <div class="r" id="winFriendRow"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M16 5a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M18 5a12 12 0 0 1 0 24Z" fill="#9a9a9a"/></svg><span>Friendship charm<small id="winFriendNote"></small></span><em>Style</em></div>
+    </div>
+    <div class="five" id="winHigh"><span id="winHighLabel">Send a high five</span><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div>
+    <div id="hiReply"></div>
+    <div class="stats" id="winStats"></div>
+    <div class="grow"></div>
+    <button class="primary" data-go="map">Back to map</button>
+    <button class="secondary" data-go="stall">Get more charms</button>
+  </div>
+</section>
+
+<!-- ================= STALL ================= -->
+<section class="screen pad" id="scr-stall" aria-label="Bramble's Charm Stall">
+  <div class="col">
+    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Bramble's Charm Stall</h2><div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div></div>
+    <div role="tablist" aria-label="Charm types" class="tabs" id="stallTabs">
+      <button role="tab" data-tab="boost" aria-selected="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z"/></svg>Boost</button>
+      <button role="tab" data-tab="style" aria-selected="false"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z"/></svg>Style</button>
+    </div>
+    <div class="stall-art">
+      <svg viewBox="0 0 358 460" aria-hidden="true">
+        <g transform="translate(179 326)"><ellipse cx="-34" cy="2" rx="28" ry="12" transform="rotate(-20 -34 2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="-28" cy="20" rx="20" ry="8" transform="rotate(15 -28 20)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="34" cy="2" rx="28" ry="12" transform="rotate(20 34 2)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><ellipse cx="28" cy="20" rx="20" ry="8" transform="rotate(-15 28 20)" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><path d="M-22 30Q-20 14 0 14Q20 14 22 30Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><circle cy="-4" r="17" fill="#fff" stroke="#1a1a1a" stroke-width="2.2"/><path d="M-17 -5Q-17 -24 0 -24Q17 -24 17 -5Q11 -14 0 -14Q-11 -14 -17 -5Z" fill="#1a1a1a"/><circle cy="-28" r="7" fill="#1a1a1a"/><path d="M6 -32q10 -9 15 0q-9 6 -15 0Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M-17 -3l-8 -6 3 10Z M17 -3l8 -6 -3 10Z" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/><circle cx="-6" cy="-3" r="2.2" fill="#1a1a1a"/><circle cx="6" cy="-3" r="2.2" fill="#1a1a1a"/><path d="M-5 4Q0 8 5 4" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g fill="#1a1a1a"><path d="M118 318l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z"/><path d="M244 312l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5Z"/></g>
+        <path d="M20 450C26 380 14 330 28 260C36 220 22 160 30 90M6 450C10 380 2 330 12 260C18 210 8 160 14 100M28 200l-22 -20M24 130l-18 -6" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M338 450C332 380 344 330 330 260C322 220 336 160 328 80M352 450C348 380 356 330 346 260C340 210 350 160 344 90M330 170l24 -14M334 120l20 -2" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M62 24H296L330 84H28Z" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M44 84V440M314 84V440" stroke="#1a1a1a" stroke-width="2.2"/>
+        <path d="M44 126Q179 150 314 126M44 236Q179 260 314 236" fill="none" stroke="#1a1a1a" stroke-width="1.8"/>
+        <rect x="36" y="350" width="286" height="90" fill="#efefef" stroke="#1a1a1a" stroke-width="2.2"/>
+        <path d="M36 364H322M68 364V440M100 364V440M132 364V440M164 364V440M196 364V440M228 364V440M260 364V440M292 364V440" stroke="#1a1a1a" stroke-width="1.6"/>
+        <circle cx="163" cy="352" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><circle cx="195" cy="352" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+      </svg>
+      <div id="stallCharms"></div>
+    </div>
+    <div class="bramble-panel">
+      <div class="row-gap">
+        <div class="preview-tile" id="stallPreview"></div>
+        <div class="col tight"><div class="eyebrow">BRAMBLE SAYS</div><div class="h3" id="brambleTitle"></div><div class="body" id="brambleSay"></div></div>
       </div>
-      <div class="five"><span>Send <span class="friend-name">Anjalie</span> a high five</span><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div>
-      <div id="hiReply"></div>
-      <div class="stats" id="stats"></div>
-      <button class="primary" id="againBtn">Play again</button>
+      <button class="primary" id="buyBtn">Buy</button>
     </div>
   </div>
+</section>
+
+<!-- ================= BRACELET ================= -->
+<section class="screen pad" id="scr-bracelet" aria-label="My bracelet">
+  <div class="col">
+    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>My Bracelet</h2><div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div></div>
+    <div class="ring">
+      <svg viewBox="0 0 358 372" aria-hidden="true">
+        <circle cx="179" cy="190" r="110" fill="none" stroke="#1a1a1a" stroke-width="5"/>
+        <g fill="#fff" stroke="#1a1a1a" stroke-width="2.5"><circle cx="179" cy="80" r="6"/><circle cx="243.7" cy="101" r="6"/><circle cx="283.6" cy="156" r="6"/><circle cx="283.6" cy="224" r="6"/><circle cx="243.7" cy="279" r="6"/><circle cx="179" cy="300" r="6"/><circle cx="114.3" cy="279" r="6"/><circle cx="74.4" cy="224" r="6"/><circle cx="74.4" cy="156" r="6"/><circle cx="114.3" cy="101" r="6"/></g>
+      </svg>
+      <div id="ringSlots"></div>
+      <div class="ring-key">
+        <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/><path transform="translate(4 4)" d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg><span><b>Boost</b>: use in the maze</span></div>
+        <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#9a9a9a" stroke-width="2" stroke-dasharray="3 3"/><path transform="translate(4 4)" d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg><span><b>Style</b>: just for looks</span></div>
+      </div>
+    </div>
+    <div class="info-panel">
+      <div class="row-gap"><div class="preview-tile small" id="braceIcon"></div><div class="col tight"><div class="row-gap tight"><span class="h3" id="braceName"></span><em class="chip-tag" id="braceType"></em></div><div class="body" id="braceSay"></div></div></div>
+      <button class="secondary" id="toggleBtn">Take off</button>
+    </div>
+    <div class="label">YOUR CHARMS</div>
+    <div class="tray" id="tray"></div>
+    <button class="primary" data-go="stall">+ Get more charms</button>
+  </div>
+</section>
+
+<div id="callout" role="status"></div>
 </div>
 
-<!-- config.js holds everything you'd want to tweak (timing, messages, the friend's script). game.js is the engine. -->
+<!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
 <script src="js/config.js"></script>
+<script src="js/ui.js"></script>
+<script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="js/game.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

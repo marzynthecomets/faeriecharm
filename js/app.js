@@ -1,0 +1,197 @@
+// Screen flow: Load → Map → Entry → (Friend) → Game → Level complete → Stall / Bracelet.
+(() => {
+const FRIEND = CONFIG.friendName;
+let entryLevel = 0, lastResult = null, stallTab = 'boost', stallPick = 'dash', bracePick = 'peek';
+
+function go(name){
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 'scr-' + name));
+  renderGemPills();
+  (render[name] || (() => {}))();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b){ e.preventDefault(); go(b.dataset.go); } });
+
+const render = {};
+
+// ---------- load ----------
+render.load = () => {
+  const bar = $('#loadBar'); bar.style.width = '0%';
+  requestAnimationFrame(() => requestAnimationFrame(() => bar.style.width = '100%'));
+  clearTimeout(render.load.t); render.load.t = setTimeout(() => go('map'), 1700);
+};
+$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); go('map'); });
+
+// ---------- map ----------
+const LEVEL_SPOTS = [[118.4, 720], [123.8, 376], [280.2, 216]];   // centers on the path (390×844 stage)
+function archSvg(state, n){
+  const thorns = '<g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M8 40H1M12.3 24 6.2 20.5M24 12.3 20.5 6.2M40 8V1M56 12.3 59.5 6.2M67.7 24 73.8 20.5M72 40H79M8 56 1 52M8 72 1 68M72 56 79 52M72 72 79 68"/></g>';
+  const body = 'M8 92V40A32 32 0 0 1 72 40V92Z';
+  if (state === 'locked') return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true"><path d="${body}" fill="#d9d9d9" stroke="#6b6b6b" stroke-width="2" stroke-dasharray="5 4"/><rect x="32" y="58" width="16" height="12" rx="2" fill="#6b6b6b"/><path d="M35 58v-3a5 5 0 0 1 10 0v3" fill="none" stroke="#6b6b6b" stroke-width="2.4"/></svg>`;
+  if (state === 'done') return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true"><path d="${body}" fill="#fff" stroke="#1a1a1a" stroke-width="3"/><text x="40" y="72" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="800" fill="#1a1a1a">${n}</text><circle cx="66" cy="16" r="11" fill="#1a1a1a"/><path d="M60.5 16.5l3.5 3.5 6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true">${thorns}<path d="${body}" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="2.5"/><path d="M16 92V40A24 24 0 0 1 64 40V92" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="72" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="800" fill="#fff">${n}</text></svg>`;
+}
+render.map = () => {
+  renderArc($('#mapArc'), Profile.data.boost, false);
+  const wrap = $('#levelSpots'); wrap.innerHTML = '';
+  CONFIG.levels.forEach((lv, i) => {
+    const [cx, cy] = LEVEL_SPOTS[i] || [195, 120];
+    const state = Profile.data.done.includes(i) ? 'done' : Profile.unlocked(i) ? 'open' : 'locked';
+    const b = document.createElement('button');
+    b.className = 'level-spot ' + state; b.style.left = (cx - 40) + 'px'; b.style.top = (cy - 50) + 'px';
+    b.setAttribute('aria-label', `Level ${i+1}, ${lv.name}${state === 'locked' ? ', locked. Finish the level before it to open' : state === 'done' ? ', finished. Play again' : '. Play'}`);
+    b.innerHTML = archSvg(state, i+1) + (state !== 'locked' ? `<span class="spot-label">${esc(lv.name)}</span>` : '');
+    b.onclick = () => { if (state === 'locked'){ say('Finish the level before this one to open it'); return; } entryLevel = i; go('entry'); };
+    wrap.appendChild(b);
+  });
+  fitStage();
+};
+function fitStage(){
+  const scr = $('#scr-map'), st = $('#mapStage'); if (!scr.classList.contains('on')) return;
+  const r = scr.getBoundingClientRect(), s = Math.min(r.width / 390, r.height / 844);
+  st.style.transform = `translate(${(r.width - 390*s)/2}px, ${(r.height - 844*s)/2}px) scale(${s})`;
+}
+addEventListener('resize', fitStage);
+
+// settings
+$('#settingsBtn').onclick = () => { $('#resetBtn').textContent = 'Reset my progress'; $('#resetBtn').dataset.armed = ''; $('#settingsOv').hidden = false; };
+$('#settingsClose').onclick = () => { $('#settingsOv').hidden = true; };
+$('#resetBtn').onclick = e => {
+  const b = e.currentTarget;
+  if (!b.dataset.armed){ b.dataset.armed = '1'; b.textContent = 'Tap again to erase gems, charms, and levels'; return; }
+  Profile.reset(); $('#settingsOv').hidden = true; render.map(); renderGemPills(); say('Progress reset');
+};
+
+// ---------- level entry ----------
+render.entry = () => {
+  const lv = CONFIG.levels[entryLevel];
+  $('#entryNum').textContent = `Level ${entryLevel + 1}`;
+  $('#entryName').textContent = lv.name;
+  $('#entryBlurb').textContent = lv.blurb;
+  $('#entryReward').textContent = CONFIG.levelReward;
+};
+function play(mode){
+  go('game');
+  Game.start({ level: entryLevel, mode, onWin: finished, onLeave: () => go('map') });
+}
+$('#entryPlay').onclick = () => play('solo');
+
+// ---------- pick a friend ----------
+render.friend = () => {
+  $('#friendAnjInitial').textContent = FRIEND[0];
+  $('#friendAnjName').textContent = FRIEND;
+  const list = $('#otherFriends'); list.innerHTML = '';
+  CONFIG.otherFriends.forEach(f => {
+    const row = document.createElement('div'); row.className = 'friend-row';
+    row.innerHTML = `<div class="avatar big">${esc(f.name[0])}</div><div class="friend-info"><b>${esc(f.name)}</b><span>${esc(f.status)}</span></div><button class="pill-btn">Invite</button>`;
+    row.querySelector('button').onclick = () => say(`Invite sent to ${f.name}! (Playtest: only ${FRIEND} can play now)`);
+    list.appendChild(row);
+  });
+};
+$('#friendPlay').onclick = () => play('duo');
+$('#addFriend').onclick = () => say("Scan each other's codes in person. Coming after playtesting!");
+
+// ---------- level complete ----------
+function finished(r){
+  const d = Profile.data, firstTime = !d.done.includes(r.level);
+  if (firstTime) d.done.push(r.level);
+  let newFriendCharm = false;
+  if (r.mode === 'duo'){ if (!d.duoDone.includes(r.level)) d.duoDone.push(r.level); if (!Profile.owns('friend')){ Profile.give('friend'); newFriendCharm = true; } }
+  Profile.addGems(CONFIG.levelReward);
+  lastResult = { ...r, newFriendCharm };
+  go('win');
+}
+render.win = () => {
+  const r = lastResult, lv = CONFIG.levels[r.level], duo = r.mode === 'duo';
+  $('#winTitle').textContent = duo ? `You and ${FRIEND} did it!` : `Level ${r.level + 1} complete!`;
+  $('#winSub').textContent = `${lv.name} is open. The forest is a little more free.`;
+  $('#winDuoFaces').hidden = !duo; $('#winFriendRow').hidden = !duo; $('#winHigh').hidden = !duo;
+  $('#winFaceB').textContent = FRIEND[0];
+  $('#winGems').textContent = '+' + CONFIG.levelReward;
+  $('#winFriendNote').textContent = r.newFriendCharm ? `New! You and ${FRIEND} each get a matching half` : `You and ${FRIEND} each have a matching half`;
+  const t = Math.round(r.time), mm = Math.floor(t/60), ss = String(t%60).padStart(2,'0');
+  $('#winStats').innerHTML = `<span>Time ${mm}:${ss}</span><span>Gems found ${r.gemsFound}</span>` + (duo ? `<span>Scrolls sent ${r.sent}</span><span>Received ${r.received}</span>` : '');
+  $('#hiReply').textContent = '';
+  $('#winHighLabel').textContent = `Send ${FRIEND} a high five`;
+};
+$$('[data-hi]').forEach(b => b.onclick = () => {
+  const e = b.dataset.hi; $('#hiReply').textContent = `Sent ${e} to ${FRIEND}…`;
+  setTimeout(() => { $('#hiReply').textContent = `${FRIEND}: ${e}${e} best team!!`; }, 1400);
+});
+
+// ---------- stall ----------
+const STALL_SPOTS = [[62,124],[128,130],[194,130],[260,124],[62,234],[128,240],[194,240],[260,234]];
+render.stall = () => {
+  $$('#stallTabs [role="tab"]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === stallTab)));
+  const ids = stallTab === 'boost' ? CONFIG.stallBoost : [...CONFIG.stallStyle, 'friend'];
+  if (!ids.includes(stallPick)) stallPick = ids[0];
+  const wrap = $('#stallCharms'); wrap.innerHTML = '';
+  STALL_SPOTS.forEach(([x, y], i) => {
+    const id = ids[i], b = document.createElement('button');
+    b.className = 'stall-charm'; b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 460 * 100) + '%';
+    if (!id){ b.disabled = true; b.classList.add('locked'); b.setAttribute('aria-label', 'Locked charm, opens in a later level'); b.innerHTML = '<span class="hoop"></span><span class="ball"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><rect x="1" y="8" width="14" height="10" rx="2" fill="#6b6b6b"/><path d="M4 8V5a4 4 0 0 1 8 0v3" fill="none" stroke="#6b6b6b" stroke-width="2.2"/></svg></span>'; wrap.appendChild(b); return; }
+    const c = CONFIG.charms[id], owned = Profile.owns(id);
+    b.classList.toggle('picked', id === stallPick);
+    b.setAttribute('aria-pressed', String(id === stallPick));
+    b.setAttribute('aria-label', `${c.name}${owned ? ', owned' : c.price == null ? ', earned with a friend' : `, ${c.price} gems`}`);
+    b.innerHTML = `<span class="hoop"></span><span class="ball">${icon(id, 26)}</span><span class="price">${owned ? '✓ Owned' : c.price == null ? 'Friend' : c.price + ' ' + GEM(11)}</span>`;
+    b.onclick = () => { stallPick = id; render.stall(); };
+    wrap.appendChild(b);
+  });
+  const c = CONFIG.charms[stallPick], owned = Profile.owns(stallPick), need = (c.price || 0) - Profile.data.gems;
+  $('#brambleTitle').textContent = `Ooh, the ${c.name} charm!`;
+  $('#brambleSay').textContent = c.say;
+  $('#stallPreview').innerHTML = icon(stallPick, 56);
+  const buy = $('#buyBtn');
+  if (owned){ buy.disabled = true; buy.innerHTML = "You have this one! ✓"; }
+  else if (c.price == null){ buy.disabled = true; buy.textContent = 'Earn it by playing with a friend'; }
+  else if (need > 0){ buy.disabled = true; buy.innerHTML = `Need ${need} more ${GEM(16)}`; }
+  else { buy.disabled = false; buy.innerHTML = `Buy for ${c.price} ${GEM(16)}`; }
+};
+$$('#stallTabs [role="tab"]').forEach(t => t.onclick = () => { stallTab = t.dataset.tab; render.stall(); });
+$('#buyBtn').onclick = () => {
+  const c = CONFIG.charms[stallPick]; if (Profile.owns(stallPick) || c.price == null || Profile.data.gems < c.price) return;
+  Profile.addGems(-c.price); Profile.give(stallPick);
+  say(Profile.isOn(stallPick) ? `${c.name} is on your bracelet!` : `${c.name} is in your charms. Your bracelet is full`);
+  bracePick = stallPick; render.stall();
+};
+
+// ---------- bracelet ----------
+const RING = [[179,52],[260.1,78.4],[310.3,147.4],[310.3,232.6],[260.1,301.6],[179,328],[97.9,301.6],[47.7,232.6],[47.7,147.4],[97.9,78.4]];
+render.bracelet = () => {
+  const d = Profile.data, wrap = $('#ringSlots'); wrap.innerHTML = '';
+  RING.forEach(([x, y], i) => {
+    const boost = i % 2 === 0, id = boost ? d.boost[i/2] : d.style[(i-1)/2];
+    const b = document.createElement('button');
+    b.className = 'ring-slot ' + (boost ? 'boost' : 'style') + (id ? ' full' : '') + (id && id === bracePick ? ' picked' : '');
+    b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 372 * 100) + '%';
+    b.setAttribute('aria-label', id ? `${CONFIG.charms[id].name}, on your bracelet` : `Empty ${boost ? 'boost' : 'style'} slot`);
+    b.innerHTML = id ? icon(id, 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg>');
+    b.onclick = () => { if (id){ bracePick = id; render.bracelet(); } else { say(`Pick a ${boost ? 'boost' : 'style'} charm below to put it here`); } };
+    wrap.appendChild(b);
+  });
+  const tray = $('#tray'); tray.innerHTML = '';
+  const owned = Object.keys(CONFIG.charms).filter(id => Profile.owns(id));
+  if (!owned.includes(bracePick)) bracePick = owned[0];
+  owned.forEach(id => {
+    const c = CONFIG.charms[id], on = Profile.isOn(id), b = document.createElement('button');
+    b.className = 'tray-item' + (id === bracePick ? ' picked' : '');
+    b.setAttribute('aria-pressed', String(id === bracePick));
+    b.innerHTML = `${icon(id, 26)}<span>${esc(c.name)}</span><small>${on ? 'On' : 'Off'}</small>`;
+    b.onclick = () => { bracePick = id; render.bracelet(); };
+    tray.appendChild(b);
+  });
+  const c = CONFIG.charms[bracePick], on = Profile.isOn(bracePick);
+  $('#braceIcon').innerHTML = icon(bracePick, 40);
+  $('#braceName').textContent = c.name;
+  $('#braceType').textContent = c.type === 'boost' ? 'Boost' : 'Style';
+  $('#braceSay').textContent = c.say;
+  $('#toggleBtn').textContent = on ? 'Take off' : 'Put on';
+};
+$('#toggleBtn').onclick = () => {
+  const id = bracePick, c = CONFIG.charms[id];
+  if (Profile.isOn(id)) Profile.unequip(id);
+  else if (!Profile.equip(id)){ say(`All 5 ${c.type} slots are full. Take one off first`); return; }
+  render.bracelet();
+};
+
+go('load');
+})();

@@ -6,28 +6,36 @@ A co-op maze game for kids 7–11, built for our UX Design for Kids class. Two f
 
 ## What's in this version
 
-This is the **Duo level for playtesting**. The second player, "Anjalie," is **scripted**: she sends scrolls, gets stuck partway through, replies to whatever you send, and finds her half of the key. Real two-phone play is the next step after playtesting.
+The whole experience, start to finish:
 
-- Drag anywhere on the maze to move (or use arrow keys / WASD on a laptop). A quick push moves one space.
-- Fog hides most of the maze; footprints fade behind you.
-- Bracelet charms in the header: **Peek** (see more for 3 seconds) and **Dash** (zip two spaces).
-- **Send a Scroll** opens the message sheet.
+**Load → Forest map → Level → (Pick a friend) → Maze → Level complete → Bramble's Charm Stall → Bracelet**
+
+- **Forest map:** three levels along a path. Finishing one unlocks the next. The floating cloud is Bramble's Charm Stall; the bracelet in the header opens your bracelet; the gear opens Settings.
+- **Solo or Duo:** the play button starts solo. "Play with Friend?" opens the friend picker, and only **Anjalie** can play right now. She's **scripted**: she sends scrolls, gets stuck partway through, replies to whatever you send, and finds her half of the key. Real two-phone play is the next step after playtesting.
+- **In the maze:** drag anywhere to move (arrow keys / WASD on a laptop). A quick push moves one space. Fog hides most of the maze and footprints fade behind you. Tap a charm on the bracelet to use it: **Peek** (see more), **Dash** (zip two spaces), **Thorn Snip** (cut the wall you're facing), **Glow** (bigger light for 10 seconds).
+- **Send a Scroll (duo):** preset messages, emojis, and gifts: a Peek, gems (up to 5), or a boost charm lent for the level.
+- **Stall:** spend gems on Boost charms (Dash 5, Thorn Snip 10, Glow 15) and Style charms (3–4). The Friendship charm can't be bought; you earn it by finishing a level with a friend.
+- **Bracelet:** 5 boost slots and 5 style slots. Tap a charm to put it on or take it off. Only boost charms on the bracelet come into the maze.
+- **Progress saves on the phone** (gems, charms, finished levels). Settings → Reset my progress wipes it, which is handy between testers.
 
 ### Running a playtest
 
-- **Hidden facilitator menu:** tap the **key icon three times quickly**. You can make Anjalie send a cheer, get stuck, or find her half, or restart the level.
-- The win screen shows time, scrolls sent, and scrolls received. Jot those down per tester.
+- Reset progress between testers (gear icon on the map → Reset my progress).
+- **Hidden facilitator menu (duo only):** tap the **key icon three times quickly**. You can make Anjalie send a cheer, get stuck, or find her half, finish the level right away, or restart.
+- The level complete screen shows time, gems found, and (duo) scrolls sent and received. Jot those down per tester.
 
 ## Files
 
 | File | What it's for |
 | --- | --- |
-| `index.html` | Page structure: header, status bar, Scroll sheet, overlays |
-| `css/style.css` | All styling |
-| `js/config.js` | **Start here.** Timing, starting items, the friend's script, messages, emojis, replies |
-| `js/game.js` | The engine: maze, movement, drawing, the friend's logic, the Scroll sheet |
+| `index.html` | Every screen's structure, one `<section class="screen">` each |
+| `css/style.css` | All styling, grouped by screen |
+| `js/config.js` | **Start here.** Levels, charm prices and descriptions, timing, the friend's script, messages, emojis, replies |
+| `js/ui.js` | Shared pieces: saved progress, charm icons, the hanging bracelet |
+| `js/game.js` | The maze engine: movement, charms, drawing, the friend's logic, the Scroll sheet |
+| `js/app.js` | Screen flow: map, level entry, friend picker, level complete, stall, bracelet |
 
-Most tweaks only need `js/config.js`. For example, change when Anjalie gets stuck (`getsStuckAt`), add a message to `messages` plus a matching line in `replies`, or try a new maze with `mySeed`.
+Most tweaks only need `js/config.js`. For example, change a charm's price or Bramble's line about it, add a level (new `seed` = new maze), change when Anjalie gets stuck (`getsStuckAt`), or add a message to `messages` plus a matching line in `replies`.
 
 ## How to make a change
 
