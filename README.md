@@ -37,6 +37,12 @@ The whole experience, start to finish:
 
 Most tweaks only need `js/config.js`. For example, change a charm's price or Bramble's line about it, add a level (new `seed` = new maze), change when Anjalie gets stuck (`getsStuckAt`), or add a message to `messages` plus a matching line in `replies`.
 
+## Art
+
+Art lives in `art/`. Right now that's the forest map (`art/map.webp`).
+
+**Swapping the map:** export the new image (portrait, about 816×1456 or the same shape), save it over `art/map.webp`, or add a new file and point `map.image` in `js/config.js` at it. If the gates move, update `map.gates`. Each gate's `x`/`y` is its center in the image's own pixels, and `w`/`h` is the tap area. Keep tappable things at least ~90px from the left and right edges, because tall phones crop the sides slightly. To shrink a big PNG, save it as WebP or JPG (around 85–90% quality).
+
 ## How to make a change
 
 **No setup (GitHub website):**

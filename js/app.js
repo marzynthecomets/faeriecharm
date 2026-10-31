@@ -21,33 +21,37 @@ render.load = () => {
 $('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); go('map'); });
 
 // ---------- map ----------
-const LEVEL_SPOTS = [[118.4, 720], [123.8, 376], [280.2, 216]];   // centers on the path (390×844 stage)
-function archSvg(state, n){
-  const thorns = '<g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M8 40H1M12.3 24 6.2 20.5M24 12.3 20.5 6.2M40 8V1M56 12.3 59.5 6.2M67.7 24 73.8 20.5M72 40H79M8 56 1 52M8 72 1 68M72 56 79 52M72 72 79 68"/></g>';
-  const body = 'M8 92V40A32 32 0 0 1 72 40V92Z';
-  if (state === 'locked') return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true"><path d="${body}" fill="#d9d9d9" stroke="#6b6b6b" stroke-width="2" stroke-dasharray="5 4"/><rect x="32" y="58" width="16" height="12" rx="2" fill="#6b6b6b"/><path d="M35 58v-3a5 5 0 0 1 10 0v3" fill="none" stroke="#6b6b6b" stroke-width="2.4"/></svg>`;
-  if (state === 'done') return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true"><path d="${body}" fill="#fff" stroke="#1a1a1a" stroke-width="3"/><text x="40" y="72" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="800" fill="#1a1a1a">${n}</text><circle cx="66" cy="16" r="11" fill="#1a1a1a"/><path d="M60.5 16.5l3.5 3.5 6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  return `<svg width="80" height="94" viewBox="0 0 80 94" aria-hidden="true">${thorns}<path d="${body}" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="2.5"/><path d="M16 92V40A24 24 0 0 1 64 40V92" fill="none" stroke="#fff" stroke-width="2"/><text x="40" y="72" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="800" fill="#fff">${n}</text></svg>`;
+// Each level sits on a gate in the map art (positions in js/config.js → map.gates).
+function gateBadge(state, n){
+  if (state === 'locked') return '<svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><rect x="3" y="10" width="16" height="12" rx="2" fill="#fff"/><path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#fff" stroke-width="2.6"/></svg>';
+  if (state === 'done') return '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M6 13.5l5 5 9-10" fill="none" stroke="#1a1a1a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return String(n);
 }
 render.map = () => {
+  const M = CONFIG.map, art = $('#mapArt');
+  if (art.getAttribute('src') !== M.image) art.src = M.image;
+  const st = $('#mapStage'); st.style.width = M.width + 'px'; st.style.height = M.height + 'px';
+  const cs = $('.cloud-stall'); cs.style.left = M.stall.x + 'px'; cs.style.top = M.stall.y + 'px';
   renderArc($('#mapArc'), Profile.data.boost, false);
   const wrap = $('#levelSpots'); wrap.innerHTML = '';
   CONFIG.levels.forEach((lv, i) => {
-    const [cx, cy] = LEVEL_SPOTS[i] || [195, 120];
+    const g = M.gates[i]; if (!g) return;
     const state = Profile.data.done.includes(i) ? 'done' : Profile.unlocked(i) ? 'open' : 'locked';
     const b = document.createElement('button');
-    b.className = 'level-spot ' + state; b.style.left = (cx - 40) + 'px'; b.style.top = (cy - 50) + 'px';
+    b.className = 'gate ' + state;
+    Object.assign(b.style, { left: (g.x - g.w/2) + 'px', top: (g.y - g.h/2) + 'px', width: g.w + 'px', height: g.h + 'px' });
     b.setAttribute('aria-label', `Level ${i+1}, ${lv.name}${state === 'locked' ? ', locked. Finish the level before it to open' : state === 'done' ? ', finished. Play again' : '. Play'}`);
-    b.innerHTML = archSvg(state, i+1) + (state !== 'locked' ? `<span class="spot-label">${esc(lv.name)}</span>` : '');
+    b.innerHTML = `<span class="gate-badge">${gateBadge(state, i+1)}</span><span class="gate-label">${state === 'locked' ? 'Locked' : esc(lv.name)}</span>`;
     b.onclick = () => { if (state === 'locked'){ say('Finish the level before this one to open it'); return; } entryLevel = i; go('entry'); };
     wrap.appendChild(b);
   });
   fitStage();
 };
+// scale the art to cover the screen (like a phone wallpaper); tall phones crop a little off the sides
 function fitStage(){
   const scr = $('#scr-map'), st = $('#mapStage'); if (!scr.classList.contains('on')) return;
-  const r = scr.getBoundingClientRect(), s = Math.min(r.width / 390, r.height / 844);
-  st.style.transform = `translate(${(r.width - 390*s)/2}px, ${(r.height - 844*s)/2}px) scale(${s})`;
+  const M = CONFIG.map, r = scr.getBoundingClientRect(), s = Math.max(r.width / M.width, r.height / M.height);
+  st.style.transform = `translate(${(r.width - M.width*s)/2}px, ${(r.height - M.height*s)/2}px) scale(${s})`;
 }
 addEventListener('resize', fitStage);
 

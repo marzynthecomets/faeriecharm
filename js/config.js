@@ -16,6 +16,19 @@ const CONFIG = {
   levelReward: 5,        // gems for finishing a level (same for solo and duo)
   maxGemGift: 5,         // most gems you can put in one scroll
 
+  // ----- forest map art -----
+  // Positions are in the art's own pixels (open the image in any editor to read them).
+  // Keep tappable things at least ~90px in from the left/right edges: tall phones crop the sides a little.
+  map: {
+    image: 'art/map.webp', width: 816, height: 1456,
+    gates: [                                   // one per level, in order: center x/y and the tap area size
+      { x: 387, y: 1025, w: 330, h: 130 },     // Level 1: the thorny hedge
+      { x: 407, y: 540,  w: 110, h: 110 },     // Level 2: lower door
+      { x: 420, y: 210,  w: 110, h: 110 }      // Level 3: upper door
+    ],
+    stall: { x: 96, y: 232 }                   // top-left corner of the floating Charm Stall
+  },
+
   // ----- levels (seed = maze layout; change it to get a new maze) -----
   levels: [
     { name: 'Thorn Maze',   blurb: 'Enter the Thorn Maze and find the key to free the forest.', width: 7, height: 12, seed: 2718, friendSeed: 9001 },

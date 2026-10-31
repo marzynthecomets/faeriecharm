@@ -70,14 +70,23 @@ h1,h2{margin:0;text-wrap:balance}
 #loadBar{height:100%;width:0;background:var(--ink);transition:width 1.5s ease-in-out}
 
 /* ---------- map ---------- */
-#mapStage{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0}
-.level-spot{position:absolute;width:80px;height:94px;border:none;background:none;padding:0}
-.level-spot svg{display:block}
-.level-spot.open svg{animation:bob 2.6s ease-in-out infinite}
-.spot-label{position:absolute;left:50%;top:100px;transform:translateX(-50%);white-space:nowrap;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:3px 8px;font-size:13px;font-weight:700}
-.cloud-stall{position:absolute;left:12px;top:104px;width:150px;height:122px;border:none;background:none;padding:0}
-.cloud-stall svg{display:block;animation:bob 3.2s ease-in-out infinite}
-.cloud-stall span{position:absolute;left:50%;top:71px;transform:translateX(-50%);white-space:nowrap;font-size:14px;font-weight:700}
+/* the map stage is sized in the art's own pixels and scaled to cover the screen (sizes below are art pixels, ~0.58× on a phone) */
+#scr-map{background:#1f3a28}
+#mapStage{position:absolute;left:0;top:0;transform-origin:0 0}
+.map-art{position:absolute;left:0;top:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
+.gate{position:absolute;border:none;background:none;padding:0}
+/* the badge hangs on the top edge of each gate like a sign, so the gate art stays visible */
+.gate-badge{position:absolute;left:50%;top:0;width:66px;height:66px;margin:-36px 0 0 -33px;border-radius:33px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;box-sizing:border-box}
+.gate-badge svg{width:36px;height:36px}
+.gate.open .gate-badge{background:var(--ink);color:#fff;border:6px solid #fff;animation:gatepulse 1.8s ease-out infinite}
+.gate.done .gate-badge{background:#fff;border:6px solid var(--ink)}
+.gate.locked .gate-badge{background:rgba(30,28,50,.72);border:5px solid rgba(255,255,255,.85)}
+@keyframes gatepulse{0%{box-shadow:0 0 0 5px var(--ink),0 0 0 5px rgba(255,255,255,.9)}100%{box-shadow:0 0 0 5px var(--ink),0 0 0 34px rgba(255,255,255,0)}}
+.gate-label{position:absolute;left:50%;top:100%;margin-top:4px;transform:translateX(-50%);white-space:nowrap;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:4px 16px;font-size:26px;font-weight:800;color:var(--ink)}
+.gate.locked .gate-label{background:rgba(255,255,255,.8);border-color:rgba(26,26,26,.6);color:#3a3a3a}
+.cloud-stall{position:absolute;width:270px;height:220px;border:none;background:none;padding:0}
+.cloud-stall svg{display:block;width:100%;height:auto;animation:bob 3.2s ease-in-out infinite}
+.cloud-stall span{position:absolute;left:50%;top:128px;transform:translateX(-50%);white-space:nowrap;font-size:26px;font-weight:800;animation:bob 3.2s ease-in-out infinite}
 .arc-link{cursor:pointer}
 
 /* ---------- entry ---------- */
