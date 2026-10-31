@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>FaerieCharm</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="world" aria-label="The Thorn Maze. Drag anywhere to move."></canvas>
+
+  <div id="stick" class="idle" aria-hidden="true"><span class="arr up"></span><span class="arr down"></span><span class="arr left"></span><span class="arr right"></span><div id="knob"></div></div>
+  <div id="hint">Drag anywhere to move · arrow keys work too</div>
+
+  <div id="gems" role="status" aria-label="Gems"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="gemCount">4</span></div>
+
+  <div id="top">
+    <button id="pauseBtn" aria-label="Pause"><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v18M16 3v18" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/></svg></button>
+    <div id="bracelet" role="group" aria-label="Bracelet charms">
+      <svg width="230" height="70" viewBox="0 0 230 70" aria-hidden="true">
+        <path d="M10 0Q115 56 220 0" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+        <g fill="#ffffff" stroke="#1a1a1a" stroke-width="2"><circle cx="39.4" cy="13.5" r="5"/><circle cx="77.2" cy="24.4" r="5"/><circle cx="115" cy="28" r="5"/><circle cx="152.8" cy="24.4" r="5"/><circle cx="190.6" cy="13.5" r="5"/></g>
+        <circle cx="39.4" cy="33" r="16" fill="#ffffff" stroke="#1a1a1a" stroke-width="3"/>
+        <circle cx="77.2" cy="43.4" r="16" fill="#ffffff" stroke="#1a1a1a" stroke-width="3"/>
+        <g fill="#ffffff" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="4 3"><circle cx="115" cy="47" r="15"/><circle cx="152.8" cy="43.4" r="15"/><circle cx="190.6" cy="32.5" r="15"/></g>
+      </svg>
+      <button class="charm" id="peekBtn" style="left:17px;top:11px" aria-label="Use Peek: see more of the maze for 3 seconds">
+        <svg width="20" height="20" viewBox="0 0 34 34" aria-hidden="true"><path d="M3 17C8 9 13 6 17 6s9 3 14 11c-5 8-10 11-14 11S8 25 3 17Z" fill="none" stroke="#1a1a1a" stroke-width="3.2" stroke-linejoin="round"/><circle cx="17" cy="17" r="5" fill="#1a1a1a"/></svg>
+        <span class="badge" id="peekBadge" hidden>2</span>
+      </button>
+      <button class="charm" id="dashBtn" style="left:55px;top:21px" aria-label="Use Dash: zip two spaces">
+        <svg width="22" height="22" viewBox="0 0 56 56" aria-hidden="true"><path d="M16 28h18M28 21l7 7-7 7M10 22h6M10 34h6" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <button id="keyBtn" aria-label="Key status">
+      <svg width="48" height="48" viewBox="0 0 44 44" aria-hidden="true">
+        <defs><clipPath id="kl"><rect x="0" y="0" width="22" height="44"/></clipPath><clipPath id="kr"><rect x="22" y="0" width="22" height="44"/></clipPath></defs>
+        <g fill="none" stroke="#c4c4c4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="33" r="7"/><path d="M22 26V5H32M22 13H30"/></g>
+        <g class="half" id="keyL" opacity="0" clip-path="url(#kl)" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="33" r="7"/><path d="M22 26V5H32M22 13H30"/></g>
+        <g class="half" id="keyR" opacity="0" clip-path="url(#kr)" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="33" r="7"/><path d="M22 26V5H32M22 13H30"/></g>
+      </svg>
+    </button>
+  </div>
+
+  <div id="status" role="status">
+    <span id="statusDot"></span>
+    <span id="statusText"><b class="friend-name">Anjalie</b> is solving…</span>
+    <button id="scrollBtn"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round"/><path d="M4 3a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2ZM5 16a2 2 0 0 1-2-2V6M7 7h5M7 10h5" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Send a Scroll</button>
+  </div>
+
+  <div id="callout" role="status"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <div id="scrim"></div>
+  <div id="sheet" role="dialog" aria-label="Send a Scroll" aria-hidden="true">
+    <div class="row">
+      <div><div class="h2">Send a Scroll</div><div class="sub">to <span class="friend-name">Anjalie</span></div></div>
+      <button class="round" id="closeSheet" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div><div class="label">SAY SOMETHING</div><div class="chips" id="msgChips"></div></div>
+    <div><div class="label">ADD AN EMOJI</div><div class="emojis" id="emoChips"></div></div>
+    <div><div class="label">SEND A GIFT</div>
+      <div class="gifts">
+        <button class="gift" id="giftPeek" aria-pressed="false">
+          <svg class="check" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1a1a1a"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="28" height="28" viewBox="0 0 34 34" aria-hidden="true"><path d="M3 17C8 9 13 6 17 6s9 3 14 11c-5 8-10 11-14 11S8 25 3 17Z" fill="none" stroke="#1a1a1a" stroke-width="2.8" stroke-linejoin="round"/><circle cx="17" cy="17" r="5" fill="#1a1a1a"/></svg>
+          <b>Peek</b><small id="peekLeft">1 left</small>
+        </button>
+        <div class="gift" id="giftGems">
+          <svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.1" stroke-linejoin="round"/></svg>
+          <b>Gems</b>
+          <div class="stepper"><button id="gemMinus" aria-label="Fewer gems">−</button><span id="gemGift">0</span><button id="gemPlus" aria-label="More gems">+</button></div>
+        </div>
+        <button class="gift" id="giftDash" aria-pressed="false">
+          <svg class="check" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1a1a1a"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="28" height="28" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="#fff" stroke="#1a1a1a" stroke-width="4"/><path d="M16 28h18M28 21l7 7-7 7M12 22h6M12 34h6" fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>Dash</b><small id="dashNote">Lend for this level</small>
+        </button>
+      </div>
+    </div>
+    <div id="preview"><span>YOUR SCROLL</span><span id="previewText">Pick a message, emoji, or gift</span></div>
+    <button class="primary" id="sendBtn" disabled>Send Scroll <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h11M10 4l5 5-5 5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
+  <div class="overlay" id="intro">
+    <div class="card">
+      <div style="display:flex;justify-content:center;gap:6px" aria-hidden="true">
+        <svg width="56" height="56" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#efefef" stroke="#1a1a1a" stroke-width="2"/><path d="M21 9a13 13 0 0 0 0 26Z" fill="#fff" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/><path d="M23 9a13 13 0 0 1 0 26Z" fill="#fff" stroke="#9a9a9a" stroke-width="2.5" stroke-dasharray="3 3" stroke-linejoin="round"/></svg>
+      </div>
+      <h1>Level One · with <span class="friend-name">Anjalie</span></h1>
+      <p>You and <span class="friend-name">Anjalie</span> each have half of the Thorn Maze. Find <b>your half of the key</b>. When both halves are found, meet at the door.</p>
+      <div class="tips">
+        <div><i>↕</i>Drag anywhere on the maze to move.</div>
+        <div><i>👁</i>Tap a charm on your bracelet to use it.</div>
+        <div><i>✉</i>Send <span class="friend-name">Anjalie</span> a Scroll to cheer her on or help.</div>
+      </div>
+      <button class="primary" id="startBtn">Start</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="pauseOv" hidden>
+    <div class="card">
+      <h1>Paused</h1>
+      <button class="primary" id="resumeBtn">Resume</button>
+      <button class="secondary" id="restartBtn">Restart level</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="facOv" hidden>
+    <div class="card fac">
+      <h1>Facilitator</h1>
+      <p style="font-size:13px">Control <span class="friend-name">Anjalie</span> during a playtest.</p>
+      <button data-fac="cheer">Anjalie sends a cheer</button>
+      <button data-fac="stuck">Anjalie gets stuck</button>
+      <button data-fac="half">Anjalie finds her half</button>
+      <button data-fac="restart">Restart level</button>
+      <button data-fac="close" class="primary" style="color:#fff">Back to game</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="winOv" hidden>
+    <div class="card">
+      <div style="display:flex;justify-content:center" aria-hidden="true"><svg width="80" height="80" viewBox="0 0 80 80"><g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M10 40H3M14 24 8 20M26 12l-4 -6M40 8V1M54 12l4 -6M66 24l6 -4M70 40h7"/></g><path d="M10 78V40A30 30 0 0 1 70 40V78Z" fill="#fff" stroke="#1a1a1a" stroke-width="3"/><path d="M18 78V42Q18 22 32 18V74Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="2"/><path d="M50 36l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z" fill="#1a1a1a"/></svg></div>
+      <h1>You and <span class="friend-name">Anjalie</span> did it!</h1>
+      <p>The Thorn Maze is open. The forest is a little more free.</p>
+      <div class="reward">
+        <div class="r"><svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1" stroke-linejoin="round"/></svg>Gems<b>+5</b></div>
+        <div class="r"><svg width="30" height="30" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/><path d="M21 10a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M23 10a12 12 0 0 1 0 24Z" fill="#9a9a9a"/></svg>Friendship charm<b style="font-size:12px;border:1.5px solid #1a1a1a;border-radius:8px;padding:2px 6px">Style</b></div>
+      </div>
+      <div class="five"><span>Send <span class="friend-name">Anjalie</span> a high five</span><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div>
+      <div id="hiReply"></div>
+      <div class="stats" id="stats"></div>
+      <button class="primary" id="againBtn">Play again</button>
+    </div>
+  </div>
+</div>
+
+<!-- config.js holds everything you'd want to tweak (timing, messages, the friend's script). game.js is the engine. -->
+<script src="js/config.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
