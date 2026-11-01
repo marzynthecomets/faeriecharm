@@ -278,3 +278,15 @@ h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .friend-info b,.reward .r,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div,.face{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
 
 .gem-img{display:inline-block;flex-shrink:0;vertical-align:middle;object-fit:contain}
+
+/* charm art (see CONFIG.charms[id].art) */
+.charm-art{display:block;width:auto;max-width:none;-webkit-user-drag:none}
+.charm .charm-art{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.stall-charm .art-hang{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.stall-charm.has-art.picked .art-hang{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px var(--ink))}
+.tray-item .charm-art{height:auto;max-height:40px}
+/* on the bracelet ring, charm art hangs from the hoop instead of sitting in a circle */
+.ring-slot.has-art{border:none;background:none;width:52px;height:52px;margin:-26px 0 0 -26px}
+.ring-slot.has-art .charm-art{margin:0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.ring-slot.has-art.picked{box-shadow:none}
+.ring-slot.has-art.picked .charm-art{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px #1a1a1a)}

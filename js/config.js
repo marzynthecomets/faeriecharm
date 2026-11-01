@@ -60,8 +60,9 @@ const CONFIG = {
   ],
 
   // ----- charms (type 'boost' = used in the maze, 'style' = just for looks) -----
+  // art (optional) = a transparent portrait charm image with its own ring at the top; charms without art use a line icon
   charms: {
-    peek:   { type: 'boost', name: 'Peek',       price: 0,  say: 'See more of the maze around you for 3 seconds. Once per level.' },
+    peek:   { type: 'boost', name: 'Peek',       price: 0,  art: 'art/charm-peek.webp', say: 'See more of the maze around you for 3 seconds. Once per level.' },
     dash:   { type: 'boost', name: 'Dash',       price: 5,  say: 'Zip two spaces in a straight line. Perfect for escaping a dead end.' },
     snip:   { type: 'boost', name: 'Thorn Snip', price: 10, say: 'Snip through one thorny wall right in front of you. Once per level.' },
     glow:   { type: 'boost', name: 'Glow',       price: 15, say: 'Light up a big circle around you for 10 seconds. Once per level.' },

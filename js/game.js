@@ -276,6 +276,7 @@ function renderSheet(){
   gp.disabled = peeks < 1; gp.setAttribute('aria-pressed', String(sel.peek)); $('#peekLeft').textContent = peeks + ' left';
   gl.disabled = !lid; gl.setAttribute('aria-pressed', String(!!sel.lend));
   $('#lendIcon').innerHTML = icon(lid || 'dash', 28);
+  $('#peekGiftIcon').innerHTML = icon('peek', 28);
   $('#lendName').textContent = lid ? CONFIG.charms[lid].name : 'Lend a charm';
   $('#lendNote').textContent = lid ? 'Lend for this level' : 'No charm to lend';
   $('#gemGift').textContent = sel.gems; $('#giftGems').setAttribute('aria-pressed', String(sel.gems > 0));

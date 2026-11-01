@@ -39,7 +39,11 @@ const ICON = {
   shroom: '<path d="M5 18a12 11 0 0 1 24 0Z" fill="#c4c4c4" stroke="#1a1a1a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 18v8a4 3 0 0 0 8 0v-8" fill="#fff" stroke="#1a1a1a" stroke-width="2.4"/><circle cx="12" cy="13" r="2" fill="#fff"/><circle cx="20" cy="11" r="2.4" fill="#fff"/>',
   friend: '<path d="M16 5a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M18 5a12 12 0 0 1 0 24Z" fill="#9a9a9a"/>'
 };
-const icon = (id, size) => `<svg width="${size}" height="${size}" viewBox="0 0 34 34" aria-hidden="true">${ICON[id] || ''}</svg>`;
+const hasArt = id => !!(CONFIG.charms[id] && CONFIG.charms[id].art);
+// charm picture: the charm's art if it has some (drawn a bit taller, since it includes its ring), otherwise the line icon
+const icon = (id, size) => hasArt(id)
+  ? `<img class="charm-art" src="${CONFIG.charms[id].art}" alt="" draggable="false" style="height:${Math.round(size * 1.35)}px">`
+  : `<svg width="${size}" height="${size}" viewBox="0 0 34 34" aria-hidden="true">${ICON[id] || ''}</svg>`;
 const GEM = s => `<img class="gem-img" src="art/gem.webp" width="${s}" height="${s}" alt="">`;
 
 // ---------- the hanging bracelet (5 boost slots dangling from the gold chain art) ----------
@@ -50,8 +54,9 @@ const ARC_DROPS = [3.5, 21.0, 41.0, 21.5, 3.5];
 function braceletArcSvg(slots){
   let s = '<svg class="arc-art" width="230" height="70" viewBox="0 0 230 70" style="overflow:visible" aria-hidden="true"><image href="art/chain.webp" x="0" y="-50" width="230" height="100.5"/>';
   ARC_CHARMS.forEach(([x,y], i) => {
-    const top = y - 14, from = Math.max(ARC_DROPS[i] - 3, -2);
+    const art = slots[i] && hasArt(slots[i]), top = art ? y - 20 : y - 14, from = Math.max(ARC_DROPS[i] - 3, -2);
     if (top - from > 2) s += `<path d="M${x} ${from}V${top}" stroke="#8a6a24" stroke-width="3.5"/><path d="M${x} ${from}V${top}" stroke="#e0c27a" stroke-width="1.5"/>`;
+    if (art) return;   // charm art brings its own rings, so no jump ring or circle
     s += `<circle cx="${x}" cy="${top}" r="3" fill="#e0c27a" stroke="#8a6a24" stroke-width="1.5"/>`;
     s += slots[i] ? `<circle cx="${x}" cy="${y}" r="14" fill="#fff" stroke="#8a6a24" stroke-width="3"/>`
                   : `<circle cx="${x}" cy="${y}" r="13" fill="rgba(255,255,255,.8)" stroke="#b8954a" stroke-width="2" stroke-dasharray="4 3"/>`;
@@ -65,8 +70,8 @@ function renderArc(el, slots, interactive){
     if (!id) return;
     const [x,y] = ARC_CHARMS[i];
     html += interactive
-      ? `<button class="charm" data-charm="${id}" style="left:${x-22}px;top:${y-22}px" aria-label="Use ${esc(CONFIG.charms[id].name)}">${icon(id, 18)}<span class="badge" hidden></span></button>`
-      : `<span class="charm" style="left:${x-22}px;top:${y-22}px">${icon(id, 18)}</span>`;
+      ? `<button class="charm" data-charm="${id}" style="left:${x-22}px;top:${y-22}px" aria-label="Use ${esc(CONFIG.charms[id].name)}">${hasArt(id) ? icon(id, 31) : icon(id, 18)}<span class="badge" hidden></span></button>`
+      : `<span class="charm" style="left:${x-22}px;top:${y-22}px">${hasArt(id) ? icon(id, 31) : icon(id, 18)}</span>`;
   });
   el.innerHTML = html;
 }

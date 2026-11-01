@@ -140,7 +140,8 @@ render.stall = () => {
     b.classList.toggle('picked', id === stallPick);
     b.setAttribute('aria-pressed', String(id === stallPick));
     b.setAttribute('aria-label', `${c.name}${owned ? ', owned' : c.price == null ? ', earned with a friend' : `, ${c.price} gems`}`);
-    b.innerHTML = `<span class="hoop"></span><span class="ball">${icon(id, 26)}</span><span class="price">${owned ? '✓ Owned' : c.price == null ? 'Friend' : c.price + ' ' + GEM(11)}</span>`;
+    b.classList.toggle('has-art', hasArt(id));
+    b.innerHTML = `${hasArt(id) ? `<span class="art-hang">${icon(id, 40)}</span>` : `<span class="hoop"></span><span class="ball">${icon(id, 26)}</span>`}<span class="price">${owned ? '✓ Owned' : c.price == null ? 'Friend' : c.price + ' ' + GEM(11)}</span>`;
     b.onclick = () => { stallPick = id; render.stall(); };
     wrap.appendChild(b);
   });
@@ -169,10 +170,12 @@ render.bracelet = () => {
   RING.forEach(([x, y], i) => {
     const boost = i % 2 === 0, id = boost ? d.boost[i/2] : d.style[(i-1)/2];
     const b = document.createElement('button');
-    b.className = 'ring-slot ' + (boost ? 'boost' : 'style') + (id ? ' full' : '') + (id && id === bracePick ? ' picked' : '');
+    b.className = 'ring-slot ' + (boost ? 'boost' : 'style') + (id ? ' full' : '') + (id && id === bracePick ? ' picked' : '') + (id && hasArt(id) ? ' has-art' : '');
     b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 372 * 100) + '%';
     b.setAttribute('aria-label', id ? `${CONFIG.charms[id].name}, on your bracelet` : `Empty ${boost ? 'boost' : 'style'} slot`);
-    b.innerHTML = id ? icon(id, 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg>');
+    b.innerHTML = id ? icon(id, hasArt(id) ? 38 : 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg>');
+    // art charms point outward from the band, ring toward the hoop (slot i sits at -90° + 36°·i)
+    if (id && hasArt(id)) b.querySelector('img').style.transform = `rotate(${-180 + 36*i}deg)`;
     b.onclick = () => { if (id){ bracePick = id; render.bracelet(); } else { say(`Pick a ${boost ? 'boost' : 'style'} charm below to put it here`); } };
     wrap.appendChild(b);
   });
