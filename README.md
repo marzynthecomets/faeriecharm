@@ -54,6 +54,8 @@ Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), 
 2. Make your edit, then **Commit changes**. Write a short note about what you changed.
 3. The live link updates about a minute later. Refresh it on your phone.
 
+**Seeing an old version after a change?** Browsers reuse files for a few minutes. In `index.html`, the CSS and JS links end in `?v=7`. Bump that number (to `?v=8` and so on) whenever you change a `.css` or `.js` file, and phones will fetch the new copy right away. Images in `art/` refresh on their own within about 10 minutes.
+
 **On your computer:**
 1. `git clone https://github.com/marzynthecomets/faeriecharm.git`
 2. Open `index.html` in a browser. No build step and no install.
