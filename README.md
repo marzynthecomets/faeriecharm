@@ -39,7 +39,9 @@ Most tweaks only need `js/config.js`. For example, change a charm's price or Bra
 
 ## Art
 
-Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), and the maze walls (`vines.webp`).
+Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), the maze walls (`vines.webp`), Bramble (`bramble.webp`, animated), and the stall (`stall.webp`).
+
+**Swapping Bramble or the stall:** save a new transparent image over the file with the same name and the same rough shape (Bramble is portrait, the stall is square). Bramble can be a still image or animated. To turn an animated GIF into WebP, use ezgif.com (GIF to WebP); it's usually a third of the size. The stall's charms hang on its two ropes; if a new stall puts the ropes somewhere else, update `STALL_SPOTS` in `js/app.js` (positions are % of the stall image).
 
 **Swapping maze textures:** they must be seamless square tiles (Midjourney's `--tile`). Save over `art/dirt.webp` or `art/vines.webp`, or point `mazeArt` in `js/config.js` at new files. `tileSize` sets how big one repeat looks on screen, and the colors there control the fog, the dark rim around walls, footprints, and the tint on the friend's side.
 

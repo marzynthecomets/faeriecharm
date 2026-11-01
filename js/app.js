@@ -122,7 +122,8 @@ $$('[data-hi]').forEach(b => b.onclick = () => {
 });
 
 // ---------- stall ----------
-const STALL_SPOTS = [[62,124],[128,130],[194,130],[260,124],[62,234],[128,240],[194,240],[260,234]];
+// where charms hang on the stall art's two ropes, in % of the stall image (x, y of the hoop)
+const STALL_SPOTS = [[22,37],[40,38.5],[60,38.5],[78,37],[16,55],[33,56]];
 render.stall = () => {
   $$('#stallTabs [role="tab"]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === stallTab)));
   const ids = stallTab === 'boost' ? CONFIG.stallBoost : [...CONFIG.stallStyle, 'friend'];
@@ -130,7 +131,7 @@ render.stall = () => {
   const wrap = $('#stallCharms'); wrap.innerHTML = '';
   STALL_SPOTS.forEach(([x, y], i) => {
     const id = ids[i], b = document.createElement('button');
-    b.className = 'stall-charm'; b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 460 * 100) + '%';
+    b.className = 'stall-charm'; b.style.left = x + '%'; b.style.top = y + '%';
     if (!id){ b.disabled = true; b.classList.add('locked'); b.setAttribute('aria-label', 'Locked charm, opens in a later level'); b.innerHTML = '<span class="hoop"></span><span class="ball"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><rect x="1" y="8" width="14" height="10" rx="2" fill="#6b6b6b"/><path d="M4 8V5a4 4 0 0 1 8 0v3" fill="none" stroke="#6b6b6b" stroke-width="2.2"/></svg></span>'; wrap.appendChild(b); return; }
     const c = CONFIG.charms[id], owned = Profile.owns(id);
     b.classList.toggle('picked', id === stallPick);
