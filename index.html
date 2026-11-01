@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=27">
+<link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=27" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=28" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
@@ -238,17 +238,25 @@
         <g fill="#fff" stroke="#8a6a24" stroke-width="3"><circle cx="179" cy="80" r="6"/><circle cx="243.7" cy="101" r="6"/><circle cx="283.6" cy="156" r="6"/><circle cx="283.6" cy="224" r="6"/><circle cx="243.7" cy="279" r="6"/><circle cx="179" cy="300" r="6"/><circle cx="114.3" cy="279" r="6"/><circle cx="74.4" cy="224" r="6"/><circle cx="74.4" cy="156" r="6"/><circle cx="114.3" cy="101" r="6"/></g>
       </svg>
       <div id="ringSlots"></div>
-      <div class="ring-key">
-        <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/><path transform="translate(4 4)" d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg><span><b>Boost</b>: use in the maze</span></div>
-        <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#9a9a9a" stroke-width="2" stroke-dasharray="3 3"/><path transform="translate(4 4)" d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg><span><b>Style</b>: just for looks</span></div>
+    </div>
+    <div class="ring-key">
+      <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/><path transform="translate(4 4)" d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg><span><b>Boost</b>: use in the maze</span></div>
+      <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#9a9a9a" stroke-width="2" stroke-dasharray="3 3"/><path transform="translate(4 4)" d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg><span><b>Style</b>: just for looks</span></div>
+    </div>
+    <div class="info-panel" id="braceInfo" hidden>
+      <button class="round info-close" id="braceClose" aria-label="Close"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+      <div id="braceDetail" class="col tight">
+        <div class="row-gap"><div class="preview-tile small" id="braceIcon"></div><div class="col tight"><div class="row-gap tight"><span class="h3" id="braceName"></span><em class="chip-tag" id="braceType"></em></div><div class="body" id="braceSay"></div></div></div>
+        <button class="secondary" id="toggleBtn">Take off</button>
+      </div>
+      <div id="bracePick" class="col tight" hidden>
+        <div class="h3" id="bracePickTitle">Pick a charm</div>
+        <div class="tray" id="slotChoices"></div>
+        <div class="body" id="bracePickEmpty" hidden></div>
+        <button class="secondary" id="bracePickStall" data-go="stall" hidden>Visit Bramble's stall</button>
       </div>
     </div>
-    <div class="info-panel">
-      <div class="row-gap"><div class="preview-tile small" id="braceIcon"></div><div class="col tight"><div class="row-gap tight"><span class="h3" id="braceName"></span><em class="chip-tag" id="braceType"></em></div><div class="body" id="braceSay"></div></div></div>
-      <button class="secondary" id="toggleBtn">Take off</button>
-    </div>
-    <div class="label">YOUR CHARMS</div>
-    <div class="tray" id="tray"></div>
+    <div class="grow"></div>
     <button class="primary" data-go="stall">+ Get more charms</button>
   </div>
 </section>
@@ -257,10 +265,10 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=27"></script>
-<script src="js/ui.js?v=27"></script>
+<script src="js/config.js?v=28"></script>
+<script src="js/ui.js?v=28"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
-<script src="js/game.js?v=27"></script>
-<script src="js/app.js?v=27"></script>
+<script src="js/game.js?v=28"></script>
+<script src="js/app.js?v=28"></script>
 </body>
 </html>

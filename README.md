@@ -15,7 +15,7 @@ The whole experience, start to finish:
 - **In the maze:** drag anywhere to move (arrow keys / WASD on a laptop). A quick push moves one space. Fog hides most of the maze and footprints fade behind you. Tap a charm on the bracelet to use it: **Peek** (see more), **Dash** (zip two spaces), **Thorn Snip** (cut the wall you're facing), **Glow** (bigger light for 10 seconds).
 - **Send a Scroll (duo):** preset messages, emojis, and gifts: a Peek, gems (up to 5), or a boost charm lent for the level.
 - **Stall:** spend gems on Boost charms (Dash 5, Thorn Snip 10, Glow 15) and Style charms (3–4). The Friendship charm can't be bought; you earn it by finishing a level with a friend.
-- **Bracelet:** 5 boost slots and 5 style slots. Tap a charm to put it on or take it off. Only boost charms on the bracelet come into the maze.
+- **Bracelet:** 5 boost slots and 5 style slots. Tap a charm you're wearing to see what it does or take it off. Tap an empty slot to pick from the charms you own that fit it. Only boost charms on the bracelet come into the maze.
 - **Progress saves on the phone** (gems, charms, finished levels). Settings → Reset my progress wipes it, which is handy between testers.
 
 ### Running a playtest
@@ -39,7 +39,7 @@ Most tweaks only need `js/config.js`. For example, change a charm's price or Bra
 
 ## Art
 
-Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), the maze walls (`vines.webp`), the gem (`gem.webp`, used everywhere gems appear), the gold bracelet chain (`chain.webp`; charm hang points are `ARC_CHARMS` in `js/ui.js`), the load screen (`load.webp`), the Thorn Maze start screen (`entry-thorn.webp`, set per level with `entryArt` in `js/config.js`), Bramble (`bramble.webp`, animated), the stall (`stall.webp`) and its sky background (`stall-bg.webp`), and the map's Charms stall (`stall-map.webp`).
+Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), the maze walls (`vines.webp`), the gem (`gem.webp`, used everywhere gems appear), the gold bracelet chain (`chain.webp`; charm hang points are `ARC_CHARMS` in `js/ui.js`), the load screen (`load.webp`), the Thorn Maze start screen (`entry-thorn.webp`, set per level with `entryArt` in `js/config.js`), Bramble (`bramble.webp`, animated), the stall (`stall-clouds.webp`) and its sky background (`stall-bg.webp`), the bracelet screen's meadow (`bracelet-bg.webp`), and the map's Charms stall (`stall-map.webp`).
 
 **Swapping Bramble or the stall:** save a new transparent image over the file with the same name and the same rough shape (Bramble is portrait, the stall is square). Bramble can be a still image or animated. To turn an animated GIF into WebP, use ezgif.com (GIF to WebP); it's usually a third of the size. The stall's charms hang on its two ropes; if a new stall puts the ropes somewhere else, update `STALL_SPOTS` in `js/app.js` (positions are % of the stall image).
 

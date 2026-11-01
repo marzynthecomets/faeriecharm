@@ -165,44 +165,52 @@ $('#buyBtn').onclick = () => {
 
 // ---------- bracelet ----------
 const RING = [[179,52],[260.1,78.4],[310.3,147.4],[310.3,232.6],[260.1,301.6],[179,328],[97.9,301.6],[47.7,232.6],[47.7,147.4],[97.9,78.4]];
+// Nothing is selected until you tap: a worn charm shows its card (Take off), an empty slot shows the charms that fit it.
+let braceSel = null;   // null | { id } | { type, index }
 render.bracelet = () => {
   const d = Profile.data, wrap = $('#ringSlots'); wrap.innerHTML = '';
+  if (braceSel && braceSel.id && !Profile.isOn(braceSel.id)) braceSel = null;
   RING.forEach(([x, y], i) => {
-    const boost = i % 2 === 0, id = boost ? d.boost[i/2] : d.style[(i-1)/2];
+    const boost = i % 2 === 0, type = boost ? 'boost' : 'style', index = boost ? i/2 : (i-1)/2, id = d[type][index];
+    const picked = braceSel && (id ? braceSel.id === id : braceSel.type === type && braceSel.index === index);
     const b = document.createElement('button');
-    b.className = 'ring-slot ' + (boost ? 'boost' : 'style') + (id ? ' full' : '') + (id && id === bracePick ? ' picked' : '') + (id && hasArt(id) ? ' has-art' : '');
+    b.className = 'ring-slot ' + type + (id ? ' full' : '') + (picked ? ' picked' : '') + (id && hasArt(id) ? ' has-art' : '');
     b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 372 * 100) + '%';
-    b.setAttribute('aria-label', id ? `${CONFIG.charms[id].name}, on your bracelet` : `Empty ${boost ? 'boost' : 'style'} slot`);
-    b.innerHTML = id ? icon(id, hasArt(id) ? 38 : 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg>');
+    b.setAttribute('aria-label', id ? `${CONFIG.charms[id].name}, on your bracelet` : `Empty ${type} slot`);
+    b.setAttribute('aria-pressed', String(!!picked));
+    b.innerHTML = id ? icon(id, hasArt(id) ? 38 : 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z"/></svg>');
     // art charms point outward from the band, ring toward the hoop (slot i sits at -90° + 36°·i)
     if (id && hasArt(id)) b.querySelector('img').style.transform = `rotate(${-180 + 36*i}deg)`;
-    b.onclick = () => { if (id){ bracePick = id; render.bracelet(); } else { say(`Pick a ${boost ? 'boost' : 'style'} charm below to put it here`); } };
+    b.onclick = () => { braceSel = picked ? null : (id ? { id } : { type, index }); render.bracelet(); };
     wrap.appendChild(b);
   });
-  const tray = $('#tray'); tray.innerHTML = '';
-  const owned = Object.keys(CONFIG.charms).filter(id => Profile.owns(id));
-  if (!owned.includes(bracePick)) bracePick = owned[0];
-  owned.forEach(id => {
-    const c = CONFIG.charms[id], on = Profile.isOn(id), b = document.createElement('button');
-    b.className = 'tray-item' + (id === bracePick ? ' picked' : '');
-    b.setAttribute('aria-pressed', String(id === bracePick));
-    b.innerHTML = `${icon(id, 26)}<span>${esc(c.name)}</span><small>${on ? 'On' : 'Off'}</small>`;
-    b.onclick = () => { bracePick = id; render.bracelet(); };
-    tray.appendChild(b);
+  const info = $('#braceInfo'); info.hidden = !braceSel;
+  if (!braceSel) return;
+  const showCharm = !!braceSel.id;
+  $('#braceDetail').hidden = !showCharm; $('#bracePick').hidden = showCharm;
+  if (showCharm){
+    const c = CONFIG.charms[braceSel.id];
+    $('#braceIcon').innerHTML = icon(braceSel.id, 40);
+    $('#braceName').textContent = c.name;
+    $('#braceType').textContent = c.type === 'boost' ? 'Boost' : 'Style';
+    $('#braceSay').textContent = c.say;
+    return;
+  }
+  const { type, index } = braceSel, label = type === 'boost' ? 'boost' : 'style';
+  const choices = Object.keys(CONFIG.charms).filter(id => CONFIG.charms[id].type === type && Profile.owns(id) && !Profile.isOn(id));
+  $('#bracePickTitle').textContent = `Pick a ${label} charm for this spot`;
+  const list = $('#slotChoices'); list.innerHTML = ''; list.hidden = !choices.length;
+  choices.forEach(id => {
+    const b = document.createElement('button'); b.className = 'tray-item';
+    b.innerHTML = `${icon(id, 26)}<span>${esc(CONFIG.charms[id].name)}</span>`;
+    b.onclick = () => { Profile.data[type][index] = id; Profile.save(); braceSel = { id }; render.bracelet(); say(`${CONFIG.charms[id].name} is on!`); };
+    list.appendChild(b);
   });
-  const c = CONFIG.charms[bracePick], on = Profile.isOn(bracePick);
-  $('#braceIcon').innerHTML = icon(bracePick, 40);
-  $('#braceName').textContent = c.name;
-  $('#braceType').textContent = c.type === 'boost' ? 'Boost' : 'Style';
-  $('#braceSay').textContent = c.say;
-  $('#toggleBtn').textContent = on ? 'Take off' : 'Put on';
+  $('#bracePickEmpty').hidden = !!choices.length; $('#bracePickStall').hidden = !!choices.length;
+  $('#bracePickEmpty').textContent = `You don't have any other ${label} charms yet. Bramble sells them at her stall!`;
 };
-$('#toggleBtn').onclick = () => {
-  const id = bracePick, c = CONFIG.charms[id];
-  if (Profile.isOn(id)) Profile.unequip(id);
-  else if (!Profile.equip(id)){ say(`All 5 ${c.type} slots are full. Take one off first`); return; }
-  render.bracelet();
-};
+$('#toggleBtn').onclick = () => { if (braceSel && braceSel.id){ Profile.unequip(braceSel.id); braceSel = null; render.bracelet(); } };
+$('#braceClose').onclick = () => { braceSel = null; render.bracelet(); };
 
 go('load');
 })();
