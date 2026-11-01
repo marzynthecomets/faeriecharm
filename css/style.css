@@ -59,15 +59,14 @@ h1,h2{margin:0;text-wrap:balance}
 .charm .badge{position:absolute;right:0;top:2px;min-width:16px;height:16px;border-radius:8px;background:var(--ink);color:var(--paper);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;box-sizing:border-box}
 
 /* ---------- load ---------- */
-#scr-load{cursor:pointer}
-.load-art{position:absolute;inset:0;width:100%;height:100%}
-.load-title{position:absolute;left:0;right:0;top:calc(12% + env(safe-area-inset-top,0px));text-align:center}
-.load-title h1{font-size:46px;font-weight:800;letter-spacing:-.02em}
-.load-title p{margin:6px 0 0;font-size:16px;color:var(--muted)}
-.load-bottom{position:absolute;left:0;right:0;top:70%;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:15px;font-weight:600}
-.load-bottom small{font-size:12px;color:var(--muted);font-weight:600}
-.loadbar{width:260px;height:16px;border-radius:8px;border:2px solid var(--ink);background:#fff;overflow:hidden;box-sizing:border-box}
-#loadBar{height:100%;width:0;background:var(--ink);transition:width 1.5s ease-in-out}
+#scr-load{cursor:pointer;background:#eeebe4}
+.load-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.load-bramble{position:absolute;left:50%;top:22%;height:17%;transform:translate(-50%,-50%)}
+.load-bottom{position:absolute;left:0;right:0;top:75%;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:15px;font-weight:700;color:#1d4a22}
+.load-bottom small{font-size:12px;font-weight:600;opacity:.75}
+.loadbar{width:240px;height:14px;border-radius:7px;border:2px solid #1d4a22;background:rgba(255,255,255,.6);overflow:hidden;box-sizing:border-box}
+#loadBar{height:100%;width:0;background:#1d4a22;transition:width 1.5s ease-in-out}
 
 /* ---------- map ---------- */
 /* the map stage is sized in the art's own pixels and scaled to cover the screen (sizes below are art pixels, ~0.58× on a phone) */
@@ -105,7 +104,6 @@ h1,h2{margin:0;text-wrap:balance}
 /* ---------- friend ---------- */
 .bramble-tip{display:flex;align-items:flex-end;gap:6px}
 .tip-bramble{width:64px;flex-shrink:0}
-.load-bramble{position:absolute;left:50%;top:50%;height:19%;transform:translate(-50%,-46%)}
 .bubble{flex:1;background:var(--ground);border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:14px;line-height:1.4}
 .friend-row{display:flex;align-items:center;gap:12px;border:2px solid var(--mist);border-radius:18px;padding:13px 13px 13px 15px}
 .friend-row.main{border:3px solid var(--ink);padding:12px 12px 12px 14px}
