@@ -26,7 +26,7 @@ const CONFIG = {
       { x: 407, y: 540,  w: 110, h: 110 },     // Level 2: lower door
       { x: 420, y: 210,  w: 110, h: 110 }      // Level 3: upper door
     ],
-    stall: { x: 82, y: 185 }                   // top-left corner of the floating Charm Stall
+    stall: { x: 72, y: 185 }                   // top-left corner of the floating Charm Stall
   },
 
   // ----- maze art -----
