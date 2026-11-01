@@ -71,6 +71,9 @@ render.entry = () => {
   $('#entryName').textContent = lv.name;
   $('#entryBlurb').textContent = lv.blurb;
   $('#entryReward').textContent = CONFIG.levelReward;
+  const bg = $('#entryBg'), scr = $('#scr-entry');
+  scr.classList.toggle('has-art', !!lv.entryArt); bg.hidden = !lv.entryArt;
+  if (lv.entryArt && bg.getAttribute('src') !== lv.entryArt) bg.src = lv.entryArt;
 };
 function play(mode){
   go('game');

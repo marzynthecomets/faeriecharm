@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 <div id="app">
@@ -28,7 +28,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=9" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=10" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
@@ -48,6 +48,7 @@
 
 <!-- ================= LEVEL ENTRY ================= -->
 <section class="screen pad" id="scr-entry" aria-label="Level">
+  <img class="entry-bg" id="entryBg" alt="" draggable="false" hidden>
   <button class="round back" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <div class="entry-wrap">
     <div class="entry-card">
@@ -257,10 +258,10 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=9"></script>
-<script src="js/ui.js?v=9"></script>
+<script src="js/config.js?v=10"></script>
+<script src="js/ui.js?v=10"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
-<script src="js/game.js?v=9"></script>
-<script src="js/app.js?v=9"></script>
+<script src="js/game.js?v=10"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>
