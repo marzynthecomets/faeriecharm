@@ -4,9 +4,12 @@
   --ink:#1a1a1a; --paper:#ffffff; --ground:#efefef; --stone:#9a9a9a; --mist:#c4c4c4; --fog:#e2e2e2; --soft:#d9d9d9;
   --bar:#333333; --gem:#cfe6f7; --gem-edge:#3d7fb5; --ok:#8fd18f; --ok-text:#2e6b2e; --warn:#f0b35a; --muted:#444444;
   --font:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* display font: titles, buttons, labels. Body text stays in --font so early readers can read it easily */
+  --font-display:'Geist Pixel', 'Inter', system-ui, sans-serif;
   --top: calc(78px + env(safe-area-inset-top, 0px));
   color-scheme: light;
 }
+@font-face{font-family:'Geist Pixel';src:url('../fonts/GeistPixel-Square.woff2') format('woff2');font-display:swap}
 html,body{height:100%;margin:0}
 [hidden]{display:none!important}
 body{background:#d0d0d0;color:var(--ink);font-family:var(--font);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -265,3 +268,8 @@ h1,h2{margin:0;text-wrap:balance}
 .tray-item.picked{border:3px solid var(--ink);background:var(--ground)}
 
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- display font ---------- */
+h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
+.primary,.secondary,.pill-btn,.outline-pill,.dashed-btn,.chip,.tabs button,#scrollBtn,
+.friend-info b,.reward .r,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div,.face{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
