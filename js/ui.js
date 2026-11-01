@@ -42,15 +42,19 @@ const ICON = {
 const icon = (id, size) => `<svg width="${size}" height="${size}" viewBox="0 0 34 34" aria-hidden="true">${ICON[id] || ''}</svg>`;
 const GEM = s => `<img class="gem-img" src="art/gem.webp" width="${s}" height="${s}" alt="">`;
 
-// ---------- the hanging bracelet (5 boost slots) ----------
-const ARC_HOOPS = [[39.4,13.5],[77.2,24.4],[115,28],[152.8,24.4],[190.6,13.5]];
-const ARC_CHARMS = [[39.4,33],[77.2,43.4],[115,47],[152.8,43.4],[190.6,32.5]];
+// ---------- the hanging bracelet (5 boost slots dangling from the gold chain art) ----------
+// The chain image is 230px wide and drawn 50px above the bracelet box, so its top runs off the top of the screen.
+// Each charm hangs on a short gold drop from the chain. ARC_CHARMS = charm centers; ARC_DROPS = where each drop meets the chain.
+const ARC_CHARMS = [[42, 41], [78.5, 48], [115, 54], [151.5, 48], [188, 41]];
+const ARC_DROPS = [3.5, 21.0, 41.0, 21.5, 3.5];
 function braceletArcSvg(slots){
-  let s = '<svg class="arc-art" width="230" height="70" viewBox="0 0 230 70" aria-hidden="true"><path d="M10 0Q115 56 220 0" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>';
-  ARC_HOOPS.forEach(([x,y]) => s += `<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>`);
+  let s = '<svg class="arc-art" width="230" height="70" viewBox="0 0 230 70" style="overflow:visible" aria-hidden="true"><image href="art/chain.webp" x="0" y="-50" width="230" height="100.5"/>';
   ARC_CHARMS.forEach(([x,y], i) => {
-    s += slots[i] ? `<circle cx="${x}" cy="${y}" r="16" fill="#fff" stroke="#1a1a1a" stroke-width="3"/>`
-                  : `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="4 3"/>`;
+    const top = y - 14, from = Math.max(ARC_DROPS[i] - 3, -2);
+    if (top - from > 2) s += `<path d="M${x} ${from}V${top}" stroke="#8a6a24" stroke-width="3.5"/><path d="M${x} ${from}V${top}" stroke="#e0c27a" stroke-width="1.5"/>`;
+    s += `<circle cx="${x}" cy="${top}" r="3" fill="#e0c27a" stroke="#8a6a24" stroke-width="1.5"/>`;
+    s += slots[i] ? `<circle cx="${x}" cy="${y}" r="14" fill="#fff" stroke="#8a6a24" stroke-width="3"/>`
+                  : `<circle cx="${x}" cy="${y}" r="13" fill="rgba(255,255,255,.8)" stroke="#b8954a" stroke-width="2" stroke-dasharray="4 3"/>`;
   });
   return s + '</svg>';
 }
@@ -61,8 +65,8 @@ function renderArc(el, slots, interactive){
     if (!id) return;
     const [x,y] = ARC_CHARMS[i];
     html += interactive
-      ? `<button class="charm" data-charm="${id}" style="left:${x-22}px;top:${y-22}px" aria-label="Use ${esc(CONFIG.charms[id].name)}">${icon(id, 21)}<span class="badge" hidden></span></button>`
-      : `<span class="charm" style="left:${x-22}px;top:${y-22}px">${icon(id, 21)}</span>`;
+      ? `<button class="charm" data-charm="${id}" style="left:${x-22}px;top:${y-22}px" aria-label="Use ${esc(CONFIG.charms[id].name)}">${icon(id, 18)}<span class="badge" hidden></span></button>`
+      : `<span class="charm" style="left:${x-22}px;top:${y-22}px">${icon(id, 18)}</span>`;
   });
   el.innerHTML = html;
 }

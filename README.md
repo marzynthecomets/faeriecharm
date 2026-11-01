@@ -39,7 +39,7 @@ Most tweaks only need `js/config.js`. For example, change a charm's price or Bra
 
 ## Art
 
-Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), the maze walls (`vines.webp`), the gem (`gem.webp`, used everywhere gems appear), the load screen (`load.webp`), the Thorn Maze start screen (`entry-thorn.webp`, set per level with `entryArt` in `js/config.js`), Bramble (`bramble.webp`, animated), the stall (`stall.webp`) and its sky background (`stall-bg.webp`), and the map's Charms stall (`stall-map.webp`).
+Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), the maze walls (`vines.webp`), the gem (`gem.webp`, used everywhere gems appear), the gold bracelet chain (`chain.webp`; charm hang points are `ARC_CHARMS` in `js/ui.js`), the load screen (`load.webp`), the Thorn Maze start screen (`entry-thorn.webp`, set per level with `entryArt` in `js/config.js`), Bramble (`bramble.webp`, animated), the stall (`stall.webp`) and its sky background (`stall-bg.webp`), and the map's Charms stall (`stall-map.webp`).
 
 **Swapping Bramble or the stall:** save a new transparent image over the file with the same name and the same rough shape (Bramble is portrait, the stall is square). Bramble can be a still image or animated. To turn an animated GIF into WebP, use ezgif.com (GIF to WebP); it's usually a third of the size. The stall's charms hang on its two ropes; if a new stall puts the ropes somewhere else, update `STALL_SPOTS` in `js/app.js` (positions are % of the stall image).
 
