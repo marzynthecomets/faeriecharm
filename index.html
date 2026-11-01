@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=28">
+<link rel="stylesheet" href="css/style.css?v=29">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=28" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=29" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
@@ -83,9 +83,37 @@
       <button class="pill-btn dark" id="friendPlay">Play</button>
     </div>
     <div id="otherFriends" class="col tight"></div>
+    <div id="liveBox" class="col tight" hidden>
+      <div class="label">PLAY ON TWO PHONES</div>
+      <div class="live-btns"><button class="pill-btn dark" id="hostBtn">Start a game</button><button class="pill-btn" id="joinBtn">Join with a code</button></div>
+    </div>
     <div class="grow"></div>
     <button class="dashed-btn" id="addFriend"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><g fill="none" stroke="#1a1a1a" stroke-width="2"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="13" y="2" width="7" height="7" rx="1"/><rect x="2" y="13" width="7" height="7" rx="1"/></g><path d="M13 13h3v3h-3ZM17 17h3v3h-3Z" fill="#1a1a1a"/></svg>Add a friend in person</button>
     <div class="caption">Scan each other's codes when you're together.</div>
+  </div>
+</section>
+
+<!-- ================= TWO-PHONE ROOM ================= -->
+<section class="screen pad" id="scr-room" aria-label="Two-phone game">
+  <div class="col">
+    <div class="titlebar"><button class="round" id="roomBack" aria-label="Back"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2 id="roomTitle">Start a game</h2></div>
+    <div class="bramble-tip">
+      <img class="bramble tip-bramble" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
+      <div class="bubble" id="roomTip"></div>
+    </div>
+    <div id="roomHost" class="room-box">
+      <div class="label">YOUR GAME CODE</div>
+      <div class="room-code" id="roomCode" aria-live="polite">····</div>
+      <div class="caption" id="roomWait">Waiting for your friend…</div>
+    </div>
+    <div id="roomJoin" class="room-box">
+      <div class="label">TYPE YOUR FRIEND'S CODE</div>
+      <input id="codeInput" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="4-letter game code" placeholder="MOSS">
+      <button class="primary" id="codeGo">Join</button>
+      <div class="caption" id="joinMsg" role="status"></div>
+    </div>
+    <div class="grow"></div>
+    <div class="caption" id="roomYou"></div>
   </div>
 </section>
 
@@ -265,10 +293,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=28"></script>
-<script src="js/ui.js?v=28"></script>
+<script src="js/config.js?v=29"></script>
+<script src="js/ui.js?v=29"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
-<script src="js/game.js?v=28"></script>
-<script src="js/app.js?v=28"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/net.js?v=29"></script>
+<script src="js/game.js?v=29"></script>
+<script src="js/app.js?v=29"></script>
 </body>
 </html>

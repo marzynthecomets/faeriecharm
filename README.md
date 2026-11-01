@@ -11,7 +11,7 @@ The whole experience, start to finish:
 **Load → Forest map → Level → (Pick a friend) → Maze → Level complete → Bramble's Charm Stall → Bracelet**
 
 - **Forest map:** three levels along a path. Finishing one unlocks the next. The floating cloud is Bramble's Charm Stall; the bracelet in the header opens your bracelet; the gear opens Settings.
-- **Solo or Duo:** the play button starts solo. "Play with Friend?" opens the friend picker, and only **Anjalie** can play right now. She's **scripted**: she sends scrolls, gets stuck partway through, replies to whatever you send, and finds her half of the key. Real two-phone play is the next step after playtesting.
+- **Solo or Duo:** the play button starts solo. "Play with Friend?" opens the friend picker, and only **Anjalie** can play right now. She's **scripted**: she sends scrolls, gets stuck partway through, replies to whatever you send, and finds her half of the key. Below her, **Play on two phones** lets two real kids play together (see below).
 - **In the maze:** drag anywhere to move (arrow keys / WASD on a laptop). A quick push moves one space. Fog hides most of the maze and footprints fade behind you. Tap a charm on the bracelet to use it: **Peek** (see more), **Dash** (zip two spaces), **Thorn Snip** (cut the wall you're facing), **Glow** (bigger light for 10 seconds).
 - **Send a Scroll (duo):** preset messages, emojis, and gifts: a Peek, gems (up to 5), or a boost charm lent for the level.
 - **Stall:** spend gems on Boost charms (Dash 5, Thorn Snip 10, Glow 15) and Style charms (3–4). The Friendship charm can't be bought; you earn it by finishing a level with a friend.
@@ -24,6 +24,29 @@ The whole experience, start to finish:
 - **Hidden facilitator menu (duo only):** tap the **key icon three times quickly**. You can make Anjalie send a cheer, get stuck, or find her half, finish the level right away, or restart.
 - The level complete screen shows time, gems found, and (duo) scrolls sent and received. Jot those down per tester.
 
+## Two-phone play
+
+Two phones play the same level together. Each kid solves their own half (the second phone gets the other maze), and they see each other's status, scrolls, gifts, and found halves live. When the key is whole, **whoever reaches the door first opens it for both**. Phones only share small notes (status, scrolls, "found my half", "we won"), never movement, so a slow connection doesn't make the maze laggy.
+
+**How kids use it:** both pick the same level → **Play with Friend?** → one taps **Start a game** and shows the 4-letter code (a nature word like MOSS) → the other taps **Join with a code** and types it. Both jump into the maze.
+
+**Safety:** kids get a random faerie name (Wren, Pip, Moss…), there's no typing besides the code, and scrolls are all preset. A room is only reachable by someone who knows its code.
+
+**Setup (once):** the game uses a free Firebase Realtime Database.
+1. console.firebase.google.com → Add project → Build → Realtime Database → Create database (United States, locked mode).
+2. Rules tab → paste this → Publish:
+   ```json
+   { "rules": { "rooms": { "$room": { ".read": true, ".write": true, ".validate": "$room.matches(/^[A-Z]{4}$/)" } } } }
+   ```
+3. Project settings (gear) → Your apps → Web (`</>`) → register → copy the `firebaseConfig = { ... }` object.
+4. Paste it into `js/config.js` as `firebase: { apiKey: "...", ... },`. (These keys are meant to be public; the rules above are what protect the data.)
+
+While `firebase` is `null`, the two-phone buttons are hidden.
+
+**Testing without two phones:** run `python3 -m http.server`, then open `http://localhost:8000/?local` in **two tabs of the same browser**. The `?local` mode passes notes between tabs instead of over the internet, so it works without Firebase. (Both tabs share one saved profile.)
+
+**During a playtest:** the facilitator menu (tap the key 3×) still works in two-phone games, but only **Finish the level now** (ends it for both) and **Restart level**. If a phone loses connection, the other phone's status bar says so; reopening the game and starting a new code is the fix.
+
 ## Files
 
 | File | What it's for |
@@ -32,6 +55,7 @@ The whole experience, start to finish:
 | `css/style.css` | All styling, grouped by screen |
 | `js/config.js` | **Start here.** Levels, charm prices and descriptions, timing, the friend's script, messages, emojis, replies |
 | `js/ui.js` | Shared pieces: saved progress, charm icons, the hanging bracelet |
+| `js/net.js` | Two-phone play: room codes and passing notes through Firebase (or between tabs with `?local`) |
 | `js/game.js` | The maze engine: movement, charms, drawing, the friend's logic, the Scroll sheet |
 | `js/app.js` | Screen flow: map, level entry, friend picker, level complete, stall, bracelet |
 
@@ -56,7 +80,7 @@ Art lives in `art/`: the forest map (`map.webp`), the maze floor (`dirt.webp`), 
 2. Make your edit, then **Commit changes**. Write a short note about what you changed.
 3. The live link updates about a minute later. Refresh it on your phone.
 
-**Seeing an old version after a change?** Browsers reuse files for a few minutes. In `index.html`, the CSS and JS links end in `?v=7`. Bump that number (to `?v=8` and so on) whenever you change a `.css` or `.js` file, and phones will fetch the new copy right away. Images get saved by browsers too: **when you replace a piece of art, give the new file a new name** (like `stall-2.webp`) and update where it's used. Otherwise phones may keep showing the old picture for a while.
+**Seeing an old version after a change?** Browsers reuse files for a few minutes. In `index.html`, the CSS and JS links end in `?v=29`. Bump that number (to `?v=30` and so on) whenever you change a `.css` or `.js` file, and phones will fetch the new copy right away. Images get saved by browsers too: **when you replace a piece of art, give the new file a new name** (like `stall-2.webp`) and update where it's used. Otherwise phones may keep showing the old picture for a while.
 
 **On your computer:**
 1. `git clone https://github.com/marzynthecomets/faeriecharm.git`

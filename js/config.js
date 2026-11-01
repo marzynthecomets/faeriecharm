@@ -2,6 +2,11 @@
 // All times are in seconds unless the name says ms.
 
 const CONFIG = {
+  // ----- two-phone play -----
+  // Paste the firebaseConfig object from the Firebase console here (README → Two-phone play).
+  // While this is null, "Play on two phones" is hidden, unless you add ?local to the URL to test in two tabs.
+  firebase: null,
+
   // ----- movement + view -----
   stepMs: 150,           // how long one step takes
   holdDelay: 0.38,       // how long the stick must be held before steps repeat

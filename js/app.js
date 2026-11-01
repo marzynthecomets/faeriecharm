@@ -1,6 +1,6 @@
 // Screen flow: Load → Map → Entry → (Friend) → Game → Level complete → Stall / Bracelet.
 (() => {
-const FRIEND = CONFIG.friendName;
+let FRIEND = CONFIG.friendName;   // the scripted friend, or the real friend's nickname after a two-phone game
 let entryLevel = 0, lastResult = null, stallTab = 'boost', stallPick = 'dash', bracePick = 'peek';
 
 function go(name){
@@ -28,6 +28,7 @@ function gateBadge(state, n){
   return String(n);
 }
 render.map = () => {
+  if (Net.code) Net.leave();   // back on the map = the two-phone game is over
   const M = CONFIG.map, art = $('#mapArt');
   if (art.getAttribute('src') !== M.image) art.src = M.image;
   const st = $('#mapStage'); st.style.width = M.width + 'px'; st.style.height = M.height + 'px';
@@ -75,14 +76,16 @@ render.entry = () => {
   scr.classList.toggle('has-art', !!lv.entryArt); bg.hidden = !lv.entryArt;
   if (lv.entryArt && bg.getAttribute('src') !== lv.entryArt) bg.src = lv.entryArt;
 };
-function play(mode){
+function play(mode, live){
   go('game');
-  Game.start({ level: entryLevel, mode, onWin: finished, onLeave: () => go('map') });
+  FRIEND = live ? live.friendName : CONFIG.friendName;
+  Game.start({ level: live ? live.level : entryLevel, mode, live: !!live, friendName: FRIEND, onWin: finished, onLeave: () => { Net.leave(); go('map'); } });
 }
 $('#entryPlay').onclick = () => play('solo');
 
 // ---------- pick a friend ----------
 render.friend = () => {
+  $('#liveBox').hidden = !Net.available();
   $('#friendAnjInitial').textContent = FRIEND[0];
   $('#friendAnjName').textContent = FRIEND;
   const list = $('#otherFriends'); list.innerHTML = '';
@@ -94,6 +97,50 @@ render.friend = () => {
   });
 };
 $('#friendPlay').onclick = () => play('duo');
+
+// ---------- two phones (js/net.js) ----------
+// One kid taps "Start a game" and gets a 4-letter code; the other types it in. Both jump into the maze together.
+let roomMode = null, roomStarting = false, roomFriend = null;
+function enterRoom(mode){ roomMode = mode; go('room'); }
+$('#hostBtn').onclick = () => enterRoom('host');
+$('#joinBtn').onclick = () => enterRoom('join');
+$('#roomBack').onclick = () => { Net.leave(); go('friend'); };
+render.room = () => {
+  roomStarting = false; roomFriend = null;
+  const host = roomMode === 'host';
+  $('#roomTitle').textContent = host ? 'Start a game' : 'Join a game';
+  $('#roomHost').hidden = !host; $('#roomJoin').hidden = host;
+  $('#roomTip').innerHTML = host ? 'Show this code to your friend. When they type it in, you both jump into the maze!' : 'Ask your friend for their <b>4-letter code</b> and type it here.';
+  $('#roomYou').textContent = ''; $('#joinMsg').textContent = ''; $('#joinMsg').className = 'caption';
+  $('#roomWait').textContent = 'Waiting for your friend…'; $('#roomWait').className = 'caption';
+  Net.leave();
+  if (host){
+    $('#roomCode').textContent = '····';
+    Net.createRoom(entryLevel).then(r => {
+      $('#roomCode').textContent = r.code; $('#roomYou').textContent = `Your faerie name is ${r.name}`;
+      Net.onPlayers(p => { if (p.guest && p.guest.online && !roomStarting) startLive(p.guest.name); });
+    }).catch(err => { $('#roomWait').textContent = err.message || "Couldn't make a game. Check the internet and try again."; });
+  } else { $('#codeInput').value = ''; setTimeout(() => $('#codeInput').focus(), 50); }
+};
+$('#codeInput').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); });
+$('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#codeGo').click(); });
+$('#codeGo').onclick = async () => {
+  const m = $('#joinMsg'); m.className = 'caption'; m.textContent = 'Looking…';
+  try {
+    const r = await Net.joinRoom($('#codeInput').value);
+    if (r.error){ m.textContent = r.error; m.className = 'caption err'; return; }
+    $('#roomYou').textContent = `Your faerie name is ${r.name}`;
+    startLive(r.friendName);
+  } catch (err){ m.textContent = "Couldn't connect. Check the internet and try again."; m.className = 'caption err'; }
+};
+function startLive(friendName){
+  roomStarting = true; roomFriend = friendName;
+  const el = roomMode === 'host' ? $('#roomWait') : $('#joinMsg');
+  el.textContent = `${friendName} is here! Starting…`; el.className = 'caption ok';
+  Net.onPlayers(p => Game.netPlayers(p[Net.friendRole()]));
+  Net.onEvents(ev => { if (ev.type === 'hi') hiFromFriend(ev.emoji); else Game.netEvent(ev); });
+  setTimeout(() => play('duo', { friendName, level: Net.level }), 1200);
+}
 $('#addFriend').onclick = () => say("Scan each other's codes in person. Coming after playtesting!");
 
 // ---------- level complete ----------
@@ -103,7 +150,7 @@ function finished(r){
   let newFriendCharm = false;
   if (r.mode === 'duo'){ if (!d.duoDone.includes(r.level)) d.duoDone.push(r.level); if (!Profile.owns('friend')){ Profile.give('friend'); newFriendCharm = true; } }
   Profile.addGems(CONFIG.levelReward);
-  lastResult = { ...r, newFriendCharm };
+  lastResult = { ...r, newFriendCharm, live: !!Net.code };
   go('win');
 }
 render.win = () => {
@@ -121,8 +168,10 @@ render.win = () => {
 };
 $$('[data-hi]').forEach(b => b.onclick = () => {
   const e = b.dataset.hi; $('#hiReply').textContent = `Sent ${e} to ${FRIEND}…`;
+  if (lastResult && lastResult.live){ Net.send({type:'hi', emoji:e}); return; }
   setTimeout(() => { $('#hiReply').textContent = `${FRIEND}: ${e}${e} best team!!`; }, 1400);
 });
+function hiFromFriend(e){ if ($('#scr-win').classList.contains('on')) $('#hiReply').textContent = `${FRIEND} sent ${e}!`; }
 
 // ---------- stall ----------
 // where charms hang on the stall art's two ropes, in % of the stall image (x, y of the hoop)

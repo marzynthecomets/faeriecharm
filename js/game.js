@@ -3,7 +3,7 @@
 (() => {
 const screen = $('#scr-game'), canvas = $('#world');
 let ctx = canvas.getContext('2d');   // swapped briefly while the maze layer is drawn
-const FRIEND = CONFIG.friendName;
+let FRIEND = CONFIG.friendName, THEIR = 'her';   // the scripted friend, or the real friend's nickname in live play
 const C = 78, WALL = 10;   // cell size and vine width (px); the stone border adds CONFIG.mazeArt.stoneWidth on each side
 const DIRS = { up:{bit:1,dx:0,dy:-1,opp:4}, right:{bit:2,dx:1,dy:0,opp:8}, down:{bit:4,dx:0,dy:1,opp:1}, left:{bit:8,dx:-1,dy:0,opp:2} };
 const DLIST = ['up','right','down','left'];
@@ -39,11 +39,11 @@ function bfs(open, sx, sy){
   }
   return d;
 }
-function buildLevel(lv){
+function buildLevel(lv, swap){   // swap: the second phone in a live game solves the other half
   W = lv.width; H = lv.height;
   START = {x:0, y:H-1}; DOOR = {x:W-1, y:0};
-  mine = genMaze(lv.seed, START.x, START.y, 4);
-  theirs = genMaze(lv.friendSeed, W-1, H-1, 4);
+  mine = genMaze(swap ? lv.friendSeed : lv.seed, START.x, START.y, 4);
+  theirs = genMaze(swap ? lv.seed : lv.friendSeed, W-1, H-1, 4);
   dist = bfs(mine, START.x, START.y);
   let best = -1; KEY = null;
   for (let i=0;i<W*H;i++){ const x=i%W, y=(i/W)|0; if (x===DOOR.x && y===DOOR.y) continue; if (y < 2 && x > W-3) continue; if (dist[i] > best){ best = dist[i]; KEY = {x,y}; } }
@@ -66,7 +66,7 @@ function fresh(){
   const duo = opts.mode === 'duo', slots = Profile.data.boost.slice(), uses = {};
   slots.forEach(id => { if (id) uses[id] = 1; });
   S = {
-    duo, slots, uses, lent:null,
+    duo, live:!!opts.live, remote:{online:true, status:'solving', half:false}, stuckUntil:0, slots, uses, lent:null,
     px:START.x, py:START.y, anim:null, queue:[], facing:'up', foot:[], repDir:null, pendDir:null, repNext:0,
     gemCells:new Set(GEM_CELLS), gemsFound:0, haveHalf:false, friendHalf:false,
     peekUntil:-1, glowUntil:-1, now:0, paused:true, won:false, door:0,
@@ -119,6 +119,7 @@ function arrive(){
     S.haveHalf = true; S.playerHalfAt = S.now;
     if (!S.duo) S.friendHalf = true;
     renderKey(true);
+    if (S.live) Net.setMine({half:true, status:'solving'});
     say(!S.duo ? 'You found the key! Find the door' : S.friendHalf ? 'The key is whole! Find the door' : 'You found your half of the key!');
     updateStatus();
   }
@@ -186,17 +187,18 @@ function renderKey(pop){
   $('#keyR').setAttribute('opacity', S.friendHalf ? 1 : 0);
   const k = $('#keyBtn');
   k.setAttribute('aria-label', !S.duo ? (S.haveHalf ? 'You have the key' : 'Key not found yet')
-    : S.haveHalf && S.friendHalf ? 'Key is whole' : S.haveHalf ? 'You have your half. Waiting on ' + FRIEND : S.friendHalf ? FRIEND + ' has her half. Find yours' : 'Key: no halves found yet');
+    : S.haveHalf && S.friendHalf ? 'Key is whole' : S.haveHalf ? 'You have your half. Waiting on ' + FRIEND : S.friendHalf ? FRIEND + ' has ' + THEIR + ' half. Find yours' : 'Key: no halves found yet');
   if (pop){ k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
 }
 function updateStatus(){
   if (!S.duo) return;
-  const f = S.friend, t = $('#statusText');
+  const f = S.live ? {state: S.remote.status} : S.friend, t = $('#statusText');
   let html, warn = false;
   if (S.won) html = 'The door is open!';
+  else if (S.live && !S.remote.online){ html = `<b>${esc(FRIEND)}</b> lost connection…`; warn = true; }
   else if (S.haveHalf && S.friendHalf) html = 'The key is whole! Find the door ↗';
   else if (f.state === 'stuck'){ html = `<b>${esc(FRIEND)}</b> seems stuck…`; warn = true; }
-  else if (S.friendHalf) html = `<b>${esc(FRIEND)}</b> found her half!`;
+  else if (S.friendHalf) html = `<b>${esc(FRIEND)}</b> found ${THEIR} half!`;
   else if (S.haveHalf) html = `<b>${esc(FRIEND)}</b> is almost there…`;
   else html = `<b>${esc(FRIEND)}</b> is solving…`;
   if (t.innerHTML !== html) t.innerHTML = html;
@@ -210,8 +212,11 @@ function nextToast(){
   const t = $('#toast'), s = inbox.shift();
   if (!s || !active){ toastBusy = false; t.classList.remove('show'); return; }
   toastBusy = true; S.received++;
-  if (s.gift === 'peek') giveTempCharm('peek');
-  t.innerHTML = `<div class="avatar">${esc(FRIEND[0])}</div><div style="min-width:0"><div class="from">${esc(FRIEND.toUpperCase())} SENT A SCROLL</div>${s.msg ? `<div class="msg">${esc(s.msg)}</div>` : ''}${s.gift === 'peek' ? '<span class="gift">+1 Peek for you</span>' : ''}</div>${s.emoji ? `<div class="emo">${esc(s.emoji)}</div>` : ''}`;
+  const gifts = [];
+  if (s.gift === 'peek'){ giveTempCharm('peek'); gifts.push('+1 Peek for you'); }
+  if (s.gems > 0){ Profile.addGems(s.gems); renderGemPills(); popGems(); gifts.push(`+${s.gems} gem${s.gems > 1 ? 's' : ''}`); }
+  if (s.lend && CONFIG.charms[s.lend]){ giveTempCharm(s.lend); gifts.push(`${CONFIG.charms[s.lend].name} lent to you`); }
+  t.innerHTML = `<div class="avatar">${esc(FRIEND[0])}</div><div style="min-width:0"><div class="from">${esc(FRIEND.toUpperCase())} SENT A SCROLL</div>${s.msg ? `<div class="msg">${esc(s.msg)}</div>` : ''}${gifts.map(g => `<span class="gift">${esc(g)}</span>`).join(' ')}</div>${s.emoji ? `<div class="emo">${esc(s.emoji)}</div>` : ''}`;
   t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(nextToast, 350); }, 4200);
 }
@@ -292,8 +297,11 @@ $('#sendBtn').onclick = () => {
   if (sel.peek) S.uses.peek--;
   if (sel.gems) Profile.addGems(-sel.gems);
   if (sel.lend) S.lent = sel.lend;
-  S.sent++; renderCharms(); closeSheet(); say('Scroll sent to ' + FRIEND + '!');
-  friendReact({...sel});
+  S.sent++; renderCharms(); renderGemPills(); closeSheet(); say('Scroll sent to ' + FRIEND + '!');
+  if (S.live){
+    Net.send({type:'scroll', msg:sel.msg, emoji:sel.emoji, gift:sel.peek ? 'peek' : null, gems:sel.gems, lend:sel.lend});
+    if (sel.msg === "I'm stuck!" && !S.haveHalf){ S.stuckUntil = S.now + 30; Net.setMine({status:'stuck'}); }
+  } else friendReact({...sel});
 };
 
 // ---------- overlays ----------
@@ -314,13 +322,16 @@ $$('[data-fac]').forEach(b => b.onclick = () => {
   $('#facOv').hidden = true;
   if (a === 'restart'){ restart(); return; }
   setPaused(false);
+  if (S.live && a !== 'finish') return;   // live play: only finish/restart (the friend is a real kid)
   if (a === 'cheer') receive({msg:['You got this!','Almost there!','Go go go!'][Math.floor(Math.random()*3)], emoji:'💪'});
   if (a === 'stuck' && !S.friendHalf){ S.friend.state = 'stuck'; S.friend.unstuckAt = S.now + 25; S.friend.helped = false; receive({msg:"I'm stuck!", emoji:'😵'}); updateStatus(); }
   if (a === 'half') friendFinds();
   if (a === 'finish'){ S.haveHalf = true; S.friendHalf = true; renderKey(true); win(); }
 });
-function win(){
-  S.won = true; updateStatus(); say('The door opens!');
+function win(fromFriend){
+  if (S.won) return;
+  if (S.live && !fromFriend) Net.send({type:'win'});
+  S.won = true; S.haveHalf = S.friendHalf = true; renderKey(false); updateStatus(); say('The door opens!');
   setTimeout(() => {
     setPaused(true);
     const result = { level: opts.level, mode: opts.mode, time: S.now, sent: S.sent, received: S.received, gemsFound: S.gemsFound };
@@ -508,16 +519,36 @@ let last = performance.now();
 function loop(t){
   const dt = Math.min(0.05, (t - last)/1000); last = t;
   if (active && S){
-    if (!S.paused){ S.now += dt; updatePlayer(dt); if (S.duo) updateFriend(); updateStatus(); }
+    if (!S.paused){ S.now += dt; updatePlayer(dt); if (S.duo && !S.live) updateFriend(); if (S.live) liveTick(); updateStatus(); }
     render(dt);
   }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
+// ---------- live play (two phones, see js/net.js) ----------
+function liveTick(){ if (S.stuckUntil && (S.now > S.stuckUntil || S.haveHalf)){ S.stuckUntil = 0; Net.setMine({status:'solving'}); } }
+function netPlayers(friend){
+  if (!active || !S || !S.live || !friend) return;
+  const was = S.remote; S.remote = {online: friend.online !== false, status: friend.status || 'solving', half: !!friend.half};
+  if (S.remote.half && !S.friendHalf){
+    S.friendHalf = true; renderKey(true);
+    say(S.haveHalf ? 'The key is whole! Find the door' : `${FRIEND} found ${THEIR} half!`); checkDoor();
+  }
+  updateStatus();
+}
+function netEvent(ev){
+  if (!active || !S || !S.live) return;
+  if (ev.type === 'scroll') receive({msg:ev.msg, emoji:ev.emoji, gift:ev.gift, gems:ev.gems, lend:ev.lend});
+  if (ev.type === 'win') win(true);
+}
+
 function start(o){
   opts = o; const lv = CONFIG.levels[o.level];
-  buildLevel(lv); fresh(); layerDirty = true;
+  FRIEND = o.friendName || CONFIG.friendName; THEIR = o.live ? 'their' : 'her';
+  buildLevel(lv, o.live && Net.role === 'guest'); fresh(); layerDirty = true;
+  if (S.live) Net.setMine({half:false, status:'solving', won:false});
+  ['cheer','stuck','half'].forEach(k => { $(`#facOv [data-fac="${k}"]`).hidden = !!o.live; });
   inbox.length = 0; toastBusy = false; $('#toast').classList.remove('show'); closeSheet();
   screen.classList.toggle('solo', !S.duo);
   $('#introTitle').textContent = `Level ${o.level + 1} · ${lv.name}`;
@@ -529,5 +560,5 @@ function start(o){
   active = true; resize(); renderKey(false); renderCharms(); updateStatus(); renderGemPills();
 }
 function stop(){ active = false; closeSheet(); joyDir = null; keyDir = null; held.length = 0; }
-window.Game = { start, stop };
+window.Game = { start, stop, netPlayers, netEvent, get active(){ return active; } };
 })();

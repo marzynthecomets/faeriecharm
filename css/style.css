@@ -14,6 +14,7 @@
 html,body{height:100%;margin:0}
 [hidden]{display:none!important}
 body{background:#d0d0d0;color:var(--ink);font-family:var(--font);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+input{-webkit-user-select:text;user-select:text}
 button{font-family:inherit;color:inherit;cursor:pointer}
 button:focus-visible,a:focus-visible{outline:3px solid var(--gem-edge);outline-offset:2px}
 h1,h2{margin:0;text-wrap:balance}
@@ -296,3 +297,14 @@ h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .ring-slot.has-art .charm-art{margin:0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
 .ring-slot.has-art.picked{box-shadow:none}
 .ring-slot.has-art.picked .charm-art{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px #1a1a1a)}
+
+/* ---------- two-phone room ---------- */
+.live-btns{display:flex;gap:10px}
+.live-btns .pill-btn{flex:1;padding:0 10px}
+.room-box{display:flex;flex-direction:column;align-items:center;gap:12px;border:3px solid var(--ink);border-radius:22px;padding:20px 16px;background:#fff}
+.room-box[hidden]{display:none}
+.room-code{font-family:var(--font-display);font-size:64px;line-height:1;letter-spacing:.14em;padding-left:.14em}
+.code-input{width:100%;max-width:240px;height:72px;border:3px solid var(--ink);border-radius:18px;text-align:center;font-size:40px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--font-display);background:#fff}
+.room-box .primary{width:100%;max-width:240px}
+#roomWait.ok,#joinMsg.ok{color:var(--ink);font-weight:700}
+#joinMsg.err{color:#b3261e}

@@ -1,0 +1,120 @@
+// Two-phone play. Phones never sync movement, only small notes: who's in the room, status
+// ("solving" / "stuck"), "found my half", "won", and scrolls. Like passing notes through a mailbox.
+//
+// Backends:
+//   firebase : real play across phones. Needs CONFIG.firebase (see README → Two-phone play).
+//   local    : add ?local to the URL to test with two tabs of the same browser, no internet needed.
+//
+// Room layout:  rooms/CODE = { level, started, players: { host: {...}, guest: {...} }, events: { id: {...} } }
+const Net = (() => {
+  const CODE_WORDS = ['MOSS','FERN','LEAF','ROOT','SEED','BARK','PINE','WREN','OWLS','BEES','DEWY','LILY','SAGE','MINT','BUDS','VINE','POND','HILL','NEST','PLUM','KIWI','LARK','DOVE','STAR','MOON','GLOW','RAIN','MIST','SNOW','SUNNY','BOLT'].filter(w => /^[A-Z]{4}$/.test(w));
+  const NICKNAMES = ['Wren','Pip','Moss','Fern','Clover','Juniper','Sorrel','Bryony','Hazel','Rowan','Sprig','Thistle'];
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+
+  let backend = null, code = null, role = null, level = 0, myName = '', joinedAt = 0;
+  let playersCb = null, eventsCb = null, lastPlayers = {};
+
+  // ---------- Firebase backend ----------
+  function firebaseBackend(){
+    if (!window.firebase || !CONFIG.firebase) return null;
+    if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+    const db = firebase.database();
+    let offset = 0; db.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+    const room = c => db.ref('rooms/' + c);
+    let offs = [];
+    return {
+      name: 'firebase',
+      now: () => Date.now() + offset,
+      async get(c){ const s = await room(c).get(); return s.exists() ? s.val() : null; },
+      async set(c, data){ await room(c).set(data); },
+      async update(c, path, patch){ await room(c).child(path).update(patch); },
+      async push(c, ev){ await room(c).child('events').push({ ...ev, t: firebase.database.ServerValue.TIMESTAMP }); },
+      presence(c, r){ const ref = room(c).child('players/' + r + '/online'); ref.set(true); ref.onDisconnect().set(false); },
+      watch(c, onRoom, onEvent, since){
+        const r1 = room(c), h1 = r1.on('value', s => onRoom(s.val() || {}));
+        const r2 = room(c).child('events'), h2 = r2.on('child_added', s => { const ev = s.val(); if (ev && ev.t >= since) onEvent(ev); });
+        offs.push(() => r1.off('value', h1), () => r2.off('child_added', h2));
+      },
+      unwatch(){ offs.forEach(f => f()); offs = []; }
+    };
+  }
+
+  // ---------- local test backend (two tabs, same browser) ----------
+  function localBackend(){
+    const bc = 'BroadcastChannel' in window ? new BroadcastChannel('faeriecharm-local') : null;
+    const key = c => 'fc-room-' + c;
+    const read = c => { try { return JSON.parse(localStorage.getItem(key(c))); } catch (e) { return null; } };
+    const write = (c, v) => { localStorage.setItem(key(c), JSON.stringify(v)); bc && bc.postMessage(c); fire(c); };
+    let watchers = [];
+    const fire = c => watchers.forEach(w => w.c === c && w.tick());
+    bc && (bc.onmessage = e => fire(e.data));
+    const setPath = (obj, path, patch) => { let o = obj; path.split('/').forEach(p => { o[p] = o[p] || {}; o = o[p]; }); Object.assign(o, patch); };
+    return {
+      name: 'local',
+      now: () => Date.now(),
+      async get(c){ return read(c); },
+      async set(c, data){ write(c, data); },
+      async update(c, path, patch){ const v = read(c) || {}; setPath(v, path, patch); write(c, v); },
+      async push(c, ev){ const v = read(c) || {}; v.events = v.events || {}; v.events['e' + Date.now() + Math.random().toString(36).slice(2, 6)] = { ...ev, t: Date.now() }; write(c, v); },
+      presence(c, r){ this.update(c, 'players/' + r, { online: true }); addEventListener('pagehide', () => this.update(c, 'players/' + r, { online: false })); },
+      watch(c, onRoom, onEvent, since){
+        const seen = new Set();
+        const w = { c, tick(){ const v = read(c) || {}; onRoom(v); Object.entries(v.events || {}).sort((a, b) => a[1].t - b[1].t).forEach(([id, ev]) => { if (!seen.has(id)){ seen.add(id); if (ev.t >= since) onEvent(ev); } }); } };
+        watchers.push(w); w.tick();
+      },
+      unwatch(){ watchers = []; }
+    };
+  }
+
+  function getBackend(){
+    if (backend) return backend;
+    const wantLocal = /[?&]local\b/.test(location.search);
+    backend = wantLocal ? localBackend() : firebaseBackend();
+    return backend;
+  }
+
+  function watchRoom(){
+    backend.unwatch();
+    backend.watch(code, v => { lastPlayers = v.players || {}; playersCb && playersCb(lastPlayers, v); }, ev => { if (ev.from !== role && eventsCb) eventsCb(ev); }, joinedAt);
+  }
+
+  return {
+    available: () => !!getBackend(),
+    get role(){ return role; }, get code(){ return code; }, get level(){ return level; }, get myName(){ return myName; },
+    friendRole: () => role === 'host' ? 'guest' : 'host',
+
+    async createRoom(lv){
+      const b = getBackend(); role = 'host'; level = lv; myName = pick(NICKNAMES);
+      for (let i = 0; i < 12; i++){
+        const c = pick(CODE_WORDS), existing = await b.get(c);
+        if (!existing || !existing.players || !existing.players.host || !existing.players.host.online || b.now() - (existing.created || 0) > 3*3600e3){ code = c; break; }
+      }
+      if (!code) throw new Error('No free room codes right now. Try again in a minute.');
+      joinedAt = b.now();
+      await b.set(code, { level, started: false, created: b.now(), players: { host: { name: myName, status: 'solving', half: false, won: false, online: true } } });
+      b.presence(code, 'host'); watchRoom();
+      return { code, name: myName };
+    },
+
+    async joinRoom(c){
+      const b = getBackend(); c = String(c || '').trim().toUpperCase();
+      if (!/^[A-Z]{4}$/.test(c)) return { error: 'Codes are 4 letters, like MOSS.' };
+      const v = await b.get(c);
+      if (!v || !v.players || !v.players.host || !v.players.host.online) return { error: `No game called ${c} right now. Check the code with your friend.` };
+      if (v.players.guest && v.players.guest.online) return { error: 'That game already has two players.' };
+      code = c; role = 'guest'; level = v.level || 0;
+      do { myName = pick(NICKNAMES); } while (myName === v.players.host.name);
+      joinedAt = b.now();
+      await b.update(code, 'players/guest', { name: myName, status: 'solving', half: false, won: false, online: true });
+      b.presence(code, 'guest'); watchRoom();
+      return { code, level, name: myName, friendName: v.players.host.name };
+    },
+
+    onPlayers(cb){ playersCb = cb; if (code) cb(lastPlayers, {}); },
+    onEvents(cb){ eventsCb = cb; },
+    setMine(patch){ if (code) backend.update(code, 'players/' + role, patch); },
+    setRoom(patch){ if (code) backend.update(code, '', patch); },
+    send(ev){ if (code) backend.push(code, { ...ev, from: role }); },
+    leave(){ if (!code) return; backend.update(code, 'players/' + role, { online: false }); backend.unwatch(); code = null; role = null; playersCb = eventsCb = null; lastPlayers = {}; }
+  };
+})();
