@@ -3,12 +3,13 @@
 :root{
   --ink:#1a1a1a; --paper:#ffffff; --ground:#efefef; --stone:#9a9a9a; --mist:#c4c4c4; --fog:#e2e2e2; --soft:#d9d9d9;
   --bar:#333333; --gem:#cfe6f7; --gem-edge:#3d7fb5; --ok:#8fd18f; --ok-text:#2e6b2e; --warn:#f0b35a; --muted:#444444;
-  --font:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font:'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* display font: titles, buttons, labels. Body text stays in --font so early readers can read it easily */
-  --font-display:'Geist Pixel', 'Inter', system-ui, sans-serif;
+  --font-display:'Geist Pixel', 'DM Sans', system-ui, sans-serif;
   --top: calc(78px + env(safe-area-inset-top, 0px));
   color-scheme: light;
 }
+@font-face{font-family:'DM Sans';src:url('../fonts/DMSans-Variable.woff2') format('woff2');font-weight:100 1000;font-display:swap}
 @font-face{font-family:'Geist Pixel';src:url('../fonts/GeistPixel-Square.woff2') format('woff2');font-display:swap}
 html,body{height:100%;margin:0}
 [hidden]{display:none!important}
