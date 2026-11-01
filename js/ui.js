@@ -40,7 +40,7 @@ const ICON = {
   friend: '<path d="M16 5a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M18 5a12 12 0 0 1 0 24Z" fill="#9a9a9a"/>'
 };
 const icon = (id, size) => `<svg width="${size}" height="${size}" viewBox="0 0 34 34" aria-hidden="true">${ICON[id] || ''}</svg>`;
-const GEM = s => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const GEM = s => `<img class="gem-img" src="art/gem.webp" width="${s}" height="${s}" alt="">`;
 
 // ---------- the hanging bracelet (5 boost slots) ----------
 const ARC_HOOPS = [[39.4,13.5],[77.2,24.4],[115,28],[152.8,24.4],[190.6,13.5]];

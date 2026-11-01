@@ -336,7 +336,7 @@ function playTop(){ const el = S.duo ? $('#status') : $('#gameTop'); const r = e
 // ---------- art (textures from CONFIG.mazeArt; falls back to flat colors if a file is missing) ----------
 const ART = {}, PATTERN = {};
 function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; }; im.src = src; }
-loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls);
+loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls); loadArt('gem', 'art/gem.webp');
 function pattern(key){
   const im = ART[key]; if (!im) return null;
   if (!PATTERN[key]){ const p = ctx.createPattern(im, 'repeat'), s = CONFIG.mazeArt.tileSize / im.width; if (p.setTransform) p.setTransform(new DOMMatrix([s,0,0,s,0,0])); PATTERN[key] = p; }
@@ -402,9 +402,10 @@ function drawFoot(){
   });
 }
 function drawGems(){
-  const bob = Math.sin(S.now*3)*2.5;
+  const bob = Math.sin(S.now*3)*2.5, im = ART.gem;
   for (const id of S.gemCells){
     const [gx, gy] = id.split(',').map(Number), c = cellCenter(gx, gy);
+    if (im){ ctx.drawImage(im, c.x - 14, c.y - 14 + bob, 28, 28); continue; }
     ctx.beginPath(); ctx.moveTo(c.x, c.y-11+bob); ctx.lineTo(c.x+10, c.y-2+bob); ctx.lineTo(c.x, c.y+12+bob); ctx.lineTo(c.x-10, c.y-2+bob); ctx.closePath();
     ctx.fillStyle = '#cfe6f7'; ctx.fill(); ctx.strokeStyle = '#3d7fb5'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke();
   }

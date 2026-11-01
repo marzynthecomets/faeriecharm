@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
 <div id="app">
@@ -27,13 +27,13 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=15" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=16" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
     <button class="icon-btn" id="settingsBtn" aria-label="Settings"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2.5v4M14 21.5v4M2.5 14h4M21.5 14h4M5.9 5.9l2.8 2.8M19.3 19.3l2.8 2.8M5.9 22.1l2.8-2.8M19.3 8.7l2.8-2.8" stroke="#1a1a1a" stroke-width="3.6" stroke-linecap="round"/><circle cx="14" cy="14" r="7.5" fill="#fff" stroke="#1a1a1a" stroke-width="3.2"/><circle cx="14" cy="14" r="2.6" fill="#1a1a1a"/></svg></button>
     <button class="arc arc-link" id="mapArc" data-go="bracelet" aria-label="My bracelet"></button>
-    <div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div>
+    <div class="gem-pill small"><img class="gem-img" src="art/gem.webp" width="16" height="16" alt=""><span class="gem-count">0</span></div>
   </header>
   <div class="overlay" id="settingsOv" hidden>
     <div class="card">
@@ -60,7 +60,7 @@
         <h1 id="entryName">Thorn Maze</h1>
         <p id="entryBlurb"></p>
         <svg width="120" height="16" viewBox="0 0 120 16" aria-hidden="true"><path d="M4 8H50M70 8H116" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/><path d="M60 2l6 6-6 6-6-6Z" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/></svg>
-        <div class="reward-line">Reward: <span id="entryReward">5</span> <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+        <div class="reward-line">Reward: <span id="entryReward">5</span> <img class="gem-img" src="art/gem.webp" width="18" height="18" alt=""></div>
       </div>
       <button class="play-btn" id="entryPlay" aria-label="Play solo"><svg width="30" height="34" viewBox="0 0 30 34" aria-hidden="true"><path d="M8 4l18 13L8 30Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></button>
     </div>
@@ -94,7 +94,7 @@
   <canvas id="world" aria-label="The maze. Drag anywhere to move."></canvas>
   <div id="stick" class="idle" aria-hidden="true"><span class="arr up"></span><span class="arr down"></span><span class="arr left"></span><span class="arr right"></span><div id="knob"></div></div>
   <div id="hint">Drag anywhere to move · arrow keys work too</div>
-  <div class="gem-pill" id="gameGems" role="status" aria-label="Gems"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div>
+  <div class="gem-pill" id="gameGems" role="status" aria-label="Gems"><img class="gem-img" src="art/gem.webp" width="18" height="18" alt=""><span class="gem-count">0</span></div>
 
   <header class="topbar" id="gameTop">
     <button class="icon-btn" id="pauseBtn" aria-label="Pause"><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v18M16 3v18" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/></svg></button>
@@ -132,7 +132,7 @@
           <b>Peek</b><small id="peekLeft">1 left</small>
         </button>
         <div class="gift" id="giftGems">
-          <svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.1" stroke-linejoin="round"/></svg>
+          <img class="gem-img" src="art/gem.webp" width="24" height="24" alt="">
           <b>Gems</b>
           <div class="stepper"><button id="gemMinus" aria-label="Fewer gems">−</button><span id="gemGift">0</span><button id="gemPlus" aria-label="More gems">+</button></div>
         </div>
@@ -193,7 +193,7 @@
     <h1 class="win-title" id="winTitle">Level complete!</h1>
     <p class="win-sub" id="winSub"></p>
     <div class="reward">
-      <div class="r"><svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1" stroke-linejoin="round"/></svg><span>Gems</span><b id="winGems">+5</b></div>
+      <div class="r"><img class="gem-img" src="art/gem.webp" width="30" height="30" alt=""><span>Gems</span><b id="winGems">+5</b></div>
       <div class="r" id="winFriendRow"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M16 5a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M18 5a12 12 0 0 1 0 24Z" fill="#9a9a9a"/></svg><span>Friendship charm<small id="winFriendNote"></small></span><em>Style</em></div>
     </div>
     <div class="five" id="winHigh"><span id="winHighLabel">Send a high five</span><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div>
@@ -208,7 +208,7 @@
 <!-- ================= STALL ================= -->
 <section class="screen pad" id="scr-stall" aria-label="Bramble's Charm Stall">
   <div class="col">
-    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Bramble's Charm Stall</h2><div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div></div>
+    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Bramble's Charm Stall</h2><div class="gem-pill small"><img class="gem-img" src="art/gem.webp" width="16" height="16" alt=""><span class="gem-count">0</span></div></div>
     <div role="tablist" aria-label="Charm types" class="tabs" id="stallTabs">
       <button role="tab" data-tab="boost" aria-selected="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z"/></svg>Boost</button>
       <button role="tab" data-tab="style" aria-selected="false"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z"/></svg>Style</button>
@@ -231,7 +231,7 @@
 <!-- ================= BRACELET ================= -->
 <section class="screen pad" id="scr-bracelet" aria-label="My bracelet">
   <div class="col">
-    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>My Bracelet</h2><div class="gem-pill small"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 6 8 14.5 2 6Z" fill="#cfe6f7" stroke="#3d7fb5" stroke-width="1.2" stroke-linejoin="round"/></svg><span class="gem-count">0</span></div></div>
+    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>My Bracelet</h2><div class="gem-pill small"><img class="gem-img" src="art/gem.webp" width="16" height="16" alt=""><span class="gem-count">0</span></div></div>
     <div class="ring">
       <svg viewBox="0 0 358 372" aria-hidden="true">
         <circle cx="179" cy="190" r="110" fill="none" stroke="#1a1a1a" stroke-width="5"/>
@@ -257,10 +257,10 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=15"></script>
-<script src="js/ui.js?v=15"></script>
+<script src="js/config.js?v=16"></script>
+<script src="js/ui.js?v=16"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
-<script src="js/game.js?v=15"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/game.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

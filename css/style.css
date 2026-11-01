@@ -276,3 +276,5 @@ h1,h2{margin:0;text-wrap:balance}
 h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .primary,.secondary,.pill-btn,.outline-pill,.dashed-btn,.chip,.tabs button,#scrollBtn,
 .friend-info b,.reward .r,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div,.face{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
+
+.gem-img{display:inline-block;flex-shrink:0;vertical-align:middle;object-fit:contain}
