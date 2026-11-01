@@ -6,8 +6,8 @@ const CONFIG = {
   stepMs: 150,           // how long one step takes
   holdDelay: 0.38,       // how long the stick must be held before steps repeat
   repeatEvery: 0.2,      // time between repeated steps while holding
-  fogClear: 85,          // radius (px) around the player that is fully visible
-  fogEdge: 215,          // radius (px) where the fog is fully opaque
+  fogClear: 96,          // radius (px) around the player that is fully visible
+  fogEdge: 240,          // radius (px) where the fog is fully opaque
   peekSeconds: 3,        // how long Peek shows the wider maze
   glowSeconds: 10,       // how long Glow lights up a bigger circle
   glowBoost: 1.9,        // how much bigger the visible circle gets with Glow
@@ -37,7 +37,13 @@ const CONFIG = {
     walls: 'art/vines.webp',
     tileSize: 256,
     groundColor: '#4a3426',     // flat floor color if the ground image is missing
-    wallEdge: '#0b1a0e',        // dark rim around every wall
+    wallEdge: '#1b1630',        // dark outline + mortar line around the stone border
+    stoneWidth: 11,             // how thick the stone border is on each side of a wall (px)
+    brickLength: 22,            // length of one stone brick (px)
+    pixelScale: 2,              // the floor and walls are drawn in chunky pixels this big (1 = smooth, 2-3 = more pixel-y)
+    stoneColors: ['#9a90b8', '#b2a9cc', '#8a80a8', '#a59cc2'],  // brick faces (mixed randomly)
+    stoneLight: '#d8d1ea',      // brick top/left highlight
+    stoneDark: '#6a6189',       // brick bottom/right shadow
     thorn: '#d7c6f2',           // thorn spikes on the wall between you and your friend
     fog: '#0d1610',             // the dark that hides the maze outside your light
     footprints: '#f3e6d4',      // footprint color (they fade on their own)

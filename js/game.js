@@ -1,9 +1,10 @@
 // FaerieCharm maze engine. Tweak values in js/config.js first; edit here for new mechanics.
 // Exposes window.Game.start({ level, mode, onWin, onLeave }).
 (() => {
-const screen = $('#scr-game'), canvas = $('#world'), ctx = canvas.getContext('2d');
+const screen = $('#scr-game'), canvas = $('#world');
+let ctx = canvas.getContext('2d');   // swapped briefly while the maze layer is drawn
 const FRIEND = CONFIG.friendName;
-const C = 64, WALL = 22;
+const C = 78, WALL = 10;   // cell size and vine width (px); the stone border adds CONFIG.mazeArt.stoneWidth on each side
 const DIRS = { up:{bit:1,dx:0,dy:-1,opp:4}, right:{bit:2,dx:1,dy:0,opp:8}, down:{bit:4,dx:0,dy:1,opp:1}, left:{bit:8,dx:-1,dy:0,opp:2} };
 const DLIST = ['up','right','down','left'];
 const MESSAGES = CONFIG.messages, EMOJIS = CONFIG.emojis, REPLIES = CONFIG.replies;
@@ -160,7 +161,7 @@ function useCharm(id){
     const d = DIRS[S.facing], nx = S.px + d.dx, ny = S.py + d.dy;
     if (canGo(S.px, S.py, S.facing)){ say('No wall in front of you'); return; }
     if (nx < 0 || ny < 0 || nx >= W || ny >= H){ say("That's the edge of the maze"); return; }
-    mine[S.py*W+S.px] |= d.bit; mine[ny*W+nx] |= d.opp; S.uses.snip--; say('Snip! The thorns are gone');
+    mine[S.py*W+S.px] |= d.bit; mine[ny*W+nx] |= d.opp; S.uses.snip--; layerDirty = true; say('Snip! The thorns are gone');
   }
   renderCharms();
 }
@@ -335,7 +336,7 @@ function playTop(){ const el = S.duo ? $('#status') : $('#gameTop'); const r = e
 
 // ---------- art (textures from CONFIG.mazeArt; falls back to flat colors if a file is missing) ----------
 const ART = {}, PATTERN = {};
-function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; }; im.src = src; }
+function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; layerDirty = true; }; im.src = src; }
 loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls); loadArt('gem', 'art/gem.webp');
 function pattern(key){
   const im = ART[key]; if (!im) return null;
@@ -344,6 +345,27 @@ function pattern(key){
 }
 const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
 
+// Pixel stone bricks along both edges of every wall (sizes/colors in CONFIG.mazeArt)
+function stoneBands(segs){
+  const A = CONFIG.mazeArt, sw = A.stoneWidth, half = WALL/2 + 2, L = A.brickLength, cols = A.stoneColors;
+  for (const s of segs){
+    const horiz = s[1] === s[3], c = horiz ? s[1] : s[0];
+    const a0 = (horiz ? s[0] : s[1]) - half - sw, a1 = (horiz ? s[2] : s[3]) + half + sw;
+    for (const side of [-1, 1]){
+      const b0 = side < 0 ? c - half - sw : c + half;
+      const start = a0 - Math.floor(hsh(s[4], s[5], s[6] + side + 9) * L);
+      for (let p = start; p < a1; p += L){
+        const p0 = Math.max(p, a0), p1 = Math.min(p + L - 2, a1); if (p1 - p0 < 3) continue;
+        const face = cols[Math.floor(hsh(Math.round(p), Math.round(c), side + 7) * cols.length)];
+        const box = (q0, q1, r0, r1, col) => { ctx.fillStyle = col; horiz ? ctx.fillRect(q0, r0, q1 - q0, r1 - r0) : ctx.fillRect(r0, q0, r1 - r0, q1 - q0); };
+        box(p0, p1, b0 + 1, b0 + sw - 1, face);                 // brick face
+        box(p0, p1 - 2, b0 + 1, b0 + 3, A.stoneLight);          // highlight along the top / left
+        box(p0, p1, b0 + sw - 3, b0 + sw - 1, A.stoneDark);     // shadow along the bottom / right
+        box(p1 - 2, p1, b0 + 1, b0 + sw - 1, A.stoneDark);      // shadow at the brick's end
+      }
+    }
+  }
+}
 function drawMazeWalls(open, ox, color, isFriend){
   const tex = pattern('walls'), A = CONFIG.mazeArt;
   ctx.lineCap = 'round';
@@ -357,8 +379,12 @@ function drawMazeWalls(open, ox, color, isFriend){
   }
   const trace = () => { ctx.beginPath(); for (const s of segs){ ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); } };
   if (tex){
-    trace(); ctx.strokeStyle = A.wallEdge; ctx.lineWidth = WALL + 6; ctx.stroke();      // dark rim so walls pop off the ground
-    trace(); ctx.strokeStyle = tex; ctx.lineWidth = WALL; ctx.stroke();                  // the vine texture
+    const sw = A.stoneWidth;
+    ctx.lineCap = 'square'; ctx.lineJoin = 'miter';
+    trace(); ctx.strokeStyle = A.wallEdge; ctx.lineWidth = WALL + 2*(sw + 2) + 4; ctx.stroke(); // dark outline + mortar
+    stoneBands(segs);                                                                         // pixel stone bricks
+    trace(); ctx.strokeStyle = A.wallEdge; ctx.lineWidth = WALL + 4; ctx.stroke();            // mortar line next to the vines
+    trace(); ctx.strokeStyle = tex; ctx.lineWidth = WALL; ctx.stroke();                       // the vine texture
     return;
   }
   trace(); ctx.strokeStyle = color; ctx.lineWidth = WALL; ctx.stroke();
@@ -429,6 +455,21 @@ function drawPlayer(){
   const off = d.dy !== 0 ? [[-6,0],[6,0]] : [[0,-5],[0,5]];
   for (const o of off){ ctx.beginPath(); ctx.arc(p.x + o[0] + d.dx*3, p.y + o[1] + d.dy*3 - (d.dy===0?2:0), 3, 0, Math.PI*2); ctx.fill(); }
 }
+// The floor and walls don't move, so they're drawn once into a small layer at chunky pixel size
+// (CONFIG.mazeArt.pixelScale) and redrawn only when the level, art, or a snipped wall changes.
+let LAYER = null, layerDirty = true;
+const LAYER_PAD = 60;
+function buildLayer(){
+  const A = CONFIG.mazeArt, ps = A.pixelScale, pad = LAYER_PAD;
+  LAYER = LAYER || document.createElement('canvas');
+  LAYER.width = Math.ceil((2*W*C + pad*2) / ps); LAYER.height = Math.ceil((H*C + pad*2) / ps);
+  const main = ctx; ctx = LAYER.getContext('2d');
+  ctx.setTransform(1/ps, 0, 0, 1/ps, pad/ps, pad/ps); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = pattern('ground') || A.groundColor; ctx.fillRect(0, 0, 2*W*C, H*C);
+  if (S.duo) drawMazeWalls(theirs, W*C, '#b4b4b4', true);
+  drawMazeWalls(mine, 0, '#9a9a9a', false);
+  ctx = main; layerDirty = false;
+}
 function render(dt){
   const top = playTop(), p = playerPix();
   const peeking = !S.paused && S.now < S.peekUntil, glowing = !S.paused && S.now < S.glowUntil;
@@ -439,18 +480,18 @@ function render(dt){
   cam.x += (p.x - cam.x) * (1 - Math.exp(-dt*8)); cam.y += (p.y - cam.y) * (1 - Math.exp(-dt*8));
   if (S.won) S.door = Math.min(1, S.door + dt*1.2);
   const cx = vw/2, cy = top + (vh - top)/2, z = cam.z;
-  const A = CONFIG.mazeArt, ground = pattern('ground'), hedge = pattern('walls');
+  const A = CONFIG.mazeArt, hedge = pattern('walls');
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = A.fog; ctx.fillRect(0,0,vw,vh);
   ctx.setTransform(dpr*z, 0, 0, dpr*z, dpr*(cx - cam.x*z), dpr*(cy - cam.y*z));
   // everything outside the maze is solid hedge, so the paths look carved out of it
   ctx.fillStyle = hedge || A.wallEdge; ctx.fillRect(-1500, -1500, W*C*2 + 3000, H*C + 3000);
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(-1500, -1500, W*C*2 + 3000, H*C + 3000);
-  ctx.fillStyle = ground || A.groundColor; ctx.fillRect(0, 0, W*C, H*C);
-  ctx.fillStyle = ground || A.groundColor; ctx.fillRect(W*C, 0, W*C, H*C);
-  if (S.duo) drawMazeWalls(theirs, W*C, '#b4b4b4', true);
+  if (layerDirty) buildLayer();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(LAYER, -LAYER_PAD, -LAYER_PAD, LAYER.width * A.pixelScale, LAYER.height * A.pixelScale);
+  ctx.imageSmoothingEnabled = true;
   ctx.fillStyle = A.friendTint; ctx.fillRect(W*C, 0, W*C, H*C);      // the friend's side is dimmed: you can't go there
   drawFoot(); drawGems(); drawKey();
-  drawMazeWalls(mine, 0, '#9a9a9a', false);
   drawThornWall(); drawDoor(); drawPlayer();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const sx = cx + (p.x - cam.x)*z, sy = cy + (p.y - cam.y)*z, fogA = 0.96 * (1 - cam.peek), grow = 1 + (CONFIG.glowBoost - 1) * cam.glow;
@@ -475,7 +516,7 @@ requestAnimationFrame(loop);
 
 function start(o){
   opts = o; const lv = CONFIG.levels[o.level];
-  buildLevel(lv); fresh();
+  buildLevel(lv); fresh(); layerDirty = true;
   inbox.length = 0; toastBusy = false; $('#toast').classList.remove('show'); closeSheet();
   screen.classList.toggle('solo', !S.duo);
   $('#introTitle').textContent = `Level ${o.level + 1} · ${lv.name}`;
