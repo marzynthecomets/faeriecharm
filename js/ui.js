@@ -102,7 +102,7 @@ function renderHang(el, slots, interactive){
 const Sound = (() => {
   const TRACK_VOL = { menu: 0.065, maze: 0.04 };   // menu track is a quieter recording, so it gets a bit more gain
   // effect volumes are set so each lands at a similar, soft loudness (the clips themselves vary a lot)
-  const FX_VOL = { key: 0.3, gem: 1, powerup: 0.14, buy: 0.28, enter: 0.14, maze: 0.32 };
+  const FX_VOL = { key: 0.06, gem: 1, powerup: 0.056, buy: 0.28, enter: 0.098, maze: 0.128 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3?v=2'), maze: mk('sound/enter-maze.mp3') };
   const tracks = { menu: mk('sound/menu-music.mp3?v=2'), maze: mk('sound/bg-music.mp3') };
