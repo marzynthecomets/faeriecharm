@@ -388,6 +388,21 @@ function updateStatus(){
 
 // incoming scrolls
 const inbox = []; let toastBusy = false, toastTimer;
+// emojis pop up from the bottom of the screen and float away
+function emojiBurst(e){
+  const host = $('#scr-game'), n = 9;
+  for (let i = 0; i < n; i++){
+    const el = document.createElement('div'); el.className = 'emo-fly'; el.textContent = e;
+    const x = 8 + (i + Math.random() * 0.8) * (84 / n), size = 34 + Math.random() * 30, rise = 45 + Math.random() * 30;
+    el.style.left = x + '%'; el.style.fontSize = size + 'px';
+    el.style.setProperty('--rise', -rise + 'cqh'); el.style.setProperty('--sway', (Math.random() * 40 - 20) + 'px');
+    el.style.setProperty('--spin', (Math.random() * 40 - 20) + 'deg');
+    el.style.animationDelay = (i % 2 ? 0.08 : 0) + Math.random() * 0.35 + 's';
+    host.appendChild(el); setTimeout(() => el.remove(), 3200);
+  }
+  const big = document.createElement('div'); big.className = 'emo-pop'; big.textContent = e;
+  host.appendChild(big); setTimeout(() => big.remove(), 2000);
+}
 function receive(scroll){ inbox.push(scroll); if (!toastBusy) nextToast(); }
 function nextToast(){
   const t = $('#toast'), s = inbox.shift();
@@ -397,9 +412,16 @@ function nextToast(){
   if (s.gift === 'peek'){ giveTempCharm('peek'); gifts.push('+1 Peek for you'); }
   if (s.gems > 0){ Profile.addGems(s.gems); renderGemPills(); popGems(); gifts.push(`+${s.gems} gem${s.gems > 1 ? 's' : ''}`); }
   if (s.lend && CONFIG.charms[s.lend]){ giveTempCharm(s.lend); gifts.push(`${CONFIG.charms[s.lend].name} lent to you`); }
-  t.innerHTML = `<div class="avatar">${esc(FRIEND[0])}</div><div style="min-width:0"><div class="from">${esc(FRIEND.toUpperCase())} SENT A SCROLL</div>${s.msg ? `<div class="msg">${esc(s.msg)}</div>` : ''}${gifts.map(g => `<span class="gift">${esc(g)}</span>`).join(' ')}</div>${s.emoji ? `<div class="emo">${esc(s.emoji)}</div>` : ''}`;
-  t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(nextToast, 350); }, 4200);
+  // a glowing scroll unrolls near the top: who sent it, then the message in big letters (emojis fly up from the bottom)
+  const emo = s.emoji ? [...s.emoji][0] : null;
+  t.classList.toggle('emoji-only', !s.msg && !gifts.length);
+  t.innerHTML = `<div class="sc-from"><span class="sc-dot">${esc(FRIEND[0])}</span>${esc(FRIEND)} sent you a scroll</div>`
+    + (s.msg ? `<div class="sc-msg">${esc(s.msg)}</div>` : '')
+    + (!s.msg && emo ? `<div class="sc-big">${esc(s.emoji)}</div>` : '')
+    + (gifts.length ? `<div class="sc-gifts">${gifts.map(g => `<span class="gift">${esc(g)}</span>`).join('')}</div>` : '');
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  if (emo) emojiBurst(emo);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(nextToast, 400); }, 4600);
 }
 $('#toast').addEventListener('click', () => { clearTimeout(toastTimer); $('#toast').classList.remove('show'); setTimeout(nextToast, 300); });
 
@@ -455,8 +477,9 @@ function friendReact(sel){
 
 // ---------- scroll sheet ----------
 let sheetOpen = false;
-const msgWrap = $('#msgChips');
+const msgWrap = $('#msgChips'), emoWrap = $('#emoChips');
 MESSAGES.forEach(m => { const b = document.createElement('button'); b.className = 'msg-btn'; b.textContent = m; b.onclick = () => sendScroll(m); msgWrap.appendChild(b); });
+EMOJIS.forEach(e => { const b = document.createElement('button'); b.className = 'emo-btn'; b.textContent = e; b.setAttribute('aria-label', 'Send ' + e); b.onclick = () => sendScroll(null, e); emoWrap.appendChild(b); });
 function openSheet(){
   if (!S || S.paused || S.won) return;
   sheetOpen = true; hold = null; padShow(false);
@@ -464,11 +487,13 @@ function openSheet(){
 }
 function closeSheet(){ sheetOpen = false; $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); $('#sheet').setAttribute('aria-hidden','true'); }
 $('#scrollBtn').onclick = openSheet; $('#closeSheet').onclick = closeSheet; $('#scrim').onclick = closeSheet;
-function sendScroll(msg){
-  const sel = {msg, emoji:null, peek:false, gems:0, lend:null};
-  S.sent++; closeSheet(); say('Scroll sent to ' + FRIEND + '!');
+function sendScroll(msg, emoji = null){
+  const sel = {msg, emoji, peek:false, gems:0, lend:null};
+  S.sent++; closeSheet();
+  if (emoji){ emojiBurst(emoji); say(emoji + ' sent to ' + FRIEND + '!'); }   // you see it fly up too
+  else say('Scroll sent to ' + FRIEND + '!');
   if (S.live){
-    Net.send({type:'scroll', msg, emoji:null, gift:null, gems:0, lend:null});
+    Net.send({type:'scroll', msg, emoji, gift:null, gems:0, lend:null});
     if (msg === "I'm stuck!" && !S.haveHalf){ S.stuckUntil = S.now + 30; Net.setMine({status:'stuck'}); }
   } else friendReact(sel);
 }
@@ -805,7 +830,7 @@ function netPlayers(friend){
 }
 function netEvent(ev){
   if (!active || !S || !S.live) return;
-  if (ev.type === 'scroll') receive({msg:ev.msg, emoji:ev.emoji, gift:ev.gift, gems:ev.gems, lend:ev.lend});
+  if (ev.type === 'scroll') receive({msg: MESSAGES.includes(ev.msg) ? ev.msg : '', emoji: EMOJIS.includes(ev.emoji) ? ev.emoji : null, gift:ev.gift, gems:ev.gems, lend:ev.lend});
   if (ev.type === 'win') win(true);
   if (ev.type === 'gem') S.gemCells.delete(ev.id);   // your friend grabbed it first
   if (ev.type === 'snip' && DIRS[ev.dir]){ const d = DIRS[ev.dir], nx = ev.x + d.dx, ny = ev.y + d.dy;

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=68">
+<link rel="stylesheet" href="css/style.css?v=70">
 </head>
 <body>
 <div id="app">
@@ -45,7 +45,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=68" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=70" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -154,8 +154,9 @@
       <div><div class="h2">Send a Scroll</div><div class="sub">to <span class="friend-name">Anjalie</span></div></div>
       <button class="round" id="closeSheet" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg></button>
     </div>
+    <div class="emo-row" id="emoChips"></div>
     <div class="msg-grid" id="msgChips"></div>
-    <p class="sheet-tip">Tap a message to send it</p>
+    <p class="sheet-tip">Tap an emoji or a message to send it</p>
   </div>
 
   <div class="overlay" id="intro">
@@ -284,13 +285,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=68"></script>
-<script src="js/ui.js?v=68"></script>
+<script src="js/config.js?v=70"></script>
+<script src="js/ui.js?v=70"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=68"></script>
-<script src="js/game.js?v=68"></script>
-<script src="js/app.js?v=68"></script>
+<script src="js/net.js?v=70"></script>
+<script src="js/game.js?v=70"></script>
+<script src="js/app.js?v=70"></script>
 </body>
 </html>
