@@ -201,7 +201,7 @@ function arrive(){
   if (!S.haveHalf && S.px === KEY.x && S.py === KEY.y){
     S.haveHalf = true; S.playerHalfAt = S.now; playSound(keySound);
     if (!S.duo) S.friendHalf = true;
-    renderKey(true);
+    flyKey(cellCenter(KEY.x, KEY.y));
     if (S.live) Net.setMine({half:true, status:'solving'});
     say(!S.duo ? 'You found the key! Find the door' : S.friendHalf ? 'Both keys found! Meet at the door' : 'You found your key! Head to the door');
     updateStatus();
@@ -274,13 +274,41 @@ function giveTempCharm(id){
 
 // ---------- HUD ----------
 function popGems(){ const g = $('#gameGems'); g.classList.remove('pop'); void g.offsetWidth; g.classList.add('pop'); }
-function renderKey(pop){
-  $('#keyL').setAttribute('opacity', S.haveHalf ? 1 : 0);
-  $('#keyR').setAttribute('opacity', S.friendHalf ? 1 : 0);
+function renderKey(pop, hold){
+  const mine = $('#keyMine'), mate = $('#keyMate'), meWho = S.duo ? ME : 0;
+  const have = S.haveHalf && hold !== 'mine';
+  mine.src = have ? KEY_SRC(meWho) : 'art/key-grey.webp'; mine.classList.toggle('got', have);
+  mate.hidden = !S.duo; $('#keyBtn').classList.toggle('two', S.duo);
+  if (S.duo){ mate.src = S.friendHalf ? KEY_SRC(1 - ME) : 'art/key-grey.webp'; mate.classList.toggle('got', !!S.friendHalf); }
   const k = $('#keyBtn');
   k.setAttribute('aria-label', !S.duo ? (S.haveHalf ? 'You have the key' : 'Key not found yet')
     : S.haveHalf && S.friendHalf ? 'Both keys found. Meet at the door' : S.haveHalf ? 'You have your key. Waiting on ' + FRIEND : S.friendHalf ? FRIEND + ' has ' + THEIR + ' key. Find yours' : 'Keys: none found yet');
   if (pop){ k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
+}
+// the key you just picked up flies from the maze into its spot in the top right, then pops in with a sparkle
+function flyKey(cell){
+  const dest = $('#keyMine'), r = dest.getBoundingClientRect(), host = $('#scr-game'), hr = host.getBoundingClientRect();
+  if (!VIEW || !r.width || !dest.animate){ renderKey(true); return; }
+  renderKey(false, 'mine');
+  const sx = VIEW.cx + (cell.x - VIEW.x) * VIEW.z, sy = VIEW.cy + (cell.y - VIEW.y) * VIEW.z;
+  const ex = r.left - hr.left + r.width/2, ey = r.top - hr.top + r.height/2;
+  const fly = document.createElement('img'); fly.className = 'key-fly'; fly.src = KEY_SRC(S.duo ? ME : 0); fly.alt = '';
+  host.appendChild(fly);
+  const mx = sx + (ex - sx) * 0.35, my = Math.min(sy, ey) - 30;
+  const a = fly.animate([
+    { transform: `translate(${sx}px,${sy}px) translate(-50%,-50%) scale(1) rotate(0deg)`, opacity: 1 },
+    { transform: `translate(${sx}px,${sy - 34}px) translate(-50%,-50%) scale(1.9) rotate(-12deg)`, opacity: 1, offset: .28 },
+    { transform: `translate(${mx}px,${my}px) translate(-50%,-50%) scale(1.5) rotate(8deg)`, opacity: 1, offset: .62 },
+    { transform: `translate(${ex}px,${ey}px) translate(-50%,-50%) scale(.62) rotate(0deg)`, opacity: 1 }
+  ], { duration: 1100, easing: 'cubic-bezier(.45,.05,.35,1)', fill: 'forwards' });
+  a.onfinish = () => { fly.remove(); renderKey(true); sparkAt(ex, ey); };
+}
+function sparkAt(x, y){
+  const host = $('#scr-game'), box = document.createElement('div'); box.className = 'key-sparks';
+  box.style.left = x + 'px'; box.style.top = y + 'px';
+  for (let i = 0; i < 10; i++){ const e = document.createElement('i'), ang = i / 10 * Math.PI * 2;
+    e.style.setProperty('--dx', Math.cos(ang) * 34 + 'px'); e.style.setProperty('--dy', Math.sin(ang) * 34 + 'px'); box.appendChild(e); }
+  host.appendChild(box); setTimeout(() => box.remove(), 900);
 }
 function updateStatus(){
   if (!S.duo) return;
@@ -431,6 +459,7 @@ const ART = {}, PATTERN = {};
 function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; layerDirty = true; }; im.src = src; }
 loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls); loadArt('gem', 'art/gem.webp');
 (CONFIG.mazeArt.playerSprites || []).forEach((src, i) => loadArt('faerie' + i, src));
+['gold', 'pink', 'purple'].forEach(k => loadArt('key-' + k, 'art/key-' + k + '.webp'));
 function pattern(key){
   const im = ART[key]; if (!im) return null;
   if (!PATTERN[key]){ const p = ctx.createPattern(im, 'repeat'), s = CONFIG.mazeArt.tileSize / im.width; if (p.setTransform) p.setTransform(new DOMMatrix([s,0,0,s,0,0])); PATTERN[key] = p; }
@@ -529,7 +558,19 @@ function drawGems(){
     ctx.fillStyle = '#cfe6f7'; ctx.fill(); ctx.strokeStyle = '#3d7fb5'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke();
   }
 }
+const KEY_ART = who => S.duo ? (who === 0 ? 'key-pink' : 'key-purple') : 'key-gold';
+const KEY_SRC = who => 'art/' + KEY_ART(who) + '.webp';
+function drawKeyArt(c, who, glow){
+  const im = ART[KEY_ART(who)]; if (!im) return false;
+  const bob = Math.sin(S.now*2.4 + who*2)*3, h = 50, w = h * im.width / im.height;
+  ctx.fillStyle = rgba(glow, .38); ctx.beginPath(); ctx.arc(c.x, c.y + bob, 25 + Math.sin(S.now*4 + who)*2, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.translate(c.x, c.y + bob); ctx.rotate(Math.sin(S.now*1.6 + who)*0.12);
+  ctx.shadowColor = rgba(glow, .9); ctx.shadowBlur = 14;
+  ctx.drawImage(im, -w/2, -h/2, w, h); ctx.restore();
+  return true;
+}
 function drawDuoKey(k, i){
+  if (drawKeyArt(cellCenter(k.x, k.y), i, PCOLOR(i))) return;
   const c = cellCenter(k.x, k.y), bob = Math.sin(S.now*2.4 + i*2)*3, col = PCOLOR(i);
   ctx.fillStyle = rgba(col, .45); ctx.beginPath(); ctx.arc(c.x, c.y+bob, 24 + Math.sin(S.now*4 + i)*2, 0, Math.PI*2); ctx.fill();
   ctx.save(); ctx.translate(c.x, c.y + bob); ctx.rotate(-Math.PI/4);
@@ -550,6 +591,7 @@ function drawKey(){
     return;
   }
   if (S.haveHalf) return;
+  if (drawKeyArt(cellCenter(KEY.x, KEY.y), 0, '#ffd45a')) return;
   const c = cellCenter(KEY.x, KEY.y), bob = Math.sin(S.now*2.4)*3;
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(c.x, c.y+bob, 22 + Math.sin(S.now*4)*2, 0, Math.PI*2); ctx.fill();
   ctx.beginPath();
@@ -600,6 +642,7 @@ function buildLayer(){
   drawMazeWalls(mine, 0, '#9a9a9a', false);
   ctx = main; layerDirty = false;
 }
+let VIEW = null;
 function render(dt){
   const top = playTop(), p = playerPix();
   const peeking = !S.paused && S.now < S.peekUntil, glowing = !S.paused && S.now < S.glowUntil;
@@ -630,6 +673,7 @@ function render(dt){
   drawPlayer();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const toScreen = q => ({x: cx + (q.x - cam.x)*z, y: cy + (q.y - cam.y)*z});
+  VIEW = {cx, cy, z, x: cam.x, y: cam.y};
   const me = toScreen(p), fogA = 0.96 * (1 - cam.peek), grow = 1 + (CONFIG.glowBoost - 1) * cam.glow;
   const lights = [{x:me.x, y:me.y, r0:CONFIG.fogClear*grow, r1:CONFIG.fogEdge*grow}];
   const ms = mp ? toScreen(mp) : null;

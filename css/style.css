@@ -621,3 +621,16 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .wd-pink{left:41.5%;top:0;width:52%}
 .play .wd-purple{animation:faerieIn 1s cubic-bezier(.2,.9,.3,1.2) both,faerieFloat 3.4s ease-in-out 1s infinite}
 .play .wd-pink{animation:faerieIn 1s cubic-bezier(.2,.9,.3,1.2) .15s both,faerieFloat 3s ease-in-out 1.15s infinite}
+
+/* key status (top right): grey until found, then the real key in your color */
+#keyBtn{width:44px;gap:2px}
+#keyBtn.two{width:62px;border-radius:22px}
+.kb-key{height:32px;width:auto;opacity:.55;transition:opacity .3s}
+.kb-key.got{opacity:1;filter:drop-shadow(0 0 5px rgba(255,220,120,.7))}
+#keyBtn.two .kb-key{height:28px}
+#keyBtn.pop .kb-key.got{animation:keyPop .55s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes keyPop{0%{transform:scale(.4)}60%{transform:scale(1.35)}100%{transform:none}}
+.key-fly{position:absolute;left:0;top:0;height:50px;width:auto;z-index:16;pointer-events:none;filter:drop-shadow(0 0 12px rgba(255,220,120,.9))}
+.key-sparks{position:absolute;z-index:16;pointer-events:none}
+.key-sparks i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;background:#fff3b0;rotate:45deg;animation:keySpark .8s ease-out forwards}
+@keyframes keySpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
