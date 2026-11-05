@@ -94,14 +94,14 @@ function renderHang(el, slots, interactive){
 }
 
 // ---------- sound ----------
-// Background music loops at 10%; effects play over it (the music dips while the key sound plays).
+// Background music loops at 4%; effects play over it (the music dips while the key sound plays).
 // Volumes go through Web Audio gain, because iPhones ignore an <audio> element's own volume.
 // Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
-  const MUSIC_VOL = 0.1, FX_VOL = { key: 0.9, gem: 0.55 };
+  const MUSIC_VOL = 0.04, FX_VOL = { key: 0.9, gem: 0.55, powerup: 0.8 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
-  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3') };
+  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3'), powerup: mk('sound/powerup.mp3') };
   const music = mk('sound/bg-music.mp3'); music.loop = true;
   const shine = mk('sound/bracelet-shine.mp3'); shine.loop = true;   // sparkly loop while you look at your bracelet
   const SHINE_VOL = 0.5; let shineGain = null, shineOn = false, shineStop;
@@ -147,7 +147,11 @@ const Sound = (() => {
       } else { fadeShine(0); setMusicVol(MUSIC_VOL); shineStop = setTimeout(() => shine.pause(), 1200); }
     },
     play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-      if (name === 'key'){ setMusicVol(MUSIC_VOL * 0.3); clearTimeout(duck); duck = setTimeout(() => setMusicVol(MUSIC_VOL), 4200); } },
+      // the music steps back while the key or power-up sound plays, then comes back when it ends
+      const dip = { key: 0.3, powerup: 0 }[name];
+      if (dip !== undefined){ setMusicVol(MUSIC_VOL * dip); clearTimeout(duck);
+        const back = () => { clearTimeout(duck); a.onended = null; setMusicVol(shineOn ? MUSIC_VOL * 0.5 : MUSIC_VOL); };
+        a.onended = back; duck = setTimeout(back, ((a.duration || 6) + 0.5) * 1000); } },
     get musicOn(){ return on(); },
     setMusic(v){ Profile.data.music = v; Profile.save(); if (v) start(); else { music.pause(); playing = false; } }
   };

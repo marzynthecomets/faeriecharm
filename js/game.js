@@ -271,7 +271,7 @@ function useCharm(id){
     mine[S.py*W+S.px] |= d.bit; mine[ny*W+nx] |= d.opp; S.uses.snip--; layerDirty = true; say('Snip! The thorns are gone');
     if (S.live && S.duo) Net.send({type:'snip', x:S.px, y:S.py, dir:S.facing});
   }
-  renderCharms();
+  renderCharms(); Sound.play('powerup');
   const fired = $(`#gameArc [data-charm="${id}"]`); if (fired){ fired.classList.remove('spent'); fired.classList.add('fired'); setTimeout(() => { if (active && S) renderCharms(); }, 650); }   // flash first, then grey out if it's used up
 }
 function renderCharms(){
