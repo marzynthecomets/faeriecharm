@@ -147,7 +147,7 @@ function fitEntry(){
 }
 addEventListener('resize', () => { if ($('#scr-entry').classList.contains('on')) fitEntry(); });
 function play(mode, live){
-  Sound.play('enter');
+  Sound.play('maze');
   go('game');
   FRIEND = live ? live.friendName : CONFIG.friendName;
   Game.start({ level: live ? live.level : entryLevel, mode, live: !!live, friendName: FRIEND, onWin: finished, onLeave: () => { Net.leave(); go('map'); } });
