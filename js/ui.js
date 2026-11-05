@@ -101,7 +101,8 @@ function renderHang(el, slots, interactive){
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
   const TRACK_VOL = { menu: 0.065, maze: 0.04 };   // menu track is a quieter recording, so it gets a bit more gain
-  const FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7, enter: 0.5, maze: 0.7 };
+  // effect volumes are set so each lands at a similar, soft loudness (the clips themselves vary a lot)
+  const FX_VOL = { key: 0.3, gem: 1, powerup: 0.14, buy: 0.28, enter: 0.14, maze: 0.32 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3?v=2'), maze: mk('sound/enter-maze.mp3') };
   const tracks = { menu: mk('sound/menu-music.mp3?v=2'), maze: mk('sound/bg-music.mp3') };
