@@ -119,7 +119,7 @@ let doorTimer = null;
 function checkDoorSoon(ms){ clearTimeout(doorTimer); doorTimer = setTimeout(() => { if (active && S) { checkDoor(); updateStatus(); } }, ms + 20); }
 function fresh(){
   const duo = opts.mode === 'duo', uses = {};
-  // In the maze the bracelet hangs 3 charms: the first 3 boost charms you're wearing
+  // In the maze the bracelet hangs 4 charms: the first 4 boost charms you're wearing
   const slots = hangSlots(Profile.data.boost);
   slots.forEach(id => { if (id) uses[id] = 1; });
   S = {
@@ -430,6 +430,7 @@ function playTop(){ const el = S.duo ? $('#status') : $('#gameTop'); const r = e
 const ART = {}, PATTERN = {};
 function loadArt(key, src){ if (!src) return; const im = new Image(); im.onload = () => { ART[key] = im; delete PATTERN[key]; layerDirty = true; }; im.src = src; }
 loadArt('ground', CONFIG.mazeArt.ground); loadArt('walls', CONFIG.mazeArt.walls); loadArt('gem', 'art/gem.webp');
+(CONFIG.mazeArt.playerSprites || []).forEach((src, i) => loadArt('faerie' + i, src));
 function pattern(key){
   const im = ART[key]; if (!im) return null;
   if (!PATTERN[key]){ const p = ctx.createPattern(im, 'repeat'), s = CONFIG.mazeArt.tileSize / im.width; if (p.setTransform) p.setTransform(new DOMMatrix([s,0,0,s,0,0])); PATTERN[key] = p; }
@@ -554,14 +555,32 @@ function drawKey(){
   ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.8; ctx.lineJoin = 'round'; ctx.stroke();
   ctx.fillStyle = '#1a1a1a'; star(c.x+16, c.y-14+bob, 5);
 }
-function drawPlayer(p, facing, ring){
-  p = p || playerPix(); const d = DIRS[facing || S.facing]; ring = ring || (S.duo ? PCOLOR(ME) : '#ffffff');
-  ctx.fillStyle = rgba(ring, .22); ctx.beginPath(); ctx.arc(p.x, p.y, 27, 0, Math.PI*2); ctx.fill();   // soft glow so you never lose yourself
-  ctx.fillStyle = ring; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#ffffff';
-  const off = d.dy !== 0 ? [[-6,0],[6,0]] : [[0,-5],[0,5]];
-  for (const o of off){ ctx.beginPath(); ctx.arc(p.x + o[0] + d.dx*3, p.y + o[1] + d.dy*3 - (d.dy===0?2:0), 3, 0, Math.PI*2); ctx.fill(); }
+// Each player is their faerie, seen from above (player 1 = pink, player 2 = purple). She leans into sideways moves,
+// flutters her wings, and sits on a soft glow in her color so you never lose her in the fog.
+const TILT = {};
+function drawPlayer(p, facing, ring, who, moving){
+  p = p || playerPix(); facing = facing || S.facing;
+  who = who === undefined ? (S.duo ? ME : 0) : who; moving = moving === undefined ? !!S.anim : moving;
+  ring = ring || PCOLOR(who);
+  const im = ART['faerie' + who];
+  ctx.fillStyle = rgba(ring, .28); ctx.beginPath(); ctx.ellipse(p.x, p.y + 6, 30, 22, 0, 0, Math.PI*2); ctx.fill();
+  if (!im){   // art still loading: the old round faerie
+    const d = DIRS[facing];
+    ctx.fillStyle = ring; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    const off = d.dy !== 0 ? [[-6,0],[6,0]] : [[0,-5],[0,5]];
+    for (const o of off){ ctx.beginPath(); ctx.arc(p.x + o[0] + d.dx*3, p.y + o[1] + d.dy*3 - (d.dy===0?2:0), 3, 0, Math.PI*2); ctx.fill(); }
+    return;
+  }
+  const want = moving ? DIRS[facing].dx * 0.26 : 0;
+  TILT[who] = (TILT[who] || 0) + (want - (TILT[who] || 0)) * 0.2;
+  const w = 76, h = w * im.height / im.width, bob = Math.sin(S.now * 4 + who * 2) * 2.5;
+  const flap = 1 - 0.06 * (0.5 + 0.5 * Math.sin(S.now * (moving ? 26 : 12) + who));
+  ctx.save(); ctx.translate(p.x, p.y + bob); ctx.rotate(TILT[who]); ctx.scale(flap, 1);
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5;
+  ctx.drawImage(im, -w/2, -h/2 - 4, w, h);
+  ctx.restore();
 }
 // The floor and walls don't move, so they're drawn once into a small layer at chunky pixel size
 // (CONFIG.mazeArt.pixelScale) and redrawn only when the level, art, or a snipped wall changes.
@@ -604,7 +623,7 @@ function render(dt){
   drawFoot(); drawGems(); drawKey();
   if (!S.duo) drawThornWall();
   drawDoor();
-  if (mp) drawPlayer(mp, S.mate.facing, PCOLOR(1-ME));
+  if (mp) drawPlayer(mp, S.mate.facing, PCOLOR(1-ME), 1-ME, S.mate.t < 1);
   drawPlayer();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const toScreen = q => ({x: cx + (q.x - cam.x)*z, y: cy + (q.y - cam.y)*z});

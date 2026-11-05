@@ -61,8 +61,9 @@ const CONFIG = {
     fog: '#0d1610',             // the dark that hides the maze outside your light
     footprints: '#f3e6d4',      // footprint color (they fade on their own)
     friendTint: 'rgba(40,20,60,.55)', // solo: tint over the side you can't reach
-    playerColors: ['#9fe08a', '#c9b3ff'],   // duo: player 1 (host, or you vs. Anjalie) and player 2: faerie ring, key, footprints
-    playerColorNames: ['green', 'purple']
+    playerColors: ['#ff8fcf', '#c9a6ff'],   // player 1 (you when solo, the host in two-phone play) and player 2: glow, key, footprints
+    playerColorNames: ['pink', 'purple'],
+    playerSprites: ['art/faerie-top-pink.webp', 'art/faerie-top-purple.webp']   // each player's faerie, seen from above
   },
 
   // ----- levels (seed = maze layout; change it to get a new maze) -----

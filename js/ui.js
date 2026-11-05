@@ -77,9 +77,9 @@ function renderArc(el, slots, interactive){
 }
 
 // ---------- the big hanging bracelet (top of the map and the maze) ----------
-// The gold chain with 3 charms hanging off it: left, middle (a bit lower), right. The first 3 boost charms you wear.
+// The gold chain with 4 charms hanging off it (the middle two a bit lower). The first 4 boost charms you wear.
 // x / top are in the chain image's own units (230 × 100.5): where each charm's ring hooks onto the chain.
-const HANG = [{x:42, top:36}, {x:115, top:72}, {x:188, top:36}];
+const HANG = [{x:34, top:27}, {x:88, top:53}, {x:142, top:53}, {x:196, top:27}];
 const hangSlots = boost => { const s = boost.filter(Boolean).slice(0, HANG.length); while (s.length < HANG.length) s.push(null); return s; };
 function renderHang(el, slots, interactive){
   let h = '<img class="hang-chain" src="art/chain.webp" alt="" draggable="false">';

@@ -199,6 +199,7 @@ render.win = () => {
   const r = lastResult, lv = CONFIG.levels[r.level], duo = r.mode === 'duo';
   // step 1: "You did it!"
   $('#callout').classList.remove('show');   // don't leave "The door opens!" floating over the faerie
+  $('#winStep1').classList.toggle('duo', duo);
   $('#winStep1').hidden = false; $('#winStep2').hidden = true; $('#winStep3').hidden = true;
   $('#winTitle').textContent = 'You did it!';
   $('#winSub').innerHTML = duo ? `You and <b>${esc(FRIEND)}</b> opened the ${esc(lv.name)}!` : `${esc(lv.name)} completed!`;
@@ -472,7 +473,7 @@ function braceCard(){
     const c = CONFIG.charms[id], inMaze = sp.type === 'boost' && hangSlots(d.boost).includes(id);
     card.innerHTML = `<div class="bc-row"><div class="preview-tile">${icon(id, 44)}</div><div class="bc-text">
       <div class="bc-name"><span class="h3">${esc(c.name)}</span><em class="bc-tag ${c.type}">${c.type === 'boost' ? 'Boost' : 'Style'}</em></div>
-      <div class="body">${esc(c.say)}</div>${sp.type === 'boost' ? `<div class="bc-note">${inMaze ? 'Comes into the maze with you' : 'Only your first 3 boost charms come into the maze'}</div>` : ''}</div></div>
+      <div class="body">${esc(c.say)}</div>${sp.type === 'boost' ? `<div class="bc-note">${inMaze ? 'Comes into the maze with you' : `Only your first ${HANG.length} boost charms come into the maze`}</div>` : ''}</div></div>
       <button class="px-btn green" id="braceOff"><span>Take it off</span></button>`;
     $('#braceOff').onclick = () => { Profile.unequip(id); braceCard(); };
     return;

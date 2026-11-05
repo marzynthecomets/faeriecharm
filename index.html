@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=47">
+<link rel="stylesheet" href="css/style.css?v=48">
 </head>
 <body>
 <div id="app">
@@ -46,7 +46,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=47" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=48" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -208,6 +208,7 @@
     <div class="win-sparks" id="winSparks" aria-hidden="true"></div>
     <div class="win-body">
       <img class="win-faerie" src="art/bramble.webp" alt="" draggable="false">
+      <div class="win-duo" aria-hidden="true"><img class="wd-purple" src="art/faerie-win-purple.webp" alt="" draggable="false"><img class="wd-pink" src="art/faerie-win-pink.webp" alt="" draggable="false"></div>
       <h1 class="px-title" id="winTitle">You did it!</h1>
       <p class="win-sub" id="winSub"></p>
       <div class="five" id="winHigh"><span id="winHighLabel">Send a high five</span><div class="five-btns"><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div></div>
@@ -289,13 +290,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=47"></script>
-<script src="js/ui.js?v=47"></script>
+<script src="js/config.js?v=48"></script>
+<script src="js/ui.js?v=48"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=47"></script>
-<script src="js/game.js?v=47"></script>
-<script src="js/app.js?v=47"></script>
+<script src="js/net.js?v=48"></script>
+<script src="js/game.js?v=48"></script>
+<script src="js/app.js?v=48"></script>
 </body>
 </html>
