@@ -82,10 +82,10 @@ const CONFIG = {
     snip:   { type: 'boost', name: 'Thorn Snip', price: 10, art: 'art/charm-snip.webp', say: 'Snip through one thorny wall right in front of you. Once per level.' },
     glow:   { type: 'boost', name: 'Glow',       price: 15, art: 'art/charm-glow.webp', say: 'Light up a big circle around you for 10 seconds. Once per level.' },
     leaf:   { type: 'style', name: 'Leaf',       price: 3,  art: 'art/charm-leaf.webp', say: 'A tiny leaf from the oldest tree in the forest. Just for looks!' },
-    star:   { type: 'style', name: 'Star',       price: 3,  say: 'A star that fell into my garden. It twinkles on your bracelet.' },
-    moon:   { type: 'style', name: 'Moon',       price: 4,  say: 'A sliver of moon. Faeries wear these for luck.' },
-    shroom: { type: 'style', name: 'Mushroom',   price: 4,  say: 'A little spotted mushroom. Do not eat it!' },
-    friend: { type: 'style', name: 'Friendship', price: null, say: 'You earn this by finishing a level with a friend. They have the matching half!' }
+    star:   { type: 'style', name: 'Star',       price: 3,  art: 'art/charm-star.webp', say: 'A star that fell into my garden. It twinkles on your bracelet.' },
+    moon:   { type: 'style', name: 'Moon',       price: 4,  art: 'art/charm-moon.webp', say: 'A sliver of moon. Faeries wear these for luck.' },
+    shroom: { type: 'style', name: 'Mushroom',   price: 4,  art: 'art/charm-shroom.webp', say: 'A little spotted mushroom. Do not eat it!' },
+    friend: { type: 'style', name: 'Friendship', price: null, art: 'art/charm-friend.webp', say: 'You earn this by finishing a level with a friend. They have the matching half!' }
   },
   stallBoost: ['dash', 'snip', 'glow'],
   stallStyle: ['leaf', 'star', 'moon', 'shroom'],
