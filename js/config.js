@@ -17,9 +17,10 @@ const CONFIG = {
 
   // ----- movement + view -----
   stepMs: 150,           // how long one step takes (Dash and the scripted friend)
-  slideMs: 170,          // swipe to slide: how long each space of a slide takes (bigger = slower, gentler)
-  slideStartMs: 140,     // plus this much per slide, for speeding up at the start and easing to a stop
-  swipeDistance: 28,     // how far (px) a finger moves before it counts as a swipe (bigger = needs a longer swipe)
+  moveMs: 210,           // hold to move: how long one space takes while you hold (bigger = slower, gentler)
+  holdDeadZone: 14,      // how far (px) the finger drags from where it pressed before she starts moving
+  slideMs: 170,          // Dash: how long each space of its quick run takes
+  slideStartMs: 140,     // Dash: plus this much, for speeding up and easing to a stop
   fogClear: 96,          // radius (px) around the player that is fully visible
   fogEdge: 240,          // radius (px) where the fog is fully opaque
   peekSeconds: 3,        // how long Peek shows the wider maze

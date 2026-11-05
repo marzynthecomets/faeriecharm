@@ -96,19 +96,19 @@ let S = null, opts = null, active = false;
 const cam = {x:0, y:0, z:1, peek:0, glow:0};
 const cellCenter = (x,y) => ({x:x*C + C/2, y:y*C + C/2});
 function mkMate(c){ return {x:c.x, y:c.y, from:cellCenter(c.x,c.y), t:1, dur:1, facing:'up', foot:[]}; }
-function mateTo(x, y, facing, ms){   // move the friend's faerie (scripted or live); animates from wherever it's drawn now
+function mateTo(x, y, facing, ms, lin){   // move the friend's faerie (scripted or live); animates from wherever it's drawn now
   const m = S.mate; if (!m) return;
   if (facing) m.facing = facing;
   if (x === m.x && y === m.y) return;
   const from = matePix(), steps = Math.abs(x - m.x) + Math.abs(y - m.y);
   m.foot.push({...cellCenter(m.x, m.y), dir: m.facing}); if (m.foot.length > 10) m.foot.shift();
-  m.from = from; m.x = x; m.y = y; m.t = 0; m.n = Math.max(1, steps); m.dur = ms ? Math.min(3000, ms) : Math.min(600, STEP_MS * m.n);
+  m.from = from; m.x = x; m.y = y; m.t = 0; m.n = Math.max(1, steps); m.lin = !!lin; m.dur = ms ? Math.min(3000, ms) : Math.min(600, STEP_MS * m.n);
   if (!S.friendHalf && !S.live && x === KEYCELLS[1-ME].x && y === KEYCELLS[1-ME].y) setTimeout(() => S && S.mate && !S.friendHalf && friendFinds(), m.dur);
   checkDoorSoon(m.dur);
 }
 function matePix(){
   const m = S.mate, b = cellCenter(m.x, m.y); if (m.t >= 1) return b;
-  const e = runEase(m.t, m.n || 1);
+  const e = m.lin ? Math.min(1, m.t) : runEase(m.t, m.n || 1);
   return {x:m.from.x + (b.x-m.from.x)*e, y:m.from.y + (b.y-m.from.y)*e};
 }
 function updateMate(dt){ const m = S.mate; if (m && m.t < 1) m.t = Math.min(1, m.t + dt*1000/m.dur); }
@@ -139,65 +139,85 @@ function fresh(){
   const p = cellCenter(S.px, S.py); cam.x = p.x; cam.y = p.y - 60; cam.z = 1; cam.peek = 0; cam.glow = 0;
 }
 
-// ---------- input: swipe to slide ----------
-// A swipe slides your faerie that way until a wall stops it, or a spot where it could turn (picking up gems and keys on the way).
-// You can swipe again before it stops: the next slide starts as soon as this one ends. Arrow keys slide too.
-let swipe = null, nextSlide = null;
+// ---------- input: hold to move ----------
+// Press anywhere on the maze and drag a little: your faerie keeps moving that way for as long as you hold.
+// Drag a different way to turn (she turns as soon as that path is open; no turning on her own). Let go and she stops.
+// A faint ring shows where you pressed and which way you're pointing. Arrow keys work the same way (hold to keep going).
+let hold = null, keyDirs = [], tapDir = null;   // tapDir: a quick press/flick still moves one space
+const pad = $('#holdPad'), padDot = $('#holdDot');
+function padShow(on, x, y){
+  if (!pad) return;
+  if (!on){ pad.classList.remove('on'); return; }
+  const r = $('#scr-game').getBoundingClientRect();
+  pad.style.left = (x - r.left) + 'px'; pad.style.top = (y - r.top) + 'px'; pad.classList.add('on'); padDot.style.transform = '';
+}
 canvas.addEventListener('pointerdown', e => {
-  if (!S || S.paused || S.won || swipe) return;
+  if (!S || S.paused || S.won || hold) return;
   try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
-  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, dir: null };
+  hold = { id: e.pointerId, ox: e.clientX, oy: e.clientY, dir: null };
+  padShow(true, e.clientX, e.clientY);
 });
 canvas.addEventListener('pointermove', e => {
-  if (!swipe || e.pointerId !== swipe.id) return;
-  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-  if (Math.hypot(dx, dy) < CONFIG.swipeDistance) return;
-  const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-  swipe.x = e.clientX; swipe.y = e.clientY;
-  if (dir === swipe.dir) return;   // one swipe = one slide; keep the finger down and swipe a new way to turn (an L-shape)
-  swipe.dir = dir; slide(dir);
-});
-const endSwipe = e => { if (swipe && e.pointerId === swipe.id) swipe = null; };
-canvas.addEventListener('pointerup', endSwipe); canvas.addEventListener('pointercancel', endSwipe);
-const KEYS = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
-addEventListener('keydown', e => { if (!active || sheetOpen) return; const d = KEYS[e.code]; if (!d) return; e.preventDefault(); if (!e.repeat) slide(d); });
-function slide(dir){
-  if (!S || S.paused || S.won || sheetOpen) return;
-  $('#hint').hidden = true;
-  if (S.anim || S.queue.length){ nextSlide = dir; return; }   // still sliding: go this way next
-  nextSlide = null;
-  const d = DIRS[dir]; let x = S.px, y = S.py, n = 0;
-  while (canGo(x, y, dir)){
-    x += d.dx; y += d.dy; n++;
-    if (stopsHere(x, y) || canTurn(x, y, dir)) break;
+  if (!hold || e.pointerId !== hold.id) return;
+  let dx = e.clientX - hold.ox, dy = e.clientY - hold.oy, dist = Math.hypot(dx, dy);
+  const R = 46;   // the ring follows a finger that drifts far away, so turning back is always a short drag
+  if (dist > R){ hold.ox += dx * (1 - R/dist); hold.oy += dy * (1 - R/dist); dx = e.clientX - hold.ox; dy = e.clientY - hold.oy; dist = R; padShow(true, hold.ox, hold.oy); }
+  const k = Math.min(1, dist / R) * 30 / Math.max(dist, 1); padDot.style.transform = `translate(${dx*k}px,${dy*k}px)`;
+  if (dist < CONFIG.holdDeadZone){ hold.dir = null; return; }
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  let dir = ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  // stick with the current way unless the finger clearly points another way (so a wobbly finger doesn't flip it)
+  if (hold.dir && dir !== hold.dir){
+    const along = (hold.dir === 'left' || hold.dir === 'right') ? ax : ay, across = (hold.dir === 'left' || hold.dir === 'right') ? ay : ax;
+    const sameAxisFlip = (hold.dir === 'left' && dx > 0) || (hold.dir === 'right' && dx < 0) || (hold.dir === 'up' && dy > 0) || (hold.dir === 'down' && dy < 0);
+    if (!sameAxisFlip && across < along * 1.25) dir = hold.dir;
   }
-  S.facing = dir;
-  if (!n){ S.bump = { dir, t: S.now }; return; }   // a wall right there: a little bump
-  S.queue = Array(n).fill(dir);
+  if (dir !== hold.dir){ hold.dir = dir; S.blockDir = null; tapDir = dir; $('#hint').hidden = true; }
+});
+const endHold = e => { if (hold && e.pointerId === hold.id){ hold = null; padShow(false); S && (S.blockDir = null); } };
+canvas.addEventListener('pointerup', endHold); canvas.addEventListener('pointercancel', endHold);
+const KEYS = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+addEventListener('keydown', e => { if (!active || sheetOpen) return; const d = KEYS[e.code]; if (!d) return; e.preventDefault();
+  if (!keyDirs.includes(d)){ keyDirs.push(d); tapDir = d; if (S) S.blockDir = null; $('#hint').hidden = true; } });
+addEventListener('keyup', e => { const d = KEYS[e.code]; if (d){ keyDirs = keyDirs.filter(k => k !== d); if (S) S.blockDir = null; } });
+addEventListener('blur', () => { keyDirs = []; });
+// which way the player wants to go right now (null = stop)
+function wantDir(){
+  if (!S || S.paused || S.won || sheetOpen) return null;
+  const d = (hold && hold.dir) || keyDirs[keyDirs.length - 1] || null;
+  return d && d !== S.blockDir ? d : null;
 }
-// A slide also stops where a side path opens, so you can choose which way to go (otherwise some paths can't be reached)
-const canTurn = (x, y, dir) => !!(mine[y*W + x] & (dir === 'up' || dir === 'down' ? DIRS.left.bit | DIRS.right.bit : DIRS.up.bit | DIRS.down.bit));
-// besides walls, a slide stops on the door once you have your key (so you can open it / meet your friend there)
+// you stop on the door once you have your key (so you don't fly past it); lift your finger or point another way to go on
 const stopsHere = (x, y) => S.haveHalf && (S.duo ? atDoor(x, y) : (x === DOOR.x && y === DOOR.y));
 
 // ---------- movement ----------
 function canGo(x,y,dir){ return !!(mine[y*W+x] & DIRS[dir].bit); }
-// A move is one smooth run along a corridor: it speeds up gently, glides, then eases to a stop.
-// Cells are still "arrived at" one by one as you pass them (gems, keys, the door).
+// Moving is cell by cell at a steady, gentle speed: she speeds up softly from a stop, glides from space to space
+// while you hold, and eases to a stop when you let go. (Dash still does a short quick run.)
+// mode: 'in' = starting from still, 'go' = carrying on, 'out' = slowing to a stop, 'run' = a multi-space run (Dash)
+const START_K = 1.6;   // the first space takes this much longer, so she starts gently and reaches full speed smoothly
 function runEase(t, n){
   t = Math.min(1, Math.max(0, t));
-  const a = Math.min(0.5, 0.9 / n), v = 1 / (1 - a);   // a = share of the run spent speeding up (and slowing down)
+  const a = Math.min(0.5, 0.9 / n), v = 1 / (1 - a);
   if (t < a) return 0.5 * v * t * t / a;
   if (t > 1 - a) return 1 - 0.5 * v * (1 - t) * (1 - t) / a;
   return v * (t - a / 2);
 }
+function moveFrac(A){
+  const t = Math.min(1, Math.max(0, A.t));
+  if (A.mode === 'in') return (START_K - 1) * t * t + (2 - START_K) * t;
+  if (A.mode === 'go') return t;
+  if (A.mode === 'out') return A.p0 + (1 - A.p0) * (1 - (1 - t) * (1 - t));
+  return runEase(t, A.n) * A.n;
+}
 const runMs = n => CONFIG.slideStartMs + CONFIG.slideMs * n;
-function startMove(dir, dur, n = 1){
+function startMove(dir, dur, n = 1, mode = 'run', carry = 0){
   if (!canGo(S.px, S.py, dir)) return false;
   const d = DIRS[dir];
-  S.anim = {fx:S.px, fy:S.py, dir, n, done:0, t:0, dur: dur || runMs(n)};
-  S.facing = dir; S.lastDir = dir;
-  if (S.live && S.duo) Net.setMine({x:S.px + d.dx*n, y:S.py + d.dy*n, f:dir, ms:Math.round(S.anim.dur)});   // your friend sees the whole run
+  S.anim = {fx:S.px, fy:S.py, dir, n, done:0, t:0, dur: dur || runMs(n), mode};
+  S.anim.t = carry / S.anim.dur;
+  S.facing = dir; S.lastDir = dir; tapDir = null;
+  if (S.live && S.duo) Net.setMine({x:S.px + d.dx*n, y:S.py + d.dy*n, f:dir, ms:Math.round(S.anim.dur * (1 - S.anim.t)), lin: mode === 'go' ? 1 : 0});   // your friend sees you move
   return true;
 }
 function arrive(){   // you've just reached the next space of a run
@@ -228,14 +248,39 @@ function checkDoor(){
   if (!meAtDoor()) S.waitSaid = false;
 }
 function updatePlayer(dt){
+  const want = wantDir(), cell = CONFIG.moveMs;
   if (S.anim){
-    const A = S.anim; A.t += dt*1000/A.dur;
-    const reached = A.t >= 1 ? A.n : Math.min(A.n - 1, Math.floor(runEase(A.t, A.n) * A.n + 0.5));   // count a space once you're halfway onto it
-    while (S.anim === A && A.done < reached) arrive();
+    const A = S.anim;
+    // keep gliding if, from the space ahead, you can carry on (or turn) the way you're pointing;
+    // otherwise (you let go, or a wall is coming) ease into that space and stop there
+    const nx = A.fx + DIRS[A.dir].dx, ny = A.fy + DIRS[A.dir].dy;
+    // (decided only in the second half of the space, so a slightly late turn still glides)
+    if ((A.mode === 'in' || A.mode === 'go') && moveFrac(A) >= 0.45 && !(want && canGo(nx, ny, want) && !stopsHere(nx, ny))){
+      const p0 = moveFrac(A); A.mode = 'out'; A.p0 = p0; A.t = 0; A.dur = Math.max(90, 2 * (1 - p0) * cell);
+    }
+    A.t += dt*1000/A.dur;
+    if (A.mode === 'run'){
+      const reached = A.t >= 1 ? A.n : Math.min(A.n - 1, Math.floor(runEase(A.t, A.n) * A.n + 0.5));
+      while (S.anim === A && A.done < reached) arrive();
+      return;
+    }
+    if (A.t < 1) return;
+    const carry = (A.t - 1) * A.dur, was = A.mode, dir = A.dir;
+    arrive();
+    if (S.anim || S.won) return;
+    // still holding: carry straight on (or turn) without a pause between spaces
+    const w = wantDir();
+    if (w && stopsHere(S.px, S.py)){ S.blockDir = w; return; }
+    if (w && canGo(S.px, S.py, w)){ const glide = was !== 'out'; startMove(w, glide ? cell : cell * START_K, 1, glide ? 'go' : 'in', glide ? carry : 0); }
+    else if (w){ S.facing = w; }
     return;
   }
-  if (S.queue.length){ const dir = S.queue[0], n = S.queue.length; S.queue = []; startMove(dir, 0, n); return; }
-  if (nextSlide){ const d = nextSlide; nextSlide = null; slide(d); }
+  if (S.queue.length){ const dir = S.queue[0], n = S.queue.length; S.queue = []; startMove(dir, 0, n, 'run'); return; }
+  const go = want || (tapDir && tapDir !== S.blockDir && !S.paused && !sheetOpen ? tapDir : null); tapDir = null;
+  if (!go) { S.bumpDir = null; return; }
+  const want2 = go;
+  if (canGo(S.px, S.py, want2)){ startMove(want2, cell * START_K, 1, 'in'); S.bumpDir = null; }
+  else { S.facing = want2; if (S.bumpDir !== want2){ S.bumpDir = want2; S.bump = { dir: want2, t: S.now }; } }   // a wall: one little bump
 }
 function playerPix(){
   if (!S.anim){
@@ -243,7 +288,7 @@ function playerPix(){
     if (k >= 1) return c;
     const o = Math.sin(k * Math.PI) * 8; return {x: c.x + DIRS[b.dir].dx * o, y: c.y + DIRS[b.dir].dy * o};
   }
-  const A = S.anim, d = DIRS[A.dir], e = runEase(A.t, A.n) * A.n, a = cellCenter(A.fx, A.fy);
+  const A = S.anim, d = DIRS[A.dir], e = moveFrac(A), a = cellCenter(A.fx, A.fy);
   return {x:a.x + d.dx*C*e, y:a.y + d.dy*C*e};
 }
 
@@ -414,7 +459,7 @@ const msgWrap = $('#msgChips');
 MESSAGES.forEach(m => { const b = document.createElement('button'); b.className = 'msg-btn'; b.textContent = m; b.onclick = () => sendScroll(m); msgWrap.appendChild(b); });
 function openSheet(){
   if (!S || S.paused || S.won) return;
-  sheetOpen = true; swipe = null; nextSlide = null;
+  sheetOpen = true; hold = null; padShow(false);
   $('#scrim').classList.add('show'); $('#sheet').classList.add('show'); $('#sheet').setAttribute('aria-hidden','false');
 }
 function closeSheet(){ sheetOpen = false; $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); $('#sheet').setAttribute('aria-hidden','true'); }
@@ -429,7 +474,7 @@ function sendScroll(msg){
 }
 
 // ---------- overlays ----------
-function setPaused(p){ S.paused = p; if (p){ swipe = null; nextSlide = null; } }
+function setPaused(p){ S.paused = p; if (p){ hold = null; keyDirs = []; tapDir = null; padShow(false); } }
 $('#startBtn').onclick = () => { $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your key' : 'Find the key'); };
 let keyTaps = [];
 $('#keyBtn').onclick = () => {
@@ -750,7 +795,7 @@ function liveTick(){ if (S.stuckUntil && (S.now > S.stuckUntil || S.haveHalf)){ 
 function netPlayers(friend){
   if (!active || !S || !S.live || !friend) return;
   S.remote = {online: friend.online !== false, status: friend.status || 'solving', half: !!friend.half};
-  if (S.duo && typeof friend.x === 'number' && typeof friend.y === 'number') mateTo(friend.x, friend.y, friend.f, friend.ms);
+  if (S.duo && typeof friend.x === 'number' && typeof friend.y === 'number') mateTo(friend.x, friend.y, friend.f, friend.ms, friend.lin);
   if (S.remote.half && !S.friendHalf){
     S.friendHalf = true; renderKey(true);
     say(S.haveHalf ? 'Both keys found! Meet at the door' : `${FRIEND} found ${THEIR} key!`);
@@ -784,6 +829,6 @@ function start(o){
   $('#intro').hidden = false; $('#pauseOv').hidden = true; $('#facOv').hidden = true; $('#hint').hidden = false;
   active = true; resize(); renderKey(false); renderCharms(); updateStatus(); renderGemPills();
 }
-function stop(){ active = false; closeSheet(); swipe = null; nextSlide = null; }
+function stop(){ active = false; closeSheet(); hold = null; keyDirs = []; padShow(false); }
 window.Game = { start, stop, netPlayers, netEvent, get active(){ return active; } };
 })();
