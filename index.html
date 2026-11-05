@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=46">
+<link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 <div id="app">
@@ -21,13 +21,32 @@
   </div>
 </section>
 
+<!-- ================= FAERIE NAME ================= -->
+<section class="screen fc-screen" id="scr-name" aria-label="Your faerie name">
+  <div class="win-bg" style="background-image:url(art/forest-bg.webp)"></div>
+  <div class="win-shade soft"></div>
+  <header class="stall-head"><button class="px-close" id="nameBack" data-go="map" aria-label="Back"><svg width="22" height="22" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h2v1h1v1h1v1h1v1h1V3h1V2h1V1h1V0h2v2h-1v1H9v1H8v1H7v1h1v1h1v1h1v1h1v2H9v-1H8V9H7V8H6V7H5v1H4v1H3v1H2v1H0V9h1V8h1V7h1V6h1V5H3V4H2V3H1V2H0Z"/></svg></button></header>
+  <div class="fc-body">
+    <div class="fc-bramble"><img class="fc-faerie" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
+      <div class="fc-bubble">Hello, little faerie! I'm <b>Bramble</b>. What should I call you?</div></div>
+    <div class="fc-card name-card">
+      <label class="name-q" for="nameInput">Your faerie name</label>
+      <input id="nameInput" class="fc-input name-input" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" placeholder="Type your name">
+      <div class="name-or">or pick one</div>
+      <div class="name-ideas" id="nameIdeas"></div>
+    </div>
+    <p class="fc-you">Your friend will see this name when you play together.</p>
+  </div>
+  <div class="win-actions"><button class="px-btn green" id="nameGo" disabled><span>That's me!</span></button></div>
+</section>
+
 <!-- ================= MAP ================= -->
 <section class="screen" id="scr-map" aria-label="Forest map">
   <div id="mapStage">
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=46" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=47" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -40,6 +59,7 @@
     <div class="card">
       <h1>Settings</h1>
       <p>Your gems, charms, and finished levels are saved on this phone.</p>
+      <button class="secondary" id="nameBtn">Change my faerie name</button>
       <button class="secondary" id="resetBtn">Reset my progress</button>
       <button class="primary" id="settingsClose">Done</button>
     </div>
@@ -140,28 +160,8 @@
       <div><div class="h2">Send a Scroll</div><div class="sub">to <span class="friend-name">Anjalie</span></div></div>
       <button class="round" id="closeSheet" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg></button>
     </div>
-    <div><div class="label">SAY SOMETHING</div><div class="chips" id="msgChips"></div></div>
-    <div><div class="label">ADD AN EMOJI</div><div class="emojis" id="emoChips"></div></div>
-    <div><div class="label">SEND A GIFT</div>
-      <div class="gifts">
-        <button class="gift" id="giftPeek" aria-pressed="false">
-          <svg class="check" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1a1a1a"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span id="peekGiftIcon"></span>
-          <b>Peek</b><small id="peekLeft">1 left</small>
-        </button>
-        <div class="gift" id="giftGems">
-          <img class="gem-img" src="art/gem.webp" width="24" height="24" alt="">
-          <b>Gems</b>
-          <div class="stepper"><button id="gemMinus" aria-label="Fewer gems">−</button><span id="gemGift">0</span><button id="gemPlus" aria-label="More gems">+</button></div>
-        </div>
-        <button class="gift" id="giftLend" aria-pressed="false">
-          <svg class="check" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1a1a1a"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span id="lendIcon"></span><b id="lendName">Dash</b><small id="lendNote">Lend for this level</small>
-        </button>
-      </div>
-    </div>
-    <div id="preview"><span>YOUR SCROLL</span><span id="previewText">Pick a message, emoji, or gift</span></div>
-    <button class="primary" id="sendBtn" disabled>Send Scroll <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h11M10 4l5 5-5 5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="msg-grid" id="msgChips"></div>
+    <p class="sheet-tip">Tap a message to send it</p>
   </div>
 
   <div class="overlay" id="intro">
@@ -289,13 +289,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=46"></script>
-<script src="js/ui.js?v=46"></script>
+<script src="js/config.js?v=47"></script>
+<script src="js/ui.js?v=47"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=46"></script>
-<script src="js/game.js?v=46"></script>
-<script src="js/app.js?v=46"></script>
+<script src="js/net.js?v=47"></script>
+<script src="js/game.js?v=47"></script>
+<script src="js/app.js?v=47"></script>
 </body>
 </html>

@@ -589,3 +589,25 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #toast .gift{border-color:var(--d-line)}
 #scrollBtn{background:var(--gold);color:#1a1a1a}
 #callout{z-index:15}
+
+/* Send a Scroll: just big message buttons */
+.msg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.msg-btn{min-height:64px;padding:8px 10px;border-radius:18px;border:1.5px solid var(--d-line);background:var(--d-tile);color:#fff;font-family:var(--font);font-size:18px;font-weight:700;line-height:1.2}
+.msg-btn:active{background:var(--gold);border-color:var(--gold);color:#1a1a1a}
+.sheet-tip{margin:0;text-align:center;font-size:15px;color:var(--d-sub)}
+#sheet .h2{font-size:24px}
+#sheet .sub{font-size:16px}
+#sheet .round{width:48px;height:48px}
+#sheet{gap:16px}
+/* faerie name screen */
+.name-card{gap:12px}
+.name-q{font-family:var(--font-display);font-size:20px;color:#ffd45a}
+.name-input{width:100%;max-width:300px;height:64px;font-family:var(--font);font-size:26px;font-weight:700;letter-spacing:0;text-transform:none}
+.name-or{font-size:15px;color:var(--d-sub)}
+.name-ideas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.name-idea{height:46px;padding:0 18px;border-radius:23px;border:1.5px solid var(--d-line);background:var(--d-tile);color:#fff;font-size:17px;font-weight:700}
+.name-idea:active{background:var(--gold);color:#1a1a1a}
+#scr-name .fc-bubble{font-size:17px}
+#scr-name .fc-you{font-size:15px}
+.name-input{padding:0 12px}
+#toast .avatar{background:var(--gold);border:none;color:#1a1a1a}

@@ -56,6 +56,8 @@ const Net = (() => {
     let watchers = [];
     const fire = c => watchers.forEach(w => w.c === c && w.tick());
     bc && (bc.onmessage = e => fire(e.data));
+    // the other tab's write can land after its message, so re-check when storage itself changes
+    addEventListener('storage', e => { if (e.key && e.key.startsWith('fc-room-')) fire(e.key.slice(8)); });
     const setPath = (obj, path, patch) => { let o = obj; path.split('/').forEach(p => { o[p] = o[p] || {}; o = o[p]; }); Object.assign(o, patch); };
     return {
       name: 'local',
@@ -92,8 +94,8 @@ const Net = (() => {
     get role(){ return role; }, get code(){ return code; }, get level(){ return level; }, get myName(){ return myName; },
     friendRole: () => role === 'host' ? 'guest' : 'host',
 
-    async createRoom(lv){
-      const b = getBackend(); role = 'host'; level = lv; myName = pick(NICKNAMES); code = null;
+    async createRoom(lv, name){
+      const b = getBackend(); role = 'host'; level = lv; myName = name || pick(NICKNAMES); code = null;
       // a code is free if nobody's hosting it, its game has been left by both players, or it's over 3 hours old
       const now = b.now(), free = r => { const p = r.players || {}, on = k => p[k] && p[k].online;
         return !on('host') && !on('guest') || now - (r.created || 0) > 3*3600e3; };
@@ -106,14 +108,14 @@ const Net = (() => {
       return { code, name: myName };
     },
 
-    async joinRoom(c){
+    async joinRoom(c, name){
       const b = getBackend(); c = String(c || '').trim().toUpperCase();
       if (!/^[A-Z]{4}$/.test(c)) return { error: 'Codes are 4 letters, like MOSS.' };
       const v = await b.get(c);
       if (!v || !v.players || !v.players.host || !v.players.host.online) return { error: `No game called ${c} right now. Check the code with your friend.` };
       if (v.players.guest && v.players.guest.online) return { error: 'That game already has two players.' };
       code = c; role = 'guest'; level = v.level || 0;
-      do { myName = pick(NICKNAMES); } while (myName === v.players.host.name);
+      if (name) myName = name; else do { myName = pick(NICKNAMES); } while (myName === v.players.host.name);
       joinedAt = b.now();
       await b.update(code, 'players/guest', { name: myName, status: 'solving', half: false, won: false, online: true });
       b.presence(code, 'guest'); watchRoom();

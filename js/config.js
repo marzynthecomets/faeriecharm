@@ -113,13 +113,13 @@ const CONFIG = {
   },
 
   // ----- the Send a Scroll sheet -----
-  messages: ["You got this!", "Almost there!", "I found my half!", "I'm stuck!", "Try another way", "Wait for me!"],
+  messages: ["You got this!", "Almost there!", "I found my key!", "I'm stuck!", "Try another way", "Wait for me!"],
   emojis: ['💪', '🎉', '⭐', '😂', '🌿', '💖'],
   // what the friend says back ("I'm stuck!" is special: she sends a Peek the first time)
   replies: {
     "You got this!":    { msg: 'Thanks!! You too',              emoji: '💪' },
     "Almost there!":    { msg: "Ooh, I'm close too!",           emoji: '✨' },
-    "I found my half!": { msg: "YAY!! Mine's coming",           emoji: '🏃' },
+    "I found my key!": { msg: "YAY!! Mine's coming",           emoji: '🏃' },
     "Try another way":  { msg: 'Ok, turning around!',           emoji: '🔄' },
     "Wait for me!":     { msg: "Ok! I'll meet you at the door", emoji: '🙂' }
   }

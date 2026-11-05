@@ -13,7 +13,7 @@ const Profile = {
   data: newProfile(),
   load(){ try { const raw = localStorage.getItem(SAVE_KEY); if (raw) this.data = Object.assign(newProfile(), JSON.parse(raw)); } catch (e) {} },
   save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.data)); } catch (e) {} },
-  reset(){ this.data = newProfile(); this.save(); },
+  reset(){ const name = this.data.name; this.data = newProfile(); if (name) this.data.name = name; this.save(); },
   addGems(n){ this.data.gems = Math.max(0, this.data.gems + n); this.save(); renderGemPills(); },
   owns(id){ return !!this.data.owned[id]; },
   give(id){ this.data.owned[id] = true; this.equip(id); this.save(); },

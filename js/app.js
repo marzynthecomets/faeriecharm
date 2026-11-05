@@ -16,9 +16,31 @@ const render = {};
 render.load = () => {
   const bar = $('#loadBar'); bar.style.width = '0%';
   requestAnimationFrame(() => requestAnimationFrame(() => bar.style.width = '100%'));
-  clearTimeout(render.load.t); render.load.t = setTimeout(() => go('map'), 1700);
+  clearTimeout(render.load.t); render.load.t = setTimeout(afterLoad, 1700);
 };
-$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); go('map'); });
+$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); afterLoad(); });
+function afterLoad(){ go(Profile.data.name ? 'map' : 'name'); }
+
+// ---------- faerie name ----------
+const NAME_IDEAS = ['Wren','Pip','Moss','Fern','Clover','Juniper','Hazel','Rowan','Sprig','Thistle','Bryony','Sorrel'];
+const cleanName = v => v.replace(/[^\p{L}\p{N} '\-]/gu, '').replace(/\s+/g, ' ').replace(/^\s/, '').slice(0, 12);
+render.name = () => {
+  const inp = $('#nameInput'); inp.value = Profile.data.name || '';
+  $('#nameBack').hidden = !Profile.data.name;
+  const ideas = NAME_IDEAS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  $('#nameIdeas').innerHTML = ideas.map(n => `<button class="name-idea" data-name="${n}">${n}</button>`).join('');
+  $$('#nameIdeas [data-name]').forEach(b => b.onclick = () => { inp.value = b.dataset.name; nameCheck(); });
+  nameCheck();
+  setTimeout(() => { if (!Profile.data.name) inp.focus(); }, 60);
+};
+function nameCheck(){ const v = cleanName($('#nameInput').value).trim(); $('#nameGo').disabled = !v; return v; }
+$('#nameInput').addEventListener('input', e => { const c = cleanName(e.target.value); if (c !== e.target.value) e.target.value = c; nameCheck(); });
+$('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#nameGo').click(); });
+$('#nameGo').onclick = () => {
+  const v = nameCheck(); if (!v) return;
+  const first = !Profile.data.name; Profile.data.name = v; Profile.save(); $('#nameInput').blur();
+  go('map'); say(first ? `Welcome, ${v}!` : `You're ${v} now!`);
+};
 
 // ---------- map ----------
 // Each level sits on a gate in the map art (positions in js/config.js → map.gates).
@@ -69,6 +91,7 @@ addEventListener('resize', fitStage);
 // settings
 $('#settingsBtn').onclick = () => { $('#resetBtn').textContent = 'Reset my progress'; $('#resetBtn').dataset.armed = ''; $('#settingsOv').hidden = false; };
 $('#settingsClose').onclick = () => { $('#settingsOv').hidden = true; };
+$('#nameBtn').onclick = () => { $('#settingsOv').hidden = true; go('name'); };
 $('#resetBtn').onclick = e => {
   const b = e.currentTarget;
   if (!b.dataset.armed){ b.dataset.armed = '1'; b.textContent = 'Tap again to erase gems, charms, and levels'; return; }
@@ -136,8 +159,8 @@ render.room = () => {
   Net.leave();
   if (host){
     $('#roomCode').textContent = '····';
-    Net.createRoom(entryLevel).then(r => {
-      $('#roomCode').textContent = r.code; $('#roomYou').textContent = `Your faerie name is ${r.name}`;
+    Net.createRoom(entryLevel, Profile.data.name).then(r => {
+      $('#roomCode').textContent = r.code; $('#roomYou').textContent = `You're playing as ${r.name}`;
       Net.onPlayers(p => { if (p.guest && p.guest.online && !roomStarting) startLive(p.guest.name); });
     }).catch(err => { $('#roomWait').textContent = err.message || "Couldn't make a game. Check the internet and try again."; });
   } else { $('#codeInput').value = ''; setTimeout(() => $('#codeInput').focus(), 50); }
@@ -147,9 +170,9 @@ $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#co
 $('#codeGo').onclick = async () => {
   const m = $('#joinMsg'); m.className = 'fc-wait'; m.textContent = 'Looking…'; $('#codeGo').disabled = true;
   try {
-    const r = await Net.joinRoom($('#codeInput').value);
+    const r = await Net.joinRoom($('#codeInput').value, Profile.data.name);
     if (r.error){ m.textContent = r.error; m.className = 'fc-wait err'; $('#codeGo').disabled = false; return; }
-    $('#roomYou').textContent = `Your faerie name is ${r.name}`;
+    $('#roomYou').textContent = `You're playing as ${r.name}`;
     startLive(r.friendName);
   } catch (err){ m.textContent = "Couldn't connect. Check the internet and try again."; m.className = 'fc-wait err'; $('#codeGo').disabled = false; }
 };

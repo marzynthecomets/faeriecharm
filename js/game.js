@@ -365,50 +365,24 @@ function friendReact(sel){
 }
 
 // ---------- scroll sheet ----------
-let sheetOpen = false, sel;
-const msgWrap = $('#msgChips'), emoWrap = $('#emoChips');
-MESSAGES.forEach(m => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = m; b.setAttribute('aria-pressed','false'); b.onclick = () => { sel.msg = sel.msg === m ? null : m; renderSheet(); }; msgWrap.appendChild(b); });
-EMOJIS.forEach(e => { const b = document.createElement('button'); b.className = 'emo'; b.textContent = e; b.setAttribute('aria-pressed','false'); b.setAttribute('aria-label','Emoji ' + e); b.onclick = () => { sel.emoji = sel.emoji === e ? null : e; renderSheet(); }; emoWrap.appendChild(b); });
-const lendable = () => S.slots.find(id => id && id !== 'peek' && S.uses[id] > 0 && S.lent !== id) || null;
-$('#giftPeek').onclick = () => { if (!(S.uses.peek > 0)) return; sel.peek = !sel.peek; renderSheet(); };
-$('#giftLend').onclick = () => { const id = lendable(); if (!id) return; sel.lend = sel.lend ? null : id; renderSheet(); };
-$('#gemPlus').onclick = () => { sel.gems = Math.min(sel.gems + 1, Math.min(Profile.data.gems, CONFIG.maxGemGift)); renderSheet(); };
-$('#gemMinus').onclick = () => { sel.gems = Math.max(0, sel.gems - 1); renderSheet(); };
+let sheetOpen = false;
+const msgWrap = $('#msgChips');
+MESSAGES.forEach(m => { const b = document.createElement('button'); b.className = 'msg-btn'; b.textContent = m; b.onclick = () => sendScroll(m); msgWrap.appendChild(b); });
 function openSheet(){
   if (!S || S.paused || S.won) return;
-  sel = {msg:null, emoji:null, peek:false, gems:0, lend:null}; sheetOpen = true; swipe = null; nextSlide = null;
-  renderSheet(); $('#scrim').classList.add('show'); $('#sheet').classList.add('show'); $('#sheet').setAttribute('aria-hidden','false');
+  sheetOpen = true; swipe = null; nextSlide = null;
+  $('#scrim').classList.add('show'); $('#sheet').classList.add('show'); $('#sheet').setAttribute('aria-hidden','false');
 }
 function closeSheet(){ sheetOpen = false; $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); $('#sheet').setAttribute('aria-hidden','true'); }
-function renderSheet(){
-  [...msgWrap.children].forEach(b => b.setAttribute('aria-pressed', String(b.textContent === sel.msg)));
-  [...emoWrap.children].forEach(b => b.setAttribute('aria-pressed', String(b.textContent === sel.emoji)));
-  const gp = $('#giftPeek'), gl = $('#giftLend'), peeks = S.uses.peek || 0, lid = sel.lend || lendable();
-  gp.disabled = peeks < 1; gp.setAttribute('aria-pressed', String(sel.peek)); $('#peekLeft').textContent = peeks + ' left';
-  gl.disabled = !lid; gl.setAttribute('aria-pressed', String(!!sel.lend));
-  $('#lendIcon').innerHTML = icon(lid || 'dash', 28);
-  $('#peekGiftIcon').innerHTML = icon('peek', 28);
-  $('#lendName').textContent = lid ? CONFIG.charms[lid].name : 'Lend a charm';
-  $('#lendNote').textContent = lid ? 'Lend for this level' : 'No charm to lend';
-  $('#gemGift').textContent = sel.gems; $('#giftGems').setAttribute('aria-pressed', String(sel.gems > 0));
-  const parts = [];
-  if (sel.msg) parts.push(sel.msg); if (sel.emoji) parts.push(sel.emoji);
-  const gifts = []; if (sel.peek) gifts.push('Peek'); if (sel.gems) gifts.push(sel.gems + (sel.gems > 1 ? ' gems' : ' gem')); if (sel.lend) gifts.push(CONFIG.charms[sel.lend].name + ' (lent)');
-  let txt = parts.join(' '); if (gifts.length) txt += (txt ? ' + ' : '') + gifts.join(' + ');
-  $('#previewText').textContent = txt || 'Pick a message, emoji, or gift';
-  $('#sendBtn').disabled = !txt;
-}
 $('#scrollBtn').onclick = openSheet; $('#closeSheet').onclick = closeSheet; $('#scrim').onclick = closeSheet;
-$('#sendBtn').onclick = () => {
-  if (sel.peek) S.uses.peek--;
-  if (sel.gems) Profile.addGems(-sel.gems);
-  if (sel.lend) S.lent = sel.lend;
-  S.sent++; renderCharms(); renderGemPills(); closeSheet(); say('Scroll sent to ' + FRIEND + '!');
+function sendScroll(msg){
+  const sel = {msg, emoji:null, peek:false, gems:0, lend:null};
+  S.sent++; closeSheet(); say('Scroll sent to ' + FRIEND + '!');
   if (S.live){
-    Net.send({type:'scroll', msg:sel.msg, emoji:sel.emoji, gift:sel.peek ? 'peek' : null, gems:sel.gems, lend:sel.lend});
-    if (sel.msg === "I'm stuck!" && !S.haveHalf){ S.stuckUntil = S.now + 30; Net.setMine({status:'stuck'}); }
-  } else friendReact({...sel});
-};
+    Net.send({type:'scroll', msg, emoji:null, gift:null, gems:0, lend:null});
+    if (msg === "I'm stuck!" && !S.haveHalf){ S.stuckUntil = S.now + 30; Net.setMine({status:'stuck'}); }
+  } else friendReact(sel);
+}
 
 // ---------- overlays ----------
 function setPaused(p){ S.paused = p; if (p){ swipe = null; nextSlide = null; } }
@@ -715,7 +689,7 @@ function netEvent(ev){
 
 function start(o){
   opts = o; const lv = CONFIG.levels[o.level];
-  FRIEND = o.friendName || CONFIG.friendName; THEIR = o.live ? 'their' : 'her';
+  FRIEND = o.friendName || CONFIG.friendName; THEIR = o.live ? 'their' : 'her'; $$('.friend-name').forEach(e => e.textContent = FRIEND);
   ME = o.live && Net.role === 'guest' ? 1 : 0;
   buildLevel(lv, o.mode === 'duo'); fresh(); layerDirty = true;
   if (S.live) Net.setMine({half:false, status:'solving', won:false, x:START.x, y:START.y, f:'up'});
