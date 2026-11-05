@@ -195,43 +195,53 @@ $$('[data-hi]').forEach(b => b.onclick = () => {
 function hiFromFriend(e){ if ($('#scr-win').classList.contains('on')) $('#hiReply').textContent = `${FRIEND} sent ${e}!`; }
 
 // ---------- stall ----------
-// where charms hang on the stall art's two ropes, in % of the stall image (x, y of the hoop)
-const STALL_SPOTS = [[22,37],[40,38.5],[60,38.5],[78,37],[16,55],[33,56]];
+// where charms hang on the stall art's two ropes, in % of the stall image (x, y of the ring top).
+// The stall is shown zoomed in, so only roughly x 22-80% of the image is on screen.
+const STALL_SPOTS = [[31,36.5],[49,38.5],[67,36.5],[40,56],[58,56]];
+let stallFresh = true;   // nothing is picked when you walk up to the stall
 render.stall = () => {
+  if (stallFresh){ stallPick = null; stallFresh = false; }
   $$('#stallTabs [role="tab"]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === stallTab)));
-  const ids = stallTab === 'boost' ? CONFIG.stallBoost : [...CONFIG.stallStyle, 'friend'];
-  if (!ids.includes(stallPick)) stallPick = ids[0];
+  const ids = stallTab === 'boost' ? CONFIG.stallBoost : [...CONFIG.stallStyle, ...(Profile.owns('friend') ? ['friend'] : [])];
+  if (stallPick && !ids.includes(stallPick)) stallPick = null;
   const wrap = $('#stallCharms'); wrap.innerHTML = '';
-  STALL_SPOTS.forEach(([x, y], i) => {
-    const id = ids[i], b = document.createElement('button');
-    b.className = 'stall-charm'; b.style.left = x + '%'; b.style.top = y + '%';
-    if (!id){ b.disabled = true; b.classList.add('locked'); b.setAttribute('aria-label', 'Locked charm, opens in a later level'); b.innerHTML = '<span class="hoop"></span><span class="ball"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><rect x="1" y="8" width="14" height="10" rx="2" fill="#6b6b6b"/><path d="M4 8V5a4 4 0 0 1 8 0v3" fill="none" stroke="#6b6b6b" stroke-width="2.2"/></svg></span>'; wrap.appendChild(b); return; }
-    const c = CONFIG.charms[id], owned = Profile.owns(id);
-    b.classList.toggle('picked', id === stallPick);
+  ids.slice(0, STALL_SPOTS.length).forEach((id, i) => {
+    const [x, y] = STALL_SPOTS[i], c = CONFIG.charms[id], owned = Profile.owns(id), b = document.createElement('button');
+    b.className = 'stall-charm' + (id === stallPick ? ' picked' : '') + (owned ? ' owned' : '');
+    b.style.left = x + '%'; b.style.top = y + '%'; b.style.setProperty('--sway', (i % 2 ? -1 : 1) * (1.2 + i*0.3) + 'deg');
     b.setAttribute('aria-pressed', String(id === stallPick));
     b.setAttribute('aria-label', `${c.name}${owned ? ', owned' : c.price == null ? ', earned with a friend' : `, ${c.price} gems`}`);
-    b.classList.toggle('has-art', hasArt(id));
-    b.innerHTML = `${hasArt(id) ? `<span class="art-hang">${icon(id, 40)}</span>` : `<span class="hoop"></span><span class="ball">${icon(id, 26)}</span>`}<span class="price">${owned ? '✓ Owned' : c.price == null ? 'Friend' : c.price + ' ' + GEM(11)}</span>`;
-    b.onclick = () => { stallPick = id; render.stall(); };
+    b.innerHTML = `<span class="charm-glow" aria-hidden="true"></span><span class="art-hang">${icon(id, 40)}</span><span class="price">${owned ? '✓ Owned' : c.price == null ? 'Friend' : c.price + ' ' + GEM(12)}</span>`;
+    b.onclick = () => { stallPick = stallPick === id ? null : id; render.stall(); };
     wrap.appendChild(b);
   });
+  const buy = $('#buyBtn'), label = buy.querySelector('span'), tile = $('#stallPreview');
+  if (!stallPick){
+    tile.hidden = true; buy.hidden = true;
+    $('#brambleTitle').textContent = stallTab === 'boost' ? 'Welcome, little faerie!' : 'Ooh, pretty things!';
+    $('#brambleSay').textContent = stallTab === 'boost' ? 'Boost charms help you in the maze. Tap one to take a look.' : 'Style charms make your bracelet sparkle. Tap one to take a look.';
+    return;
+  }
   const c = CONFIG.charms[stallPick], owned = Profile.owns(stallPick), need = (c.price || 0) - Profile.data.gems;
+  tile.hidden = false; tile.innerHTML = icon(stallPick, 44);
   $('#brambleTitle').textContent = `Ooh, the ${c.name} charm!`;
   $('#brambleSay').textContent = c.say;
-  $('#stallPreview').innerHTML = icon(stallPick, 56);
-  const buy = $('#buyBtn');
-  if (owned){ buy.disabled = true; buy.innerHTML = "You have this one! ✓"; }
-  else if (c.price == null){ buy.disabled = true; buy.textContent = 'Earn it by playing with a friend'; }
-  else if (need > 0){ buy.disabled = true; buy.innerHTML = `Need ${need} more ${GEM(16)}`; }
-  else { buy.disabled = false; buy.innerHTML = `Buy for ${c.price} ${GEM(16)}`; }
+  buy.hidden = false;
+  if (owned){ buy.disabled = true; label.textContent = 'You have this one ✓'; }
+  else if (c.price == null){ buy.disabled = true; label.textContent = 'Earn it with a friend'; }
+  else if (need > 0){ buy.disabled = true; label.innerHTML = `Need ${need} more ${GEM(18)}`; }
+  else { buy.disabled = false; label.innerHTML = `Buy for ${c.price} gem${c.price > 1 ? 's' : ''}`; }
 };
-$$('#stallTabs [role="tab"]').forEach(t => t.onclick = () => { stallTab = t.dataset.tab; render.stall(); });
+$$('#stallTabs [role="tab"]').forEach(t => t.onclick = () => { stallTab = t.dataset.tab; stallPick = null; render.stall(); });
 $('#buyBtn').onclick = () => {
-  const c = CONFIG.charms[stallPick]; if (Profile.owns(stallPick) || c.price == null || Profile.data.gems < c.price) return;
-  Profile.addGems(-c.price); Profile.give(stallPick);
-  say(Profile.isOn(stallPick) ? `${c.name} is on your bracelet!` : `${c.name} is in your charms. Your bracelet is full`);
+  const c = CONFIG.charms[stallPick]; if (!stallPick || Profile.owns(stallPick) || c.price == null || Profile.data.gems < c.price) return;
+  Profile.addGems(-c.price); Profile.give(stallPick); renderGemPills();
   bracePick = stallPick; render.stall();
+  // Bramble says it in her bubble, so no pop-up covers it
+  $('#brambleTitle').textContent = `Yay! The ${c.name} charm is yours!`;
+  $('#brambleSay').textContent = Profile.isOn(stallPick) ? "I put it on your bracelet." : 'Your bracelet is full, so it\'s waiting in your charms.';
 };
+document.addEventListener('click', e => { if (e.target.closest('[data-go="stall"]')) stallFresh = true; }, true);
 
 // ---------- bracelet ----------
 const RING = [[179,52],[260.1,78.4],[310.3,147.4],[310.3,232.6],[260.1,301.6],[179,328],[97.9,301.6],[47.7,232.6],[47.7,147.4],[97.9,78.4]];

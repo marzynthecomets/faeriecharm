@@ -283,24 +283,11 @@ h1,h2{margin:0;text-wrap:balance}
 .px-btn:focus-visible span{box-shadow:inset 0 0 0 3px #fff,inset 0 -8px 0 var(--lo)}
 
 /* ---------- stall ---------- */
-#scr-stall{background:#8d95cf url('../art/stall-bg.webp') center bottom / cover no-repeat}
-#scr-stall .titlebar h2{color:#fff;text-shadow:0 2px 6px rgba(30,40,70,.6)}
 .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .tabs button{height:44px;border-radius:22px;border:2px solid var(--ink);background:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
 .tabs button svg{fill:var(--ink)}
 .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
 .tabs button[aria-selected="true"] svg{fill:#fff}
-.stall-art{position:relative;width:100%;max-width:380px;align-self:center;aspect-ratio:1/1;flex-shrink:0;margin:-8px 0 -14px}
-.stall-img{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-.stall-bramble{position:absolute;right:-5%;top:52%;width:34%;z-index:3;pointer-events:none}
-#stallCharms{position:absolute;inset:0;z-index:2}
-.stall-charm{position:absolute;width:56px;transform:translate(-50%,-5px);border:none;background:none;padding:0;display:flex;flex-direction:column;align-items:center}
-.stall-charm .hoop{width:10px;height:10px;border-radius:5px;border:2px solid var(--ink);box-sizing:border-box}
-.stall-charm .ball{margin-top:-2px;width:46px;height:46px;border-radius:23px;border:2px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
-.stall-charm.picked .ball{border-width:4px;box-shadow:0 0 0 4px #fff,0 0 0 6px var(--ink)}
-.stall-charm.locked .hoop{border-color:#8a8a8a}
-.stall-charm.locked .ball{background:var(--soft);border:2px dashed #8a8a8a}
-.stall-charm .price{margin-top:3px;display:flex;align-items:center;gap:3px;font-size:12px;font-weight:800;white-space:nowrap;background:rgba(255,255,255,.85);border-radius:6px;padding:0 3px}
 .bramble-panel,.info-panel{position:relative;border:2px solid var(--ink);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;background:#fff;flex-shrink:0}
 .bramble-panel::before{content:"";position:absolute;left:50%;top:-9px;width:16px;height:16px;margin-left:-8px;background:#fff;border-left:2px solid var(--ink);border-top:2px solid var(--ink);transform:rotate(45deg)}
 .preview-tile{width:80px;height:80px;flex-shrink:0;border-radius:14px;background:var(--ground);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center}
@@ -333,15 +320,12 @@ h1,h2{margin:0;text-wrap:balance}
 /* ---------- display font ---------- */
 h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .primary,.secondary,.pill-btn,.outline-pill,.dashed-btn,.chip,.tabs button,#scrollBtn,
-.friend-info b,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
-
+.friend-info b,.tray-item span,
 .gem-img{display:inline-block;flex-shrink:0;vertical-align:middle;object-fit:contain}
 
 /* charm art (see CONFIG.charms[id].art) */
 .charm-art{display:block;width:auto;max-width:none;-webkit-user-drag:none}
 .charm .charm-art{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
-.stall-charm .art-hang{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
-.stall-charm.has-art.picked .art-hang{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px var(--ink))}
 .tray-item .charm-art{height:auto;max-height:40px}
 /* on the bracelet ring, charm art hangs from the hoop instead of sitting in a circle */
 .ring-slot.has-art{border:none;background:none;width:52px;height:52px;margin:-26px 0 0 -26px}
@@ -382,3 +366,41 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #knob{background:rgba(244,239,226,.92);box-shadow:0 2px 6px rgba(0,0,0,.4)}
 #hint{color:rgba(244,239,226,.7)}
 #gameArc .arc-art circle[stroke-dasharray]{fill:rgba(255,255,255,.06);stroke:rgba(224,194,122,.8)}   /* empty bracelet slot */
+
+/* ---------- Bramble's stall: the stall art zoomed in to fill the screen ---------- */
+#scr-stall{background:#6f7fb8 url('../art/stall-bg.webp') center / cover no-repeat;container-type:size}
+.stall-scene{position:absolute;width:166cqw;aspect-ratio:1/1;left:-35cqw;top:calc(53cqh - 61cqw)}
+.stall-img{position:absolute;inset:0;width:100%;height:100%;z-index:1;-webkit-user-drag:none}
+#stallCharms{position:absolute;inset:0;z-index:2}
+.stall-top-shade{position:absolute;left:0;right:0;top:0;height:calc(150px + env(safe-area-inset-top,0px));background:linear-gradient(rgba(20,34,42,.92),rgba(20,34,42,.55) 55%,rgba(20,34,42,0));z-index:3;pointer-events:none}
+.stall-bramble{position:absolute;right:-4cqw;top:calc(env(safe-area-inset-top,0px) + 118px);width:min(36cqw,170px);z-index:6;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3));animation:bob 3.2s ease-in-out infinite}
+.stall-head{position:absolute;left:0;right:0;top:0;z-index:7;display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px))}
+.stall-head h2{flex:1;min-width:0;margin:0;color:#fff;font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.px-close{width:44px;height:44px;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+.gem-pill.glass{display:flex;align-items:center;height:42px;padding:0 12px;gap:6px;border-radius:12px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.55);color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.stall-tabs{position:absolute;z-index:7;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 74px);display:flex;padding:3px;border-radius:20px;background:rgba(14,20,30,.5);border:1.5px solid rgba(255,255,255,.25)}
+.stall-tabs button{height:34px;padding:0 16px;border-radius:17px;border:none;background:none;color:rgba(255,255,255,.8);font-family:var(--font-display);font-size:15px}
+.stall-tabs button[aria-selected="true"]{background:#fff;color:var(--ink)}
+.stall-charm{position:absolute;transform:translate(-50%,0);transform-origin:50% 0;border:none;background:none;padding:0;display:flex;flex-direction:column;align-items:center;animation:sway 3.4s ease-in-out infinite alternate}
+@keyframes sway{from{rotate:calc(var(--sway) * -1)}to{rotate:var(--sway)}}
+.stall-charm .art-hang{position:relative;z-index:1;display:block;filter:drop-shadow(0 4px 4px rgba(0,0,0,.35))}
+.stall-charm .charm-art{height:min(27cqw,124px,15cqh) !important}
+.stall-charm .charm-glow{position:absolute;left:50%;top:58%;width:min(36cqw,170px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,226,120,.95),rgba(255,206,80,.55) 45%,rgba(255,200,60,0));opacity:0;transition:opacity .25s}
+.stall-charm.picked .charm-glow{opacity:1;animation:glowPulse 1.6s ease-in-out infinite}
+.stall-charm.picked .art-hang{filter:drop-shadow(0 0 6px rgba(255,240,180,.9)) drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+@keyframes glowPulse{50%{scale:1.1}}
+.stall-charm .price{position:relative;z-index:1;margin-top:2px;display:flex;align-items:center;gap:3px;font-family:var(--font-display);font-size:13px;color:#fff;white-space:nowrap;background:rgba(14,20,30,.62);border-radius:8px;padding:2px 7px}
+.stall-charm.owned .price{color:#c9f2bf}
+.bramble-bubble{position:absolute;z-index:7;left:max(14px,env(safe-area-inset-left,0px));right:calc(min(24cqw,110px));top:calc(env(safe-area-inset-top,0px) + 124px);display:flex;gap:12px;align-items:center;background:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.bramble-bubble::after{content:"";position:absolute;right:-8px;top:40%;width:16px;height:16px;background:#fff;rotate:45deg;border-radius:3px}
+.bramble-bubble .preview-tile{width:64px;height:64px;border-radius:12px;background:#f1eef7}
+.bramble-bubble .preview-tile[hidden]{display:none}
+.bubble-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+.bubble-text .h3{font-size:16px}
+.bubble-text .body{font-size:13px;line-height:1.35;color:#2a2a2a}
+.stall-buy{position:absolute;z-index:7;left:0;right:0;bottom:0;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.stall-buy .px-btn[hidden]{display:none}
+.px-btn:disabled{cursor:default;--c:#6d7186;--hi:#8f93a6;--lo:#4a4d5e}
+.px-btn:disabled span{color:rgba(255,255,255,.85)}
+.px-btn span .gem-img{margin-left:6px}
+@media (prefers-reduced-motion: reduce){.stall-charm,.stall-bramble,.stall-charm.picked .charm-glow{animation:none}}
