@@ -107,6 +107,11 @@ const Sound = (() => {
   // effect volumes are set so each lands at a similar, soft loudness (the clips themselves vary a lot)
   const FX_VOL = { key: 0.06, gem: 1, powerup: 0.056, buy: 0.28, enter: 0.098, maze: 0.128 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
+  // effects: <audio> elements are only a fallback. iPhones refuse to start an <audio> that wasn't started by a tap,
+  // so gem and key sounds (which play when you touch them in the maze, not on a tap) are played from decoded
+  // Web Audio buffers instead, which can play any time once the first tap has unlocked the audio.
+  const FX_SRC = { key: 'sound/key-found.mp3', gem: 'sound/gem.mp3?v=2', powerup: 'sound/powerup.mp3', buy: 'sound/buy-charm.mp3', enter: 'sound/enter-chime.mp3?v=2', maze: 'sound/enter-maze.mp3' };
+  const buffers = {}, fxGain = {};
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3?v=2'), maze: mk('sound/enter-maze.mp3') };
   const tracks = { menu: mk('sound/menu-music.mp3?v=2'), maze: mk('sound/bg-music.mp3') };
   Object.values(tracks).forEach(t => t.loop = true);
@@ -126,8 +131,16 @@ const Sound = (() => {
     try { ctx = new AC(); } catch (e) { ctx = false; return; }
     Object.keys(tracks).forEach(k => gains[k] = route(tracks[k], k === cur ? TRACK_VOL[k] * level : 0));
     shineGain = route(shine, 0);
-    Object.keys(fx).forEach(k => route(fx[k], FX_VOL[k]));
+    Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]);   // fallback only (until the buffers have loaded)
+    if (ctx) Object.keys(FX_SRC).forEach(k => {
+      const g = ctx.createGain(); g.gain.value = FX_VOL[k]; g.connect(ctx.destination); fxGain[k] = g;
+      fetch(FX_SRC[k]).then(r => r.arrayBuffer()).then(data => new Promise((ok, no) => {
+        const p = ctx.decodeAudioData(data, ok, no); if (p && p.then) p.then(ok, no);   // older Safari only has the callback form
+      })).then(b => { buffers[k] = b; }).catch(() => {});
+    });
   }
+  // keep the audio unlocked: iPhones can pause it (a call, another app), and only a tap may wake it again
+  const wake = () => { if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); };
   if (!AC){ Object.keys(tracks).forEach(k => tracks[k].volume = TRACK_VOL[k]); Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]); }
   const on = () => Profile.data.music !== false;
   const fadeTrack = (k, v, t = 0.15) => { if (gains[k]) gains[k].gain.setTargetAtTime(v, ctx.currentTime, t); else tracks[k].volume = v; };
@@ -150,7 +163,7 @@ const Sound = (() => {
     try { tracks[name].currentTime = 0; } catch (e) {}
     if (playing) { start(); fadeTrack(name, TRACK_VOL[name] * level, 0.3); }
   }
-  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!playing || music().paused) start(); }, { passive: true }));
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => { setup(); wake(); if (!playing || music().paused) start(); }, { passive: true }));
   document.addEventListener('visibilitychange', () => { if (document.hidden){ music().pause(); playing = false; } else start(); });
   let duck;
   const fadeShine = v => { if (shineGain) shineGain.gain.setTargetAtTime(v, ctx.currentTime, 0.25); else shine.volume = v; };
@@ -166,12 +179,17 @@ const Sound = (() => {
         fadeShine(SHINE_VOL); setMusicVol(0.5);
       } else { fadeShine(0); setMusicVol(1); shineStop = setTimeout(() => shine.pause(), 1200); }
     },
-    play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    play(name){ const a = fx[name]; if (!a) return; setup(); wake();
+      let len = a.duration;
+      if (buffers[name] && ctx){   // the reliable way: a fresh buffer source each time (overlapping gems are fine)
+        try { const src = ctx.createBufferSource(); src.buffer = buffers[name]; src.connect(fxGain[name]); src.start(); len = buffers[name].duration; }
+        catch (e) { try { a.currentTime = 0; a.play().catch(() => {}); } catch (e2) {} }
+      } else { try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
       // the music steps back while the key, buy or power-up sound plays, then comes back when it ends
       const dip = { key: 0.3, powerup: 0, buy: 0.3 }[name];
       if (dip !== undefined){ setMusicVol(dip); clearTimeout(duck);
-        const back = () => { clearTimeout(duck); a.onended = null; setMusicVol(shineOn ? 0.5 : 1); };
-        a.onended = back; duck = setTimeout(back, ((a.duration || 6) + 0.5) * 1000); } },
+        const back = () => { clearTimeout(duck); setMusicVol(shineOn ? 0.5 : 1); };
+        duck = setTimeout(back, ((len || 6) + 0.5) * 1000); } },
     get musicOn(){ return on(); },
     setMusic(v){ Profile.data.music = v; Profile.save(); if (v) start(); else { music().pause(); playing = false; } }
   };
