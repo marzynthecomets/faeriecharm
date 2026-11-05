@@ -16,11 +16,9 @@ const CONFIG = {
   },
 
   // ----- movement + view -----
-  stepMs: 150,           // how long one step takes
-  holdDelay: 0.3,        // after the first step, how long you hold before steps repeat
-  repeatEvery: 0.2,      // time between repeated steps while holding (bigger = slower)
-  stickDeadZone: 16,     // how far (px) your thumb moves before the stick counts (bigger = less twitchy)
-  stickReach: 34,        // how far (px) the stick pulls before its centre follows your thumb
+  stepMs: 150,           // how long one step takes (Dash and the scripted friend)
+  slideMs: 80,           // swipe to slide: how long each space of a slide takes (bigger = slower slide)
+  swipeDistance: 28,     // how far (px) a finger moves before it counts as a swipe (bigger = needs a longer swipe)
   fogClear: 96,          // radius (px) around the player that is fully visible
   fogEdge: 240,          // radius (px) where the fog is fully opaque
   peekSeconds: 3,        // how long Peek shows the wider maze

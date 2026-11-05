@@ -139,43 +139,46 @@ function fresh(){
   const p = cellCenter(S.px, S.py); cam.x = p.x; cam.y = p.y - 60; cam.z = 1; cam.peek = 0; cam.glow = 0;
 }
 
-// ---------- input ----------
-let joyDir = null, keyDir = null, joyId = null, jx = 0, jy = 0;
-const stick = $('#stick'), knob = $('#knob'), arrows = {up:stick.querySelector('.up'),down:stick.querySelector('.down'),left:stick.querySelector('.left'),right:stick.querySelector('.right')};
-function idleStick(){ const r = screen.getBoundingClientRect(); stick.style.left = 'calc(' + (r.width - 84) + 'px - env(safe-area-inset-right, 0px))'; stick.style.top = 'calc(' + (r.height - 112) + 'px - env(safe-area-inset-bottom, 0px))'; stick.classList.add('idle'); knob.style.transform = ''; for (const k in arrows) arrows[k].classList.remove('on'); }
+// ---------- input: swipe to slide ----------
+// A swipe slides your faerie that way until a wall stops it, or a spot where it could turn (picking up gems and keys on the way).
+// You can swipe again before it stops: the next slide starts as soon as this one ends. Arrow keys slide too.
+let swipe = null, nextSlide = null;
 canvas.addEventListener('pointerdown', e => {
-  if (!S || S.paused || S.won || joyId !== null) return;
-  joyId = e.pointerId; canvas.setPointerCapture(e.pointerId);
-  const r = screen.getBoundingClientRect(); jx = e.clientX - r.left; jy = e.clientY - r.top;   // drag anywhere; the stick itself stays put at the bottom right
-  stick.classList.remove('idle'); $('#hint').hidden = true;
+  if (!S || S.paused || S.won || swipe) return;
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, dir: null };
 });
 canvas.addEventListener('pointermove', e => {
-  if (e.pointerId !== joyId) return;
-  const r = screen.getBoundingClientRect(); let dx = e.clientX - r.left - jx, dy = e.clientY - r.top - jy;
-  const d = Math.hypot(dx,dy), m = CONFIG.stickReach;
-  // the centre follows your thumb, so turning back the other way only takes a short move
-  if (d > m){ jx += dx * (d - m) / d; jy += dy * (d - m) / d; dx = dx/d*m; dy = dy/d*m; }
-  knob.style.transform = `translate(${dx*38/m}px,${dy*38/m}px)`;
-  joyVec = Math.hypot(dx,dy) < CONFIG.stickDeadZone ? null : {x:dx, y:dy};
-  joyDir = joyVec ? joyDirs()[0] : null;
-  for (const k in arrows) arrows[k].classList.toggle('on', k === joyDir);
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+  if (Math.hypot(dx, dy) < CONFIG.swipeDistance) return;
+  const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  swipe.x = e.clientX; swipe.y = e.clientY;
+  if (dir === swipe.dir) return;   // one swipe = one slide; keep the finger down and swipe a new way to turn (an L-shape)
+  swipe.dir = dir; slide(dir);
 });
-const endJoy = e => { if (e.pointerId !== joyId) return; joyId = null; joyDir = null; joyVec = null; idleStick(); };
-// The stick's main direction first, then the side it leans toward (so pushing up-right goes up if right is a wall)
-let joyVec = null;
-function joyDirs(){   // the one direction the stick points; a wobble doesn't flip it until the other way clearly wins
-  if (!joyVec) return [];
-  const ax = Math.abs(joyVec.x), ay = Math.abs(joyVec.y), h = joyVec.x > 0 ? 'right' : 'left', v = joyVec.y > 0 ? 'down' : 'up';
-  const wasH = joyDir === 'left' || joyDir === 'right', wasV = joyDir === 'up' || joyDir === 'down', k = 1.35;
-  if (wasH && ax * k >= ay) return [h];
-  if (wasV && ay * k >= ax) return [v];
-  return [ax >= ay ? h : v];
-}
-canvas.addEventListener('pointerup', endJoy); canvas.addEventListener('pointercancel', endJoy);
+const endSwipe = e => { if (swipe && e.pointerId === swipe.id) swipe = null; };
+canvas.addEventListener('pointerup', endSwipe); canvas.addEventListener('pointercancel', endSwipe);
 const KEYS = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
-const held = [];
-addEventListener('keydown', e => { if (!active || sheetOpen) return; const d = KEYS[e.code]; if (!d) return; e.preventDefault(); if (!held.includes(d)) held.push(d); keyDir = held[held.length-1]; });
-addEventListener('keyup', e => { const d = KEYS[e.code]; if (!d) return; const i = held.indexOf(d); if (i>=0) held.splice(i,1); keyDir = held[held.length-1] || null; });
+addEventListener('keydown', e => { if (!active || sheetOpen) return; const d = KEYS[e.code]; if (!d) return; e.preventDefault(); if (!e.repeat) slide(d); });
+function slide(dir){
+  if (!S || S.paused || S.won || sheetOpen) return;
+  $('#hint').hidden = true;
+  if (S.anim || S.queue.length){ nextSlide = dir; return; }   // still sliding: go this way next
+  nextSlide = null;
+  const d = DIRS[dir]; let x = S.px, y = S.py, n = 0;
+  while (canGo(x, y, dir)){
+    x += d.dx; y += d.dy; n++;
+    if (stopsHere(x, y) || canTurn(x, y, dir)) break;
+  }
+  S.facing = dir;
+  if (!n){ S.bump = { dir, t: S.now }; return; }   // a wall right there: a little bump
+  S.queue = Array(n).fill(dir);
+}
+// A slide also stops where a side path opens, so you can choose which way to go (otherwise some paths can't be reached)
+const canTurn = (x, y, dir) => !!(mine[y*W + x] & (dir === 'up' || dir === 'down' ? DIRS.left.bit | DIRS.right.bit : DIRS.up.bit | DIRS.down.bit));
+// besides walls, a slide stops on the door once you have your key (so you can open it / meet your friend there)
+const stopsHere = (x, y) => S.haveHalf && (S.duo ? atDoor(x, y) : (x === DOOR.x && y === DOOR.y));
 
 // ---------- movement ----------
 function canGo(x,y,dir){ return !!(mine[y*W+x] & DIRS[dir].bit); }
@@ -213,20 +216,16 @@ function checkDoor(){
   if (!meAtDoor()) S.waitSaid = false;
 }
 function updatePlayer(dt){
-  const joy = !sheetOpen && !!joyDir, dir = sheetOpen ? null : (joyDir || keyDir);
-  // one step straight away, then a short pause, then steady steps while you hold (stick and arrow keys alike)
-  if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + HOLD_DELAY; } }
   if (S.anim){ S.anim.t += dt*1000/S.anim.dur; if (S.anim.t >= 1) arrive(); return; }
-  if (S.queue.length){ startMove(S.queue.shift(), 75); return; }
-  if (S.pendDir){ const d = S.pendDir; S.pendDir = null; tryMove(d, joy); return; }
-  if (dir && S.now >= S.repNext){ if (tryMove(dir, joy)) S.repNext = S.now + REPEAT; }
-}
-function tryMove(dir){   // goes only the way you point; a wall stops you
-  if (startMove(dir, STEP_MS)) return true;
-  S.facing = dir; return false;
+  if (S.queue.length){ startMove(S.queue.shift(), CONFIG.slideMs); return; }
+  if (nextSlide){ const d = nextSlide; nextSlide = null; slide(d); }
 }
 function playerPix(){
-  if (!S.anim) return cellCenter(S.px, S.py);
+  if (!S.anim){
+    const c = cellCenter(S.px, S.py), b = S.bump, k = b ? (S.now - b.t) / 0.22 : 1;
+    if (k >= 1) return c;
+    const o = Math.sin(k * Math.PI) * 8; return {x: c.x + DIRS[b.dir].dx * o, y: c.y + DIRS[b.dir].dy * o};
+  }
   const t = Math.min(1, S.anim.t), e = t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
   const a = cellCenter(S.anim.fx, S.anim.fy), b = cellCenter(S.anim.tx, S.anim.ty);
   return {x:a.x + (b.x-a.x)*e, y:a.y + (b.y-a.y)*e};
@@ -377,7 +376,7 @@ $('#gemPlus').onclick = () => { sel.gems = Math.min(sel.gems + 1, Math.min(Profi
 $('#gemMinus').onclick = () => { sel.gems = Math.max(0, sel.gems - 1); renderSheet(); };
 function openSheet(){
   if (!S || S.paused || S.won) return;
-  sel = {msg:null, emoji:null, peek:false, gems:0, lend:null}; sheetOpen = true; joyDir = null; idleStick();
+  sel = {msg:null, emoji:null, peek:false, gems:0, lend:null}; sheetOpen = true; swipe = null; nextSlide = null;
   renderSheet(); $('#scrim').classList.add('show'); $('#sheet').classList.add('show'); $('#sheet').setAttribute('aria-hidden','false');
 }
 function closeSheet(){ sheetOpen = false; $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); $('#sheet').setAttribute('aria-hidden','true'); }
@@ -412,7 +411,7 @@ $('#sendBtn').onclick = () => {
 };
 
 // ---------- overlays ----------
-function setPaused(p){ S.paused = p; if (p){ joyDir = null; idleStick(); } }
+function setPaused(p){ S.paused = p; if (p){ swipe = null; nextSlide = null; } }
 $('#startBtn').onclick = () => { $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your key' : 'Find the key'); };
 let keyTaps = [];
 $('#keyBtn').onclick = () => {
@@ -449,7 +448,7 @@ function restart(){ start(opts); $('#intro').hidden = true; setPaused(false); sa
 
 // ---------- render ----------
 let vw = 0, vh = 0, dpr = 1;
-function resize(){ const r = screen.getBoundingClientRect(); if (!r.width) return; vw = r.width; vh = r.height; dpr = Math.min(devicePixelRatio || 1, 2); canvas.width = Math.round(vw*dpr); canvas.height = Math.round(vh*dpr); canvas.style.width = vw + 'px'; canvas.style.height = vh + 'px'; if (joyId === null) idleStick(); }
+function resize(){ const r = screen.getBoundingClientRect(); if (!r.width) return; vw = r.width; vh = r.height; dpr = Math.min(devicePixelRatio || 1, 2); canvas.width = Math.round(vw*dpr); canvas.height = Math.round(vh*dpr); canvas.style.width = vw + 'px'; canvas.style.height = vh + 'px'; }
 addEventListener('resize', () => { if (active) resize(); });
 function playTop(){ const el = S.duo ? $('#status') : $('#gameTop'); const r = el.getBoundingClientRect(), a = screen.getBoundingClientRect(); return r.bottom - a.top; }
 
@@ -731,6 +730,6 @@ function start(o){
   $('#intro').hidden = false; $('#pauseOv').hidden = true; $('#facOv').hidden = true; $('#hint').hidden = false;
   active = true; resize(); renderKey(false); renderCharms(); updateStatus(); renderGemPills();
 }
-function stop(){ active = false; closeSheet(); joyDir = null; keyDir = null; held.length = 0; }
+function stop(){ active = false; closeSheet(); swipe = null; nextSlide = null; }
 window.Game = { start, stop, netPlayers, netEvent, get active(){ return active; } };
 })();
