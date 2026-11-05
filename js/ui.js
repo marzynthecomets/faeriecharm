@@ -79,7 +79,7 @@ function renderArc(el, slots, interactive){
 // ---------- the big hanging bracelet (top of the map and the maze) ----------
 // The gold chain with 4 charms hanging off it (the middle two a bit lower). The first 4 boost charms you wear.
 // x / top are in the chain image's own units (230 × 100.5): where each charm's ring hooks onto the chain.
-const HANG = [{x:34, top:27}, {x:88, top:53}, {x:142, top:53}, {x:196, top:27}];
+const HANG = [{x:30, top:22}, {x:87, top:53}, {x:143, top:53}, {x:200, top:22}];
 const hangSlots = boost => { const s = boost.filter(Boolean).slice(0, HANG.length); while (s.length < HANG.length) s.push(null); return s; };
 function renderHang(el, slots, interactive){
   let h = '<img class="hang-chain" src="art/chain.webp" alt="" draggable="false">';
@@ -94,24 +94,49 @@ function renderHang(el, slots, interactive){
 }
 
 // ---------- sound ----------
-// Background music loops quietly; effects play over it (the music dips while the key sound plays).
-// Phones only allow sound after the first tap, so the music starts on the first touch anywhere.
+// Background music loops at 30%; effects play over it (the music dips while the key sound plays).
+// Volumes go through Web Audio gain, because iPhones ignore an <audio> element's own volume.
+// Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
+// the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
-  const mk = (src, vol) => { const a = new Audio(src); a.preload = 'auto'; a.volume = vol; return a; };
-  const fx = { key: mk('sound/key-found.mp3', 0.9), gem: mk('sound/gem.mp3', 0.55) };
-  const music = mk('sound/bg-music.mp3', 0.16); music.loop = true; music.preload = 'auto';
-  const MUSIC_VOL = 0.16; let started = false;
+  const MUSIC_VOL = 0.3, FX_VOL = { key: 0.9, gem: 0.55 };
+  const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
+  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3') };
+  const music = mk('sound/bg-music.mp3'); music.loop = true;
+  let ctx = null, musicGain = null, playing = false;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  function route(el, vol){   // send an element through its own gain node (falls back to el.volume)
+    if (!ctx){ el.volume = vol; return null; }
+    try { const g = ctx.createGain(); g.gain.value = vol; ctx.createMediaElementSource(el).connect(g); g.connect(ctx.destination); return g; }
+    catch (e){ el.volume = vol; return null; }
+  }
+  function setup(){
+    if (ctx !== null || !AC) return;
+    try { ctx = new AC(); } catch (e) { ctx = false; return; }
+    musicGain = route(music, MUSIC_VOL);
+    Object.keys(fx).forEach(k => route(fx[k], FX_VOL[k]));
+  }
+  if (!AC){ music.volume = MUSIC_VOL; Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]); }
   const on = () => Profile.data.music !== false;
-  const tryPlay = a => { try { const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
-  function startMusic(){ if (on() && !document.hidden){ started = true; tryPlay(music); } }
-  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!started || music.paused) startMusic(); }, { passive: true }));
-  document.addEventListener('visibilitychange', () => { if (document.hidden) music.pause(); else if (started) startMusic(); });
+  const setMusicVol = v => { if (musicGain) musicGain.gain.setTargetAtTime(v, ctx.currentTime, 0.15); else music.volume = v; };
+  // try to start the music; resolves true if it's actually playing
+  function start(){
+    if (!on() || document.hidden) return Promise.resolve(false);
+    setup(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    try {
+      const p = music.play();
+      return (p && p.then ? p : Promise.resolve()).then(() => { playing = !(ctx && ctx.state === 'suspended'); return playing; }, () => (playing = false));
+    } catch (e) { return Promise.resolve(false); }
+  }
+  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!playing || music.paused) start(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => { if (document.hidden){ music.pause(); playing = false; } else start(); });
   let duck;
   return {
-    play(name){ const a = fx[name]; if (!a) return; try { a.currentTime = 0; } catch (e) {} tryPlay(a);
-      if (name === 'key'){ music.volume = MUSIC_VOL * 0.3; clearTimeout(duck); duck = setTimeout(() => music.volume = MUSIC_VOL, 4200); } },
+    start,
+    play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+      if (name === 'key'){ setMusicVol(MUSIC_VOL * 0.3); clearTimeout(duck); duck = setTimeout(() => setMusicVol(MUSIC_VOL), 4200); } },
     get musicOn(){ return on(); },
-    setMusic(v){ Profile.data.music = v; Profile.save(); if (v) startMusic(); else music.pause(); }
+    setMusic(v){ Profile.data.music = v; Profile.save(); if (v) start(); else { music.pause(); playing = false; } }
   };
 })();
 

@@ -16,9 +16,17 @@ const render = {};
 render.load = () => {
   const bar = $('#loadBar'); bar.style.width = '0%';
   requestAnimationFrame(() => requestAnimationFrame(() => bar.style.width = '100%'));
-  clearTimeout(render.load.t); render.load.t = setTimeout(afterLoad, 1700);
+  $('#loadTap').textContent = 'Tap to skip'; loadReady = false;
+  // the music starts right away if the phone allows it; if not, wait for a tap (which starts it) before moving on
+  const music = Sound.musicOn ? Sound.start() : Promise.resolve(true);
+  clearTimeout(render.load.t);
+  render.load.t = setTimeout(() => music.then(ok => {
+    if (ok || !Sound.musicOn) afterLoad();
+    else { loadReady = true; $('#loadText').textContent = 'The charms are ready!'; $('#loadTap').textContent = 'Tap to start'; $('#loadTap').classList.add('ready'); }
+  }), 1700);
 };
-$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); afterLoad(); });
+let loadReady = false;
+$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); Sound.start(); afterLoad(); });
 function afterLoad(){ go(Profile.data.name ? 'map' : 'name'); }
 
 // ---------- faerie name ----------

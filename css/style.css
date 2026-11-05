@@ -634,3 +634,10 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .key-sparks{position:absolute;z-index:16;pointer-events:none}
 .key-sparks i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;background:#fff3b0;rotate:45deg;animation:keySpark .8s ease-out forwards}
 @keyframes keySpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+/* 4 charms on the chain: a slightly wider chain and slightly smaller charms so they don't bump into each other */
+.hang{width:min(74cqw,340px)}
+.hang .hang-charm .charm-art{height:min(19cqw,92px,12cqh) !important}
+.hang .hang-charm:nth-of-type(4){--sway:-2deg;animation-delay:-.6s}
+.hang{width:min(70cqw,330px)}
+#loadTap.ready{font-size:18px;font-weight:800;opacity:1;padding:10px 22px;border-radius:22px;background:rgba(255,255,255,.75);color:#1d4a22;animation:tapPulse 1.4s ease-in-out infinite}
+@keyframes tapPulse{50%{transform:scale(1.07)}}
