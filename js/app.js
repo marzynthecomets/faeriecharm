@@ -186,27 +186,34 @@ render.win = () => {
   const r = lastResult, lv = CONFIG.levels[r.level], duo = r.mode === 'duo';
   // step 1: "You did it!"
   $('#callout').classList.remove('show');   // don't leave "The door opens!" floating over the faerie
-  $('#winStep1').hidden = false; $('#winStep2').hidden = true;
+  $('#winStep1').hidden = false; $('#winStep2').hidden = true; $('#winStep3').hidden = true;
   $('#winTitle').textContent = 'You did it!';
   $('#winSub').innerHTML = duo ? `You and <b>${esc(FRIEND)}</b> opened the ${esc(lv.name)}!` : `${esc(lv.name)} completed!`;
   $('#winHigh').hidden = !duo; $('#winHighLabel').textContent = `High five ${FRIEND}`; $('#hiReply').textContent = '';
   const t = Math.round(r.time), mm = Math.floor(t/60), ss = String(t%60).padStart(2,'0');
   $('#winStats').textContent = [`${mm}:${ss}`, `${r.gemsFound} found`].concat(duo ? [`${r.sent} scrolls sent`, `${r.received} received`] : []).join(' · ');
-  const sp = $('#winSparks'); sp.innerHTML = '';   // a burst of sparkles out from behind the faerie
-  for (let i = 0; i < 26; i++){
-    const a = (i / 26) * Math.PI * 2 + Math.random()*0.3, d = 110 + Math.random()*120, e = document.createElement('i');
-    e.style.cssText = `--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;--d:${(Math.random()*0.35).toFixed(2)}s;--s:${(0.6 + Math.random()*0.9).toFixed(2)}`;
-    sp.appendChild(e);
-  }
+  sparkBurst($('#winSparks'));   // a burst of sparkles out from behind the faerie
   replay($('#winStep1'));
   // step 2 content (shown after Continue)
   const earned = CONFIG.levelReward + (r.gemsFound || 0), cheapest = Math.min(...Object.values(CONFIG.charms).map(c => c.price).filter(p => p > 0));
   $('#winGemCount').dataset.to = earned;
   $('#winGemNote').textContent = Profile.data.gems >= cheapest ? "You can buy a new charm at Bramble's stall." : `Save ${cheapest - Profile.data.gems} more for a charm at Bramble's stall.`;
-  $('#winFriendRow').hidden = !duo;
+  // a new Friendship charm gets its own celebration after the gems, so the gems screen just says Continue
+  const newCharm = duo && r.newFriendCharm;
+  $('#winFriendRow').hidden = !duo || newCharm; $('#winGemActions').hidden = newCharm; $('#winGemNext').hidden = !newCharm;
+  $('#winFriendSub').innerHTML = `You and <b>${esc(FRIEND)}</b> each got one for finishing together. It's on your bracelet!`;
   $('#winFriendIcon').innerHTML = icon('friend', 22);
   $('#winFriendNote').innerHTML = r.newFriendCharm ? `<b>New!</b> A Friendship charm. ${esc(FRIEND)} has the matching half.` : `You and ${esc(FRIEND)} both wear the Friendship charm.`;
 };
+function sparkBurst(el, n = 26){
+  el.innerHTML = '';
+  for (let i = 0; i < n; i++){
+    const a = (i / n) * Math.PI * 2 + Math.random()*0.3, d = 110 + Math.random()*120, e = document.createElement('i');
+    e.style.cssText = `--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;--d:${(Math.random()*0.35).toFixed(2)}s;--s:${(0.6 + Math.random()*0.9).toFixed(2)}`;
+    el.appendChild(e);
+  }
+}
+$('#winToFriend').onclick = () => { $('#winStep2').hidden = true; const st = $('#winStep3'); st.hidden = false; sparkBurst($('#winSparks3'), 32); replay(st); };
 function replay(el){ el.classList.remove('play'); void el.offsetWidth; el.classList.add('play'); }
 $('#winContinue').onclick = () => {
   $('#winStep1').hidden = true; const st = $('#winStep2'); st.hidden = false; replay(st);

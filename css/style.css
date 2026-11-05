@@ -486,3 +486,16 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .bc-choice span{font-family:var(--font-display);font-size:13px}
 .bc-choice:active{border-color:#ffd45a;background:#fff8dc}
 .brace-card .px-btn{height:58px}
+
+/* step 3: the Friendship charm, with pink-gold rays turning behind it */
+.friend-rays{background:repeating-conic-gradient(rgba(255,190,240,.2) 0 9deg,rgba(255,236,160,0) 9deg 22deg)}
+.friend-sparks i{background:#ffd6f4}.friend-sparks i:nth-child(3n){background:#fff1a8}.friend-sparks i:nth-child(4n){background:#e2c8ff}
+.friend-charm-big{width:min(46vw,190px);height:auto;transform-origin:50% 6%;filter:drop-shadow(0 0 18px rgba(255,170,240,.7)) drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+.friend-eyebrow{color:#ffd6f4;letter-spacing:.12em;margin-top:4px}
+.play .friend-charm-big{animation:charmDrop 1s cubic-bezier(.3,1.5,.5,1) .15s both,charmSwing 3s ease-in-out 1.2s infinite}
+#winStep3.play .px-title{animation-delay:.75s}
+#winStep3.play .friend-eyebrow{animation:fadeUp .5s ease-out .65s both}
+@keyframes charmDrop{0%{transform:translateY(-300px) rotate(-14deg);opacity:0}55%{opacity:1}100%{transform:none}}
+@keyframes charmSwing{0%,100%{rotate:-5deg}50%{rotate:5deg}}
+#scr-win .win-actions[hidden]{display:none}
+@media (prefers-reduced-motion: reduce){.friend-charm-big{animation:none !important}}

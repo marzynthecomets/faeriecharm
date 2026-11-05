@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=39">
+<link rel="stylesheet" href="css/style.css?v=40">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=39" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=40" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -237,7 +237,22 @@
       <p class="win-sub" id="winGemNote"></p>
       <div class="friend-earned" id="winFriendRow"><span class="friend-earned-icon" id="winFriendIcon"></span><span id="winFriendNote"></span></div>
     </div>
-    <div class="win-actions"><button class="px-btn blue" data-go="stall"><span>Get more charms</span></button><button class="px-btn green" data-go="map"><span>Back to map</span></button></div>
+    <div class="win-actions" id="winGemActions"><button class="px-btn blue" data-go="stall"><span>Get more charms</span></button><button class="px-btn green" data-go="map"><span>Back to map</span></button></div>
+    <div class="win-actions" id="winGemNext" hidden><button class="px-btn green" id="winToFriend"><span>Continue</span></button></div>
+  </div>
+  <!-- step 3 (only the first time you finish a level with a friend): the Friendship charm -->
+  <div class="win-step" id="winStep3" hidden>
+    <div class="win-bg" style="background-image:url(art/forest-bg.webp)"></div>
+    <div class="win-shade"></div>
+    <div class="win-rays friend-rays" aria-hidden="true"></div>
+    <div class="win-sparks friend-sparks" id="winSparks3" aria-hidden="true"></div>
+    <div class="win-body">
+      <img class="friend-charm-big" src="art/charm-friend.webp" alt="">
+      <div class="eyebrow friend-eyebrow">NEW CHARM</div>
+      <h1 class="px-title">Friendship charm!</h1>
+      <p class="win-sub" id="winFriendSub"></p>
+    </div>
+    <div class="win-actions"><button class="px-btn blue" data-go="bracelet"><span>See my bracelet</span></button><button class="px-btn green" data-go="map"><span>Back to map</span></button></div>
   </div>
 </section>
 
@@ -285,13 +300,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=39"></script>
-<script src="js/ui.js?v=39"></script>
+<script src="js/config.js?v=40"></script>
+<script src="js/ui.js?v=40"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=39"></script>
-<script src="js/game.js?v=39"></script>
-<script src="js/app.js?v=39"></script>
+<script src="js/net.js?v=40"></script>
+<script src="js/game.js?v=40"></script>
+<script src="js/app.js?v=40"></script>
 </body>
 </html>
