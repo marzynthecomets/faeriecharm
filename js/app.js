@@ -114,18 +114,9 @@ $('#entryPlay').onclick = () => play('solo');
 
 // ---------- pick a friend ----------
 render.friend = () => {
-  $('#liveBox').hidden = !Net.available();
-  $('#friendAnjInitial').textContent = FRIEND[0];
-  $('#friendAnjName').textContent = FRIEND;
-  const list = $('#otherFriends'); list.innerHTML = '';
-  CONFIG.otherFriends.forEach(f => {
-    const row = document.createElement('div'); row.className = 'friend-row';
-    row.innerHTML = `<div class="avatar big">${esc(f.name[0])}</div><div class="friend-info"><b>${esc(f.name)}</b><span>${esc(f.status)}</span></div><button class="pill-btn">Invite</button>`;
-    row.querySelector('button').onclick = () => say(`Invite sent to ${f.name}! (Playtest: only ${FRIEND} can play now)`);
-    list.appendChild(row);
-  });
+  const on = Net.available();
+  $('#liveBox').hidden = !on; $('#liveOff').hidden = on; $('#hostBtn').disabled = !on; $('#joinBtn').disabled = !on;
 };
-$('#friendPlay').onclick = () => play('duo');
 
 // ---------- two phones (js/net.js) ----------
 // One kid taps "Start a game" and gets a 4-letter code; the other types it in. Both jump into the maze together.
@@ -138,10 +129,10 @@ render.room = () => {
   roomStarting = false; roomFriend = null;
   const host = roomMode === 'host';
   $('#roomTitle').textContent = host ? 'Start a game' : 'Join a game';
-  $('#roomHost').hidden = !host; $('#roomJoin').hidden = host;
-  $('#roomTip').innerHTML = host ? 'Show this code to your friend. When they type it in, you both jump into the maze!' : 'Ask your friend for their <b>4-letter code</b> and type it here.';
-  $('#roomYou').textContent = ''; $('#joinMsg').textContent = ''; $('#joinMsg').className = 'caption';
-  $('#roomWait').textContent = 'Waiting for your friend…'; $('#roomWait').className = 'caption';
+  $('#roomHost').hidden = !host; $('#roomJoin').hidden = host; $('#joinActions').hidden = host; $('#codeGo').disabled = false;
+  $('#roomTip').innerHTML = host ? 'Show this code to your friend. When they type it in, you both jump into the maze!' : 'Ask your friend for their <b style="white-space:nowrap">4-letter code</b> and type it here.';
+  $('#roomYou').textContent = ''; $('#joinMsg').textContent = ''; $('#joinMsg').className = 'fc-wait';
+  $('#roomWait').textContent = 'Waiting for your friend…'; $('#roomWait').className = 'fc-wait';
   Net.leave();
   if (host){
     $('#roomCode').textContent = '····';
@@ -154,23 +145,22 @@ render.room = () => {
 $('#codeInput').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); });
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#codeGo').click(); });
 $('#codeGo').onclick = async () => {
-  const m = $('#joinMsg'); m.className = 'caption'; m.textContent = 'Looking…';
+  const m = $('#joinMsg'); m.className = 'fc-wait'; m.textContent = 'Looking…'; $('#codeGo').disabled = true;
   try {
     const r = await Net.joinRoom($('#codeInput').value);
-    if (r.error){ m.textContent = r.error; m.className = 'caption err'; return; }
+    if (r.error){ m.textContent = r.error; m.className = 'fc-wait err'; $('#codeGo').disabled = false; return; }
     $('#roomYou').textContent = `Your faerie name is ${r.name}`;
     startLive(r.friendName);
-  } catch (err){ m.textContent = "Couldn't connect. Check the internet and try again."; m.className = 'caption err'; }
+  } catch (err){ m.textContent = "Couldn't connect. Check the internet and try again."; m.className = 'fc-wait err'; $('#codeGo').disabled = false; }
 };
 function startLive(friendName){
   roomStarting = true; roomFriend = friendName;
   const el = roomMode === 'host' ? $('#roomWait') : $('#joinMsg');
-  el.textContent = `${friendName} is here! Starting…`; el.className = 'caption ok';
+  el.textContent = `${friendName} is here! Starting…`; el.className = 'fc-wait ok';
   Net.onPlayers(p => Game.netPlayers(p[Net.friendRole()]));
   Net.onEvents(ev => { if (ev.type === 'hi') hiFromFriend(ev.emoji); else Game.netEvent(ev); });
   setTimeout(() => play('duo', { friendName, level: Net.level }), 1200);
 }
-$('#addFriend').onclick = () => say("Scan each other's codes in person. Coming after playtesting!");
 
 // ---------- level complete ----------
 function finished(r){

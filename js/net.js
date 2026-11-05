@@ -7,7 +7,14 @@
 //
 // Room layout:  rooms/CODE = { level, started, players: { host: {...}, guest: {...} }, events: { id: {...} } }
 const Net = (() => {
-  const CODE_WORDS = ['MOSS','FERN','LEAF','ROOT','SEED','BARK','PINE','WREN','OWLS','BEES','DEWY','LILY','SAGE','MINT','BUDS','VINE','POND','HILL','NEST','PLUM','KIWI','LARK','DOVE','STAR','MOON','GLOW','RAIN','MIST','SNOW','SUNNY','BOLT'].filter(w => /^[A-Z]{4}$/.test(w));
+  // ~120 friendly 4-letter words. Every game gets its own: a code is claimed in one step (see claim()), so groups
+  // starting at the same moment never share one, and a code frees up again once its game is over.
+  const CODE_WORDS = ('MOSS FERN LEAF ROOT SEED BARK PINE WREN OWLS BEES DEWY LILY SAGE MINT BUDS VINE POND HILL NEST PLUM KIWI LARK DOVE STAR MOON GLOW RAIN MIST SNOW BOLT ' +
+    'ACORN TWIG BUSH REED KELP CLAY SAND DUNE CAVE PEAK LAKE COVE TIDE WAVE GUST WIND HAZE DAWN DUSK NOON ' +
+    'FROG TOAD NEWT MOTH WASP SWAN DEER HARE MOLE VOLE LAMB CALF FAWN FOAL PUMA LYNX SEAL CRAB CLAM KOI ' +
+    'ROSE IRIS ARUM FIGS PEAR LIME KALE CORN OATS RICE BEAN PEAS NUTS HONEY JAM TEAL GOLD JADE RUBY OPAL ' +
+    'RUNE ORBS WAND BELL HARP DRUM KITE BOAT RAFT DOCK MAPS PATH GATE DOOR ARCH TOWER LAMP WICK GEMS KEYS ' +
+    'PUFF ZOOM ZING HOOT CHIP BLIP TWIN DUET PALS CREW TEAM JOLLY COSY SNUG WARM SOFT KIND BRAVE BOLD WISH').split(' ').filter(w => /^[A-Z]{4}$/.test(w));
   const NICKNAMES = ['Wren','Pip','Moss','Fern','Clover','Juniper','Sorrel','Bryony','Hazel','Rowan','Sprig','Thistle'];
   const pick = list => list[Math.floor(Math.random() * list.length)];
 
@@ -26,6 +33,7 @@ const Net = (() => {
       name: 'firebase',
       now: () => Date.now() + offset,
       async get(c){ const s = await room(c).get(); return s.exists() ? s.val() : null; },
+      async claim(c, data, free){ const r = await room(c).transaction(cur => (cur === null || free(cur)) ? data : undefined); return r.committed; },
       async set(c, data){ await room(c).set(data); },
       async update(c, path, patch){ await room(c).child(path).update(patch); },
       async push(c, ev){ await room(c).child('events').push({ ...ev, t: firebase.database.ServerValue.TIMESTAMP }); },
@@ -53,6 +61,7 @@ const Net = (() => {
       name: 'local',
       now: () => Date.now(),
       async get(c){ return read(c); },
+      async claim(c, data, free){ const cur = read(c); if (cur && !free(cur)) return false; write(c, data); return true; },
       async set(c, data){ write(c, data); },
       async update(c, path, patch){ const v = read(c) || {}; setPath(v, path, patch); write(c, v); },
       async push(c, ev){ const v = read(c) || {}; v.events = v.events || {}; v.events['e' + Date.now() + Math.random().toString(36).slice(2, 6)] = { ...ev, t: Date.now() }; write(c, v); },
@@ -84,14 +93,15 @@ const Net = (() => {
     friendRole: () => role === 'host' ? 'guest' : 'host',
 
     async createRoom(lv){
-      const b = getBackend(); role = 'host'; level = lv; myName = pick(NICKNAMES);
-      for (let i = 0; i < 12; i++){
-        const c = pick(CODE_WORDS), existing = await b.get(c);
-        if (!existing || !existing.players || !existing.players.host || !existing.players.host.online || b.now() - (existing.created || 0) > 3*3600e3){ code = c; break; }
-      }
-      if (!code) throw new Error('No free room codes right now. Try again in a minute.');
-      joinedAt = b.now();
-      await b.set(code, { level, started: false, created: b.now(), players: { host: { name: myName, status: 'solving', half: false, won: false, online: true } } });
+      const b = getBackend(); role = 'host'; level = lv; myName = pick(NICKNAMES); code = null;
+      // a code is free if nobody's hosting it, its game has been left by both players, or it's over 3 hours old
+      const now = b.now(), free = r => { const p = r.players || {}, on = k => p[k] && p[k].online;
+        return !on('host') && !on('guest') || now - (r.created || 0) > 3*3600e3; };
+      const fresh = { level, started: false, created: now, players: { host: { name: myName, status: 'solving', half: false, won: false, online: true } } };
+      const order = CODE_WORDS.slice().sort(() => Math.random() - 0.5);
+      for (let i = 0; i < Math.min(order.length, 40) && !code; i++) if (await b.claim(order[i], fresh, free)) code = order[i];
+      if (!code) throw new Error('So many games right now! Try again in a minute.');
+      joinedAt = now;
       b.presence(code, 'host'); watchRoom();
       return { code, name: myName };
     },

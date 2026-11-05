@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=41">
+<link rel="stylesheet" href="css/style.css?v=42">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=41" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=42" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -70,52 +70,42 @@
 </section>
 
 <!-- ================= PICK A FRIEND ================= -->
-<section class="screen pad" id="scr-friend" aria-label="Play with a friend">
-  <div class="col">
-    <div class="titlebar"><button class="round" data-go="entry" aria-label="Back"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Play with a friend</h2></div>
-    <div class="bramble-tip">
-      <img class="bramble tip-bramble" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
-      <div class="bubble">Pick a friend to team up with! You'll explore the <b>same maze</b> and each find <b>your own key</b>.</div>
+<section class="screen fc-screen" id="scr-friend" aria-label="Play with a friend">
+  <div class="win-bg" style="background-image:url(art/forest-bg.webp)"></div>
+  <div class="win-shade soft"></div>
+  <header class="stall-head"><button class="px-close" data-go="entry" aria-label="Back"><svg width="22" height="22" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h2v1h1v1h1v1h1v1h1V3h1V2h1V1h1V0h2v2h-1v1H9v1H8v1H7v1h1v1h1v1h1v1h1v2H9v-1H8V9H7V8H6V7H5v1H4v1H3v1H2v1H0V9h1V8h1V7h1V6h1V5H3V4H2V3H1V2H0Z"/></svg></button><h2>Play with a friend</h2></header>
+  <div class="fc-body">
+    <div class="fc-bramble"><img class="fc-faerie" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
+      <div class="fc-bubble">Explore the <b>same maze</b> together! You each find <b>your own key</b>, then meet at the door.</div></div>
+    <div class="fc-steps" id="liveBox">
+      <div class="fc-step"><b>1</b><span>One of you taps <b>Start a game</b> and gets a code.</span></div>
+      <div class="fc-step"><b>2</b><span>The other taps <b>Join with a code</b> and types it in.</span></div>
     </div>
-    <div class="label">YOUR FRIENDS</div>
-    <div class="friend-row main">
-      <div class="avatar big online" id="friendAnjInitial">A</div>
-      <div class="friend-info"><b id="friendAnjName">Anjalie</b><span class="online-text">Online now</span></div>
-      <button class="pill-btn dark" id="friendPlay">Play</button>
-    </div>
-    <div id="otherFriends" class="col tight"></div>
-    <div id="liveBox" class="col tight" hidden>
-      <div class="label">PLAY ON TWO PHONES</div>
-      <div class="live-btns"><button class="pill-btn dark" id="hostBtn">Start a game</button><button class="pill-btn" id="joinBtn">Join with a code</button></div>
-    </div>
-    <div class="grow"></div>
-    <button class="dashed-btn" id="addFriend"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><g fill="none" stroke="#1a1a1a" stroke-width="2"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="13" y="2" width="7" height="7" rx="1"/><rect x="2" y="13" width="7" height="7" rx="1"/></g><path d="M13 13h3v3h-3ZM17 17h3v3h-3Z" fill="#1a1a1a"/></svg>Add a friend in person</button>
-    <div class="caption">Scan each other's codes when you're together.</div>
+    <p class="fc-off" id="liveOff" hidden>Playing with a friend needs the internet. Check your connection and try again.</p>
   </div>
+  <div class="win-actions"><button class="px-btn green" id="hostBtn"><span>Start a game</span></button><button class="px-btn blue" id="joinBtn"><span>Join with a code</span></button></div>
 </section>
 
 <!-- ================= TWO-PHONE ROOM ================= -->
-<section class="screen pad" id="scr-room" aria-label="Two-phone game">
-  <div class="col">
-    <div class="titlebar"><button class="round" id="roomBack" aria-label="Back"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2 id="roomTitle">Start a game</h2></div>
-    <div class="bramble-tip">
-      <img class="bramble tip-bramble" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
-      <div class="bubble" id="roomTip"></div>
+<section class="screen fc-screen" id="scr-room" aria-label="Two-phone game">
+  <div class="win-bg" style="background-image:url(art/forest-bg.webp)"></div>
+  <div class="win-shade soft"></div>
+  <header class="stall-head"><button class="px-close" id="roomBack" aria-label="Back"><svg width="22" height="22" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h2v1h1v1h1v1h1v1h1V3h1V2h1V1h1V0h2v2h-1v1H9v1H8v1H7v1h1v1h1v1h1v1h1v2H9v-1H8V9H7V8H6V7H5v1H4v1H3v1H2v1H0V9h1V8h1V7h1V6h1V5H3V4H2V3H1V2H0Z"/></svg></button><h2 id="roomTitle">Start a game</h2></header>
+  <div class="fc-body">
+    <div class="fc-bramble"><img class="fc-faerie" src="art/bramble.webp" alt="" draggable="false"><div class="fc-bubble" id="roomTip"></div></div>
+    <div id="roomHost" class="fc-card">
+      <div class="eyebrow">YOUR GAME CODE</div>
+      <div class="fc-code" id="roomCode" aria-live="polite">····</div>
+      <div class="fc-wait" id="roomWait">Waiting for your friend…</div>
     </div>
-    <div id="roomHost" class="room-box">
-      <div class="label">YOUR GAME CODE</div>
-      <div class="room-code" id="roomCode" aria-live="polite">····</div>
-      <div class="caption" id="roomWait">Waiting for your friend…</div>
+    <div id="roomJoin" class="fc-card">
+      <div class="eyebrow">TYPE YOUR FRIEND'S CODE</div>
+      <input id="codeInput" class="fc-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="4-letter game code" placeholder="MOSS">
+      <div class="fc-wait" id="joinMsg" role="status"></div>
     </div>
-    <div id="roomJoin" class="room-box">
-      <div class="label">TYPE YOUR FRIEND'S CODE</div>
-      <input id="codeInput" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="4-letter game code" placeholder="MOSS">
-      <button class="primary" id="codeGo">Join</button>
-      <div class="caption" id="joinMsg" role="status"></div>
-    </div>
-    <div class="grow"></div>
-    <div class="caption" id="roomYou"></div>
+    <div class="fc-you" id="roomYou"></div>
   </div>
+  <div class="win-actions" id="joinActions"><button class="px-btn green" id="codeGo"><span>Join</span></button></div>
 </section>
 
 <!-- ================= GAME ================= -->
@@ -299,13 +289,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=41"></script>
-<script src="js/ui.js?v=41"></script>
+<script src="js/config.js?v=42"></script>
+<script src="js/ui.js?v=42"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=41"></script>
-<script src="js/game.js?v=41"></script>
-<script src="js/app.js?v=41"></script>
+<script src="js/net.js?v=42"></script>
+<script src="js/game.js?v=42"></script>
+<script src="js/app.js?v=42"></script>
 </body>
 </html>
