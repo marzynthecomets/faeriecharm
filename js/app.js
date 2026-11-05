@@ -27,27 +27,35 @@ render.load = () => {
 };
 let loadReady = false;
 $('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); Sound.start(); afterLoad(); });
-function afterLoad(){ go(Profile.data.name ? 'map' : 'name'); }
+function afterLoad(){ go(okName(Profile.data.name) ? 'map' : 'name'); }   // a typed name from an older version gets picked again
 
 // ---------- faerie name ----------
-const NAME_IDEAS = ['Wren','Pip','Moss','Fern','Clover','Juniper','Hazel','Rowan','Sprig','Thistle','Bryony','Sorrel'];
-const cleanName = v => v.replace(/[^\p{L}\p{N} '\-]/gu, '').replace(/\s+/g, ' ').replace(/^\s/, '').slice(0, 12);
+// Kids pick from a list (no typing, for safety). 9 names at a time; "More names" shows another 9.
+const NAMES = CONFIG.faerieNames;
+const okName = n => NAMES.includes(n);
+const safeName = n => okName(n) ? n : 'Your friend';   // anything a friend's phone sends that isn't on the list stays hidden
+let namePick = null, namePage = [];
+function nameShuffle(){
+  const rest = NAMES.filter(n => n !== namePick).sort(() => Math.random() - 0.5);
+  namePage = (namePick ? [namePick] : []).concat(rest).slice(0, 9).sort(() => Math.random() - 0.5);
+  $('#nameIdeas').innerHTML = namePage.map(n => `<button class="name-idea" data-name="${n}" aria-pressed="${n === namePick}">${n}</button>`).join('');
+  $$('#nameIdeas [data-name]').forEach(b => b.onclick = () => { namePick = b.dataset.name; nameMark(); });
+}
+function nameMark(){
+  $$('#nameIdeas [data-name]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.name === namePick)));
+  $('#nameGo').disabled = !namePick;
+  $('#nameGo span').textContent = namePick ? `I'm ${namePick}!` : 'Pick a name';
+}
 render.name = () => {
-  const inp = $('#nameInput'); inp.value = Profile.data.name || '';
-  $('#nameBack').hidden = !Profile.data.name;
-  const ideas = NAME_IDEAS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-  $('#nameIdeas').innerHTML = ideas.map(n => `<button class="name-idea" data-name="${n}">${n}</button>`).join('');
-  $$('#nameIdeas [data-name]').forEach(b => b.onclick = () => { inp.value = b.dataset.name; nameCheck(); });
-  nameCheck();
-  setTimeout(() => { if (!Profile.data.name) inp.focus(); }, 60);
+  namePick = okName(Profile.data.name) ? Profile.data.name : null;
+  $('#nameBack').hidden = !namePick;
+  nameShuffle(); nameMark();
 };
-function nameCheck(){ const v = cleanName($('#nameInput').value).trim(); $('#nameGo').disabled = !v; return v; }
-$('#nameInput').addEventListener('input', e => { const c = cleanName(e.target.value); if (c !== e.target.value) e.target.value = c; nameCheck(); });
-$('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#nameGo').click(); });
+$('#nameMore').onclick = () => { nameShuffle(); nameMark(); };
 $('#nameGo').onclick = () => {
-  const v = nameCheck(); if (!v) return;
-  const first = !Profile.data.name; Profile.data.name = v; Profile.save(); $('#nameInput').blur();
-  go('map'); say(first ? `Welcome, ${v}!` : `You're ${v} now!`);
+  if (!namePick) return;
+  const first = !okName(Profile.data.name); Profile.data.name = namePick; Profile.save();
+  go('map'); say(first ? `Welcome, ${namePick}!` : `You're ${namePick} now!`);
 };
 
 // ---------- map ----------
@@ -187,6 +195,7 @@ $('#codeGo').onclick = async () => {
   } catch (err){ m.textContent = "Couldn't connect. Check the internet and try again."; m.className = 'fc-wait err'; $('#codeGo').disabled = false; }
 };
 function startLive(friendName){
+  friendName = safeName(friendName);
   roomStarting = true; roomFriend = friendName;
   const el = roomMode === 'host' ? $('#roomWait') : $('#joinMsg');
   el.textContent = `${friendName} is here! Starting…`; el.className = 'fc-wait ok';

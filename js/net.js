@@ -15,7 +15,7 @@ const Net = (() => {
     'ROSE IRIS ARUM FIGS PEAR LIME KALE CORN OATS RICE BEAN PEAS NUTS HONEY JAM TEAL GOLD JADE RUBY OPAL ' +
     'RUNE ORBS WAND BELL HARP DRUM KITE BOAT RAFT DOCK MAPS PATH GATE DOOR ARCH TOWER LAMP WICK GEMS KEYS ' +
     'PUFF ZOOM ZING HOOT CHIP BLIP TWIN DUET PALS CREW TEAM JOLLY COSY SNUG WARM SOFT KIND BRAVE BOLD WISH').split(' ').filter(w => /^[A-Z]{4}$/.test(w));
-  const NICKNAMES = ['Wren','Pip','Moss','Fern','Clover','Juniper','Sorrel','Bryony','Hazel','Rowan','Sprig','Thistle'];
+  const NICKNAMES = CONFIG.faerieNames;   // fallback when a player has no name yet
   const pick = list => list[Math.floor(Math.random() * list.length)];
 
   let backend = null, code = null, role = null, level = 0, myName = '', joinedAt = 0;

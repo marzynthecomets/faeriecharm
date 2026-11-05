@@ -96,6 +96,12 @@ const CONFIG = {
   stallBoost: ['dash', 'snip', 'glow'],
   stallStyle: ['leaf', 'star', 'moon', 'shroom'],
 
+  // ----- faerie names -----
+  // For safety, kids pick a name from this list instead of typing one. Friends only ever see names from this list.
+  faerieNames: ['Wren', 'Pip', 'Moss', 'Fern', 'Clover', 'Juniper', 'Hazel', 'Rowan', 'Sprig', 'Thistle', 'Willow', 'Poppy',
+    'Daisy', 'Acorn', 'Pebble', 'Sunny', 'Misty', 'Bluebell', 'Petal', 'Honey', 'Maple', 'Ivy', 'Briar', 'Dewdrop',
+    'Sparkle', 'Lumi', 'Saffron', 'Nutmeg', 'Peony', 'Sorrel'],
+
   // ----- the scripted friend (playtest stand-in for a real second player) -----
   friendName: 'Anjalie',
   otherFriends: [

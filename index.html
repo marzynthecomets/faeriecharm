@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=56">
+<link rel="stylesheet" href="css/style.css?v=57">
 </head>
 <body>
 <div id="app">
@@ -28,12 +28,11 @@
   <header class="stall-head"><button class="px-close" id="nameBack" data-go="map" aria-label="Back"><svg width="22" height="22" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h2v1h1v1h1v1h1v1h1V3h1V2h1V1h1V0h2v2h-1v1H9v1H8v1H7v1h1v1h1v1h1v1h1v2H9v-1H8V9H7V8H6V7H5v1H4v1H3v1H2v1H0V9h1V8h1V7h1V6h1V5H3V4H2V3H1V2H0Z"/></svg></button></header>
   <div class="fc-body">
     <div class="fc-bramble"><img class="fc-faerie" src="art/bramble.webp" alt="Bramble the faerie" draggable="false">
-      <div class="fc-bubble">Hello, little faerie! I'm <b>Bramble</b>. What should I call you?</div></div>
+      <div class="fc-bubble">Hello, little faerie! I'm <b>Bramble</b>. Which faerie name do you like?</div></div>
     <div class="fc-card name-card">
-      <label class="name-q" for="nameInput">Your faerie name</label>
-      <input id="nameInput" class="fc-input name-input" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" placeholder="Type your name">
-      <div class="name-or">or pick one</div>
-      <div class="name-ideas" id="nameIdeas"></div>
+      <div class="name-q">Pick your faerie name</div>
+      <div class="name-ideas" id="nameIdeas" role="group" aria-label="Faerie names"></div>
+      <button class="name-more" id="nameMore">More names</button>
     </div>
     <p class="fc-you">Your friend will see this name when you play together.</p>
   </div>
@@ -46,7 +45,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=56" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=57" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -284,13 +283,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=56"></script>
-<script src="js/ui.js?v=56"></script>
+<script src="js/config.js?v=57"></script>
+<script src="js/ui.js?v=57"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=56"></script>
-<script src="js/game.js?v=56"></script>
-<script src="js/app.js?v=56"></script>
+<script src="js/net.js?v=57"></script>
+<script src="js/game.js?v=57"></script>
+<script src="js/app.js?v=57"></script>
 </body>
 </html>
