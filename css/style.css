@@ -75,7 +75,7 @@ h1,h2{margin:0;text-wrap:balance}
 
 /* ---------- map ---------- */
 /* the map stage is sized in the art's own pixels and scaled to cover the screen (sizes below are art pixels, ~0.58× on a phone) */
-#scr-map{background:#1f3a28}
+#scr-map{background:#14261a}
 #mapStage{position:absolute;left:0;top:0;transform-origin:0 0}
 .map-art{position:absolute;left:0;top:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
 .gate{position:absolute;border:none;background:none;padding:0}
@@ -402,11 +402,11 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 
 /* the big 3-charm bracelet hanging over the maze */
 #scr-game{container-type:size}
-#gameArc{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) - 4px);bottom:auto;transform:translateX(-50%);width:min(62cqw,300px);height:auto;aspect-ratio:230/100.5}
+.hang{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) - 4px);bottom:auto;transform:translateX(-50%);width:min(62cqw,300px);height:auto;aspect-ratio:230/100.5;border:none;background:none;padding:0;display:block;z-index:1}
 .hang-chain{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));-webkit-user-drag:none}
-#gameArc .hang-charm{position:absolute;width:auto;height:auto;transform:translateX(-50%);transform-origin:50% 0;filter:drop-shadow(0 4px 5px rgba(0,0,0,.55));animation:sway 3.6s ease-in-out infinite alternate}
-#gameArc .hang-charm:nth-of-type(1){--sway:2deg}#gameArc .hang-charm:nth-of-type(2){--sway:-1.5deg;animation-delay:-1.2s}#gameArc .hang-charm:nth-of-type(3){--sway:2.4deg;animation-delay:-2.1s}
-#gameArc .hang-charm .charm-art{height:min(25cqw,118px,14cqh) !important}
+.hang .hang-charm{position:absolute;width:auto;height:auto;transform:translateX(-50%);transform-origin:50% 0;filter:drop-shadow(0 4px 5px rgba(0,0,0,.55));animation:sway 3.6s ease-in-out infinite alternate}
+.hang .hang-charm:nth-of-type(1){--sway:2deg}.hang .hang-charm:nth-of-type(2){--sway:-1.5deg;animation-delay:-1.2s}.hang .hang-charm:nth-of-type(3){--sway:2.4deg;animation-delay:-2.1s}
+.hang .hang-charm .charm-art{height:min(25cqw,118px,14cqh) !important}
 #gameArc .hang-charm.spent{opacity:.35;filter:grayscale(1)}
 #gameArc .hang-charm .badge{right:-6px;top:30%}
 .hang-empty{position:absolute;width:min(11cqw,46px);aspect-ratio:1;transform:translate(-50%,24px);border-radius:50%;border:2px dashed rgba(224,194,122,.85);background:rgba(255,255,255,.05)}
@@ -414,7 +414,7 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #gameGems .gem-img{width:22px;height:22px}
 #status{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 20px)}
 #toast{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 82px)}
-@media (prefers-reduced-motion: reduce){#gameArc .hang-charm{animation:none}}
+@media (prefers-reduced-motion: reduce){.hang .hang-charm{animation:none}}
 
 /* usable charms glow softly so kids know to tap them; a used-up charm goes grey and stops glowing */
 #gameArc .hang-charm:not(.spent) .charm-art{animation:charmGlow 2.2s ease-in-out infinite}
@@ -424,3 +424,16 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 @keyframes charmFire{0%{scale:1;filter:drop-shadow(0 0 4px #fff3b0) brightness(1.1)}35%{scale:1.22;filter:drop-shadow(0 0 18px #ffe066) drop-shadow(0 0 6px #fff) brightness(1.5)}100%{scale:1;filter:none}}
 #gameArc .hang-charm .charm-art{transform-origin:50% 10%}
 @media (prefers-reduced-motion: reduce){#gameArc .hang-charm:not(.spent) .charm-art{animation:none;filter:drop-shadow(0 0 6px rgba(255,214,90,.7))}#gameArc .hang-charm.fired .charm-art{animation:none}}
+
+/* home screen (map): same hanging bracelet, no white bar */
+#scr-map{container-type:size}
+.hang-bar{background:none;border-bottom:none;pointer-events:none;height:calc(64px + env(safe-area-inset-top,0px));align-items:flex-start;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.hang-bar > *{pointer-events:auto}
+#settingsBtn{width:44px;height:44px;border-radius:22px;background:rgba(14,12,24,.55);border:1.5px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;padding:0;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#settingsBtn svg{width:24px;height:24px}
+#settingsBtn path{stroke:#f4efe2}
+#settingsBtn circle:first-of-type{fill:rgba(14,12,24,.9);stroke:#f4efe2}
+#settingsBtn circle:last-of-type{fill:#f4efe2}
+#mapArc{cursor:pointer}
+#mapTop .gem-pill.glass{background:rgba(14,12,24,.45)}
+#mapFade{position:absolute;left:0;right:0;top:0;height:140px;z-index:9;pointer-events:none;background:linear-gradient(#14261a 0,#14261a calc(100% - 64px),rgba(20,38,26,.55) calc(100% - 30px),rgba(20,38,26,0))}

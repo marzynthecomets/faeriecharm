@@ -76,6 +76,23 @@ function renderArc(el, slots, interactive){
   el.innerHTML = html;
 }
 
+// ---------- the big hanging bracelet (top of the map and the maze) ----------
+// The gold chain with 3 charms hanging off it: left, middle (a bit lower), right. The first 3 boost charms you wear.
+// x / top are in the chain image's own units (230 × 100.5): where each charm's ring hooks onto the chain.
+const HANG = [{x:42, top:36}, {x:115, top:72}, {x:188, top:36}];
+const hangSlots = boost => { const s = boost.filter(Boolean).slice(0, HANG.length); while (s.length < HANG.length) s.push(null); return s; };
+function renderHang(el, slots, interactive){
+  let h = '<img class="hang-chain" src="art/chain.webp" alt="" draggable="false">';
+  HANG.forEach((p, i) => {
+    const id = slots[i], pos = `left:${(p.x/230*100).toFixed(2)}%;top:${(p.top/100.5*100).toFixed(2)}%`;
+    if (!id){ h += `<span class="hang-empty" style="${pos}" aria-hidden="true"></span>`; return; }
+    h += interactive
+      ? `<button class="charm hang-charm" data-charm="${id}" style="${pos}" aria-label="Use ${esc(CONFIG.charms[id].name)}">${icon(id, 40)}<span class="badge" hidden></span></button>`
+      : `<span class="charm hang-charm" style="${pos}">${icon(id, 40)}</span>`;
+  });
+  el.innerHTML = h;
+}
+
 // ---------- little helpers ----------
 let toastT;
 function say(text){ const c = $('#callout'); c.textContent = text; c.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => c.classList.remove('show'), 2200); }

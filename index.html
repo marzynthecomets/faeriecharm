@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=34">
+<link rel="stylesheet" href="css/style.css?v=35">
 </head>
 <body>
 <div id="app">
@@ -27,13 +27,14 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=34" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=35" alt="" draggable="false">
     </button>
   </div>
-  <header class="topbar">
+  <div id="mapFade" aria-hidden="true"></div>
+  <header class="topbar hang-bar" id="mapTop">
     <button class="icon-btn" id="settingsBtn" aria-label="Settings"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2.5v4M14 21.5v4M2.5 14h4M21.5 14h4M5.9 5.9l2.8 2.8M19.3 19.3l2.8 2.8M5.9 22.1l2.8-2.8M19.3 8.7l2.8-2.8" stroke="#1a1a1a" stroke-width="3.6" stroke-linecap="round"/><circle cx="14" cy="14" r="7.5" fill="#fff" stroke="#1a1a1a" stroke-width="3.2"/><circle cx="14" cy="14" r="2.6" fill="#1a1a1a"/></svg></button>
-    <button class="arc arc-link" id="mapArc" data-go="bracelet" aria-label="My bracelet"></button>
-    <div class="gem-pill small"><img class="gem-img" src="art/gem.webp" width="16" height="16" alt=""><span class="gem-count">0</span></div>
+    <button class="hang arc-link" id="mapArc" data-go="bracelet" aria-label="My bracelet"></button>
+    <div class="gem-pill glass"><img class="gem-img" src="art/gem.webp" width="22" height="22" alt=""><span class="gem-count">0</span></div>
   </header>
   <div class="overlay" id="settingsOv" hidden>
     <div class="card">
@@ -126,7 +127,7 @@
 
   <header class="topbar" id="gameTop">
     <button class="icon-btn" id="pauseBtn" aria-label="Pause"><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v18M16 3v18" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/></svg></button>
-    <div class="arc" id="gameArc" role="group" aria-label="Bracelet charms"></div>
+    <div class="hang" id="gameArc" role="group" aria-label="Bracelet charms"></div>
     <button id="keyBtn" aria-label="Key status">
       <svg width="48" height="48" viewBox="0 0 44 44" aria-hidden="true">
         <defs><clipPath id="kl"><rect x="0" y="0" width="22" height="44"/></clipPath><clipPath id="kr"><rect x="22" y="0" width="22" height="44"/></clipPath></defs>
@@ -301,13 +302,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=34"></script>
-<script src="js/ui.js?v=34"></script>
+<script src="js/config.js?v=35"></script>
+<script src="js/ui.js?v=35"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=34"></script>
-<script src="js/game.js?v=34"></script>
-<script src="js/app.js?v=34"></script>
+<script src="js/net.js?v=35"></script>
+<script src="js/game.js?v=35"></script>
+<script src="js/app.js?v=35"></script>
 </body>
 </html>

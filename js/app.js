@@ -33,7 +33,7 @@ render.map = () => {
   if (art.getAttribute('src') !== M.image) art.src = M.image;
   const st = $('#mapStage'); st.style.width = M.width + 'px'; st.style.height = M.height + 'px';
   const cs = $('.cloud-stall'); cs.style.left = M.stall.x + 'px'; cs.style.top = M.stall.y + 'px';
-  renderArc($('#mapArc'), Profile.data.boost, false);
+  renderHang($('#mapArc'), hangSlots(Profile.data.boost), false);
   const wrap = $('#levelSpots'); wrap.innerHTML = '';
   CONFIG.levels.forEach((lv, i) => {
     const g = M.gates[i]; if (!g) return;
@@ -48,11 +48,16 @@ render.map = () => {
   });
   fitStage();
 };
-// scale the art to cover the screen (like a phone wallpaper); tall phones crop a little off the sides
+// The map starts just under the hanging bracelet (so the charms never cover a gate) and is scaled to fill the
+// rest of the screen; tall phones crop a little off the sides, short ones a little off the bottom.
 function fitStage(){
   const scr = $('#scr-map'), st = $('#mapStage'); if (!scr.classList.contains('on')) return;
-  const M = CONFIG.map, r = scr.getBoundingClientRect(), s = Math.max(r.width / M.width, r.height / M.height);
-  st.style.transform = `translate(${(r.width - M.width*s)/2}px, ${(r.height - M.height*s)/2}px) scale(${s})`;
+  const M = CONFIG.map, r = scr.getBoundingClientRect(), W = r.width, H = r.height;
+  const chainW = Math.min(W * 0.62, 300), charmH = Math.min(W * 0.25, 118, H * 0.14);
+  const off = Math.round(chainW / 2.288 * 0.716 + charmH - 44);   // bottom of the lower middle charm, less the sky at the top of the art
+  const s = Math.max(W / M.width, (H - off) / M.height);
+  st.style.transform = `translate(${(W - M.width*s)/2}px, ${off}px) scale(${s})`;
+  $('#mapFade').style.height = (off + 56) + 'px';
 }
 addEventListener('resize', fitStage);
 
