@@ -12,6 +12,9 @@ const HOLD_DELAY = CONFIG.holdDelay, REPEAT = CONFIG.repeatEvery, STEP_MS = CONF
 
 // ---------- maze ----------
 let W = 7, H = 12, mine, theirs, dist, KEY, START, DOOR, GEM_CELLS;
+// Duo: both players share ONE maze (twice as wide). STARTS/KEYS are indexed by player (0 = host/you, 1 = guest/friend).
+let DUO = false, ME = 0, STARTS = null, KEYCELLS = null, DOOR_CELLS = [], DOOR_PX = 0;
+const PCOLOR = i => CONFIG.mazeArt.playerColors[i], PCOLOR_NAME = i => CONFIG.mazeArt.playerColorNames[i];
 function makeRng(seed){ let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
 function genMaze(seed, sx, sy, extra){
   const r = makeRng(seed), open = new Uint8Array(W*H), vis = new Uint8Array(W*H);
@@ -39,11 +42,41 @@ function bfs(open, sx, sy){
   }
   return d;
 }
-function buildLevel(lv, swap){   // swap: the second phone in a live game solves the other half
+function pickGems(open, d, skip, n){
+  const de = [];
+  for (let i=0;i<W*H;i++){ const x=i%W, y=(i/W)|0; let k=0; for (const q of DLIST) if (open[i] & DIRS[q].bit) k++;
+    if (k===1 && !skip(x,y)) de.push({x,y,d:d[i]}); }
+  de.sort((a,b)=>a.d-b.d);
+  const out = [];
+  if (de.length <= n) out.push(...de); else for (let j=0;j<n;j++) out.push(de[Math.round(j*(de.length-1)/(n-1))]);
+  let k = 0; while (out.length < n && k < W*H){ const x=k%W, y=(k/W)|0; if (!out.some(c=>c.x===x&&c.y===y) && !skip(x,y) && d[k]>4) out.push({x,y}); k+=7; }
+  return out.map(c => c.x + ',' + c.y);
+}
+function buildDuo(lv){
+  W = lv.width * 2; H = lv.height;
+  STARTS = [{x:0, y:H-1}, {x:W-1, y:H-1}];
+  const half = W/2;
+  DOOR_CELLS = [{x:half-1, y:0}, {x:half, y:0}]; DOOR = DOOR_CELLS[0]; DOOR_PX = half*C;
+  mine = genMaze(lv.seed, STARTS[0].x, STARTS[0].y, lv.width + 4);   // extra openings = more than one way through
+  mine[half-1] |= DIRS.right.bit; mine[half] |= DIRS.left.bit;          // the two cells under the door form one doorway
+  const d0 = bfs(mine, STARTS[0].x, STARTS[0].y), d1 = bfs(mine, STARTS[1].x, STARTS[1].y);
+  // each player's key sits on the FRIEND's side, so you cross paths on the way
+  const keyOn = (own, x0, x1) => { let best = -1, k = null;
+    for (let y=2; y<=H-4; y++) for (let x=x0; x<x1; x++){ const i = y*W+x; if (own[i] > best){ best = own[i]; k = {x,y}; } }
+    return k; };
+  KEYCELLS = [keyOn(d0, half, W), keyOn(d1, 0, half)];
+  const dmin = d0.map((v,i) => Math.min(v, d1[i]));
+  const isSpecial = (x,y) => STARTS.some(c=>c.x===x&&c.y===y) || KEYCELLS.some(c=>c.x===x&&c.y===y) || DOOR_CELLS.some(c=>c.x===x&&c.y===y);
+  GEM_CELLS = pickGems(mine, dmin, isSpecial, 6);
+  START = STARTS[ME]; KEY = KEYCELLS[ME];
+}
+function buildLevel(lv, duo){
+  DUO = duo;
+  if (duo){ buildDuo(lv); return; }
   W = lv.width; H = lv.height;
-  START = {x:0, y:H-1}; DOOR = {x:W-1, y:0};
-  mine = genMaze(swap ? lv.friendSeed : lv.seed, START.x, START.y, 4);
-  theirs = genMaze(swap ? lv.seed : lv.friendSeed, W-1, H-1, 4);
+  START = {x:0, y:H-1}; DOOR = {x:W-1, y:0}; DOOR_CELLS = [DOOR]; DOOR_PX = W*C;
+  mine = genMaze(lv.seed, START.x, START.y, 4);
+  theirs = genMaze(lv.friendSeed, W-1, H-1, 4);
   dist = bfs(mine, START.x, START.y);
   let best = -1; KEY = null;
   for (let i=0;i<W*H;i++){ const x=i%W, y=(i/W)|0; if (x===DOOR.x && y===DOOR.y) continue; if (y < 2 && x > W-3) continue; if (dist[i] > best){ best = dist[i]; KEY = {x,y}; } }
@@ -62,6 +95,28 @@ function hsh(a,b,c){ let h = (Math.imul(a,73856093) ^ Math.imul(b,19349663) ^ Ma
 let S = null, opts = null, active = false;
 const cam = {x:0, y:0, z:1, peek:0, glow:0};
 const cellCenter = (x,y) => ({x:x*C + C/2, y:y*C + C/2});
+function mkMate(c){ return {x:c.x, y:c.y, from:cellCenter(c.x,c.y), t:1, dur:1, facing:'up', foot:[]}; }
+function mateTo(x, y, facing){   // move the friend's faerie (scripted or live); animates from wherever it's drawn now
+  const m = S.mate; if (!m) return;
+  if (facing) m.facing = facing;
+  if (x === m.x && y === m.y) return;
+  const from = matePix(), steps = Math.abs(x - m.x) + Math.abs(y - m.y);
+  m.foot.push({...cellCenter(m.x, m.y), dir: m.facing}); if (m.foot.length > 10) m.foot.shift();
+  m.from = from; m.x = x; m.y = y; m.t = 0; m.dur = Math.min(600, STEP_MS * Math.max(1, steps));
+  if (!S.friendHalf && !S.live && x === KEYCELLS[1-ME].x && y === KEYCELLS[1-ME].y) setTimeout(() => S && S.mate && !S.friendHalf && friendFinds(), m.dur);
+  checkDoorSoon(m.dur);
+}
+function matePix(){
+  const m = S.mate, b = cellCenter(m.x, m.y); if (m.t >= 1) return b;
+  const t = m.t, e = t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+  return {x:m.from.x + (b.x-m.from.x)*e, y:m.from.y + (b.y-m.from.y)*e};
+}
+function updateMate(dt){ const m = S.mate; if (m && m.t < 1) m.t = Math.min(1, m.t + dt*1000/m.dur); }
+const atDoor = (x, y) => DOOR_CELLS.some(c => c.x === x && c.y === y);
+const meAtDoor = () => !S.anim && atDoor(S.px, S.py);
+const mateAtDoor = () => !!S.mate && atDoor(S.mate.x, S.mate.y);
+let doorTimer = null;
+function checkDoorSoon(ms){ clearTimeout(doorTimer); doorTimer = setTimeout(() => { if (active && S) { checkDoor(); updateStatus(); } }, ms + 20); }
 function fresh(){
   const duo = opts.mode === 'duo', slots = Profile.data.boost.slice(), uses = {};
   slots.forEach(id => { if (id) uses[id] = 1; });
@@ -71,9 +126,14 @@ function fresh(){
     gemCells:new Set(GEM_CELLS), gemsFound:0, haveHalf:false, friendHalf:false,
     peekUntil:-1, glowUntil:-1, now:0, paused:true, won:false, door:0,
     sent:0, received:0, pending:[], playerHalfAt:null,
-    friend:{ state:'solving', halfAt:CONFIG.friend.findsHalfAt, stuckAt:CONFIG.friend.getsStuckAt, unstuckAt:0, helped:false, wasStuck:false, sentHelp:false,
-      events:CONFIG.friend.scriptedScrolls.map(e => ({...e})) }
+    friend:{ state:'solving', stuckAt:CONFIG.friend.getsStuckAt, unstuckAt:0, helped:false, wasStuck:false, sentHelp:false, nextStep:1.2, pace:0.6,
+      events:CONFIG.friend.scriptedScrolls.map(e => ({...e})) },
+    mate: duo ? mkMate(STARTS[1-ME]) : null, mateKeyWarned:false
   };
+  if (duo && !S.live){   // pace the scripted friend so she reaches her key around CONFIG.friend.findsHalfAt
+    const len = Math.max(1, bfs(mine, KEYCELLS[1-ME].x, KEYCELLS[1-ME].y)[STARTS[1-ME].y*W + STARTS[1-ME].x]);
+    S.friend.pace = Math.min(1.1, Math.max(0.4, (CONFIG.friend.findsHalfAt - CONFIG.friend.stuckFor*0.5) / len));
+  }
   const p = cellCenter(S.px, S.py); cam.x = p.x; cam.y = p.y - 60; cam.z = 1; cam.peek = 0; cam.glow = 0;
 }
 
@@ -109,23 +169,34 @@ function startMove(dir, dur){
   const d = DIRS[dir];
   S.foot.push({...cellCenter(S.px,S.py), dir}); if (S.foot.length > 12) S.foot.shift();
   S.anim = {fx:S.px, fy:S.py, tx:S.px+d.dx, ty:S.py+d.dy, t:0, dur};
-  S.facing = dir; return true;
+  S.facing = dir;
+  if (S.live && S.duo) Net.setMine({x:S.anim.tx, y:S.anim.ty, f:dir});   // your friend sees you move
+  return true;
 }
 function arrive(){
   S.px = S.anim.tx; S.py = S.anim.ty; S.anim = null;
   const id = S.px + ',' + S.py;
-  if (S.gemCells.has(id)){ S.gemCells.delete(id); S.gemsFound++; Profile.addGems(1); popGems(); say('+1 gem'); }
+  if (S.gemCells.has(id)){ S.gemCells.delete(id); S.gemsFound++; Profile.addGems(1); popGems(); say('+1 gem'); if (S.live) Net.send({type:'gem', id}); }
+  if (S.duo && !S.friendHalf && S.px === KEYCELLS[1-ME].x && S.py === KEYCELLS[1-ME].y){
+    if (!S.mateKeyWarned){ S.mateKeyWarned = true; say(`That's ${FRIEND}'s key! Leave it for ${THEIR === 'their' ? 'them' : 'her'}`); }
+  } else S.mateKeyWarned = false;
   if (!S.haveHalf && S.px === KEY.x && S.py === KEY.y){
     S.haveHalf = true; S.playerHalfAt = S.now;
     if (!S.duo) S.friendHalf = true;
     renderKey(true);
     if (S.live) Net.setMine({half:true, status:'solving'});
-    say(!S.duo ? 'You found the key! Find the door' : S.friendHalf ? 'The key is whole! Find the door' : 'You found your half of the key!');
+    say(!S.duo ? 'You found the key! Find the door' : S.friendHalf ? 'Both keys found! Meet at the door' : 'You found your key! Head to the door');
     updateStatus();
   }
   checkDoor();
 }
-function checkDoor(){ if (!S.won && S.haveHalf && S.friendHalf && S.px === DOOR.x && S.py === DOOR.y) win(); }
+function checkDoor(){
+  if (S.won || !S.haveHalf || !S.friendHalf) return;
+  if (!S.duo){ if (S.px === DOOR.x && S.py === DOOR.y) win(); return; }
+  if (meAtDoor() && mateAtDoor()) win();   // duo: the door opens when you're BOTH standing at it
+  else if (meAtDoor() && !S.waitSaid){ S.waitSaid = true; say(`Waiting for ${FRIEND} at the door…`); }
+  if (!meAtDoor()) S.waitSaid = false;
+}
 function updatePlayer(dt){
   const dir = sheetOpen ? null : (joyDir || keyDir);
   if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + HOLD_DELAY; } }
@@ -163,6 +234,7 @@ function useCharm(id){
     if (canGo(S.px, S.py, S.facing)){ say('No wall in front of you'); return; }
     if (nx < 0 || ny < 0 || nx >= W || ny >= H){ say("That's the edge of the maze"); return; }
     mine[S.py*W+S.px] |= d.bit; mine[ny*W+nx] |= d.opp; S.uses.snip--; layerDirty = true; say('Snip! The thorns are gone');
+    if (S.live && S.duo) Net.send({type:'snip', x:S.px, y:S.py, dir:S.facing});
   }
   renderCharms();
 }
@@ -187,7 +259,7 @@ function renderKey(pop){
   $('#keyR').setAttribute('opacity', S.friendHalf ? 1 : 0);
   const k = $('#keyBtn');
   k.setAttribute('aria-label', !S.duo ? (S.haveHalf ? 'You have the key' : 'Key not found yet')
-    : S.haveHalf && S.friendHalf ? 'Key is whole' : S.haveHalf ? 'You have your half. Waiting on ' + FRIEND : S.friendHalf ? FRIEND + ' has ' + THEIR + ' half. Find yours' : 'Key: no halves found yet');
+    : S.haveHalf && S.friendHalf ? 'Both keys found. Meet at the door' : S.haveHalf ? 'You have your key. Waiting on ' + FRIEND : S.friendHalf ? FRIEND + ' has ' + THEIR + ' key. Find yours' : 'Keys: none found yet');
   if (pop){ k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
 }
 function updateStatus(){
@@ -196,9 +268,9 @@ function updateStatus(){
   let html, warn = false;
   if (S.won) html = 'The door is open!';
   else if (S.live && !S.remote.online){ html = `<b>${esc(FRIEND)}</b> lost connection…`; warn = true; }
-  else if (S.haveHalf && S.friendHalf) html = 'The key is whole! Find the door ↗';
+  else if (S.haveHalf && S.friendHalf) html = meAtDoor() ? `Waiting for <b>${esc(FRIEND)}</b> at the door…` : mateAtDoor() ? `<b>${esc(FRIEND)}</b> is at the door! Go ↑` : 'Both keys found! Meet at the door ↑';
   else if (f.state === 'stuck'){ html = `<b>${esc(FRIEND)}</b> seems stuck…`; warn = true; }
-  else if (S.friendHalf) html = `<b>${esc(FRIEND)}</b> found ${THEIR} half!`;
+  else if (S.friendHalf) html = `<b>${esc(FRIEND)}</b> found ${THEIR} key!`;
   else if (S.haveHalf) html = `<b>${esc(FRIEND)}</b> is almost there…`;
   else html = `<b>${esc(FRIEND)}</b> is solving…`;
   if (t.innerHTML !== html) t.innerHTML = html;
@@ -226,26 +298,40 @@ $('#toast').addEventListener('click', () => { clearTimeout(toastTimer); $('#toas
 function friendFinds(){
   const f = S.friend; if (S.friendHalf) return;
   S.friendHalf = true; f.state = 'found'; renderKey(true);
-  receive({msg:'Got my half!!', emoji:'🎉'});
-  if (S.haveHalf) say('The key is whole! Find the door');
+  receive({msg:'Got my key!!', emoji:'🎉'});
+  if (S.haveHalf) say('Both keys found! Meet at the door');
   updateStatus(); checkDoor();
+}
+function friendStep(){   // one step along the shortest path to her key, then to the door
+  const m = S.mate, goal = !S.friendHalf ? KEYCELLS[1-ME] : DOOR_CELLS[1-ME] || DOOR_CELLS[0];
+  if (m.x === goal.x && m.y === goal.y) return;
+  const d = bfs(mine, goal.x, goal.y), here = d[m.y*W + m.x];
+  for (const k of DLIST){ const q = DIRS[k]; if (!(mine[m.y*W+m.x] & q.bit)) continue;
+    const nx = m.x + q.dx, ny = m.y + q.dy; if (d[ny*W+nx] === here - 1){ mateTo(nx, ny, k); return; } }
 }
 function updateFriend(){
   const f = S.friend;
   for (const ev of f.events) if (!ev.done && S.now >= ev.at && !S.won){ ev.done = true; receive({msg:ev.msg, emoji:ev.emoji}); }
   for (let i = S.pending.length-1; i >= 0; i--) if (S.now >= S.pending[i].at){ receive(S.pending[i].scroll); S.pending.splice(i,1); }
-  if (S.friendHalf) return;
-  if (f.state === 'solving' && !f.helped && !f.wasStuck && S.now >= f.stuckAt){
+  if (!S.friendHalf && f.state === 'solving' && !f.helped && !f.wasStuck && S.now >= f.stuckAt){
     f.state = 'stuck'; f.wasStuck = true; f.unstuckAt = S.now + CONFIG.friend.stuckFor; receive({msg:"I'm stuck!", emoji:'😵'});
   }
-  if (f.state === 'stuck' && S.now >= f.unstuckAt) f.state = 'solving';
-  if (S.haveHalf) f.halfAt = Math.min(f.halfAt, S.playerHalfAt + CONFIG.friend.findsHalfAfterYou);
-  if (S.now >= f.halfAt) friendFinds();
+  const late = S.haveHalf && S.now >= S.playerHalfAt + CONFIG.friend.findsHalfAfterYou;   // don't keep you waiting too long
+  if (f.state === 'stuck' && (S.now >= f.unstuckAt || late)) f.state = 'solving';
+  if (S.won || f.state === 'stuck' || S.mate.t < 1 || S.now < f.nextStep) return;
+  let every = f.helped ? 0.38 : f.pace;
+  if (S.friendHalf) every = S.haveHalf && meAtDoor() ? 0.28 : 0.45;
+  else if (S.haveHalf){   // you have your key: she catches up within CONFIG.friend.findsHalfAfterYou
+    const left = bfs(mine, KEYCELLS[1-ME].x, KEYCELLS[1-ME].y)[S.mate.y*W + S.mate.x];
+    const time = Math.max(1, S.playerHalfAt + CONFIG.friend.findsHalfAfterYou - S.now);
+    every = Math.min(every, Math.max(0.25, time / Math.max(1, left)));
+  }
+  friendStep(); f.nextStep = S.now + every;
 }
 function friendReact(sel){
   const f = S.friend; let delay = 2.4;
   const push = scroll => { S.pending.push({at:S.now + delay, scroll}); delay += 2.6; };
-  if ((sel.peek || sel.lend) && !S.friendHalf){ f.helped = true; if (f.state === 'stuck') f.state = 'solving'; f.halfAt = Math.min(f.halfAt, S.now + CONFIG.friend.findsHalfAfterHelp); }
+  if ((sel.peek || sel.lend) && !S.friendHalf){ f.helped = true; if (f.state === 'stuck') f.state = 'solving'; }
   if (sel.msg){
     if (sel.msg === "I'm stuck!"){
       if (!f.sentHelp){ f.sentHelp = true; push({msg:'Hang on! Sending you a Peek', emoji:'👀', gift:'peek'}); }
@@ -306,7 +392,7 @@ $('#sendBtn').onclick = () => {
 
 // ---------- overlays ----------
 function setPaused(p){ S.paused = p; if (p){ joyDir = null; idleStick(); } }
-$('#startBtn').onclick = () => { $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your half of the key' : 'Find the key'); };
+$('#startBtn').onclick = () => { $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your key' : 'Find the key'); };
 let keyTaps = [];
 $('#keyBtn').onclick = () => {
   const t = performance.now(); keyTaps = keyTaps.filter(x => t - x < 900); keyTaps.push(t);
@@ -325,20 +411,20 @@ $$('[data-fac]').forEach(b => b.onclick = () => {
   if (S.live && a !== 'finish') return;   // live play: only finish/restart (the friend is a real kid)
   if (a === 'cheer') receive({msg:['You got this!','Almost there!','Go go go!'][Math.floor(Math.random()*3)], emoji:'💪'});
   if (a === 'stuck' && !S.friendHalf){ S.friend.state = 'stuck'; S.friend.unstuckAt = S.now + 25; S.friend.helped = false; receive({msg:"I'm stuck!", emoji:'😵'}); updateStatus(); }
-  if (a === 'half') friendFinds();
+  if (a === 'half'){ const k = KEYCELLS[1-ME]; mateTo(k.x, k.y); friendFinds(); }
   if (a === 'finish'){ S.haveHalf = true; S.friendHalf = true; renderKey(true); win(); }
 });
 function win(fromFriend){
   if (S.won) return;
-  if (S.live && !fromFriend) Net.send({type:'win'});
-  S.won = true; S.haveHalf = S.friendHalf = true; renderKey(false); updateStatus(); say('The door opens!');
+  S.won = true;   // set first: telling the other phone can echo straight back here
+  if (S.live && !fromFriend) Net.send({type:'win'}); S.haveHalf = S.friendHalf = true; renderKey(false); updateStatus(); say('The door opens!');
   setTimeout(() => {
     setPaused(true);
     const result = { level: opts.level, mode: opts.mode, time: S.now, sent: S.sent, received: S.received, gemsFound: S.gemsFound };
     stop(); opts.onWin && opts.onWin(result);
   }, 1300);
 }
-function restart(){ start(opts); $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your half of the key' : 'Find the key'); }
+function restart(){ start(opts); $('#intro').hidden = true; setPaused(false); say(S.duo ? 'Find your key' : 'Find the key'); }
 
 // ---------- render ----------
 let vw = 0, vh = 0, dpr = 1;
@@ -387,7 +473,7 @@ function drawMazeWalls(open, ox, color, isFriend){
     if (!(o & 1)) segs.push([X,Y,X+C,Y,x,y,1]);
     if (!(o & 8) && !(isFriend && x === 0)) segs.push([X,Y,X,Y+C,x,y,8]);
     if (y === H-1 && !(o & 4)) segs.push([X,Y+C,X+C,Y+C,x,y,4]);
-    if (x === W-1 && !(o & 2) && isFriend) segs.push([X+C,Y,X+C,Y+C,x,y,2]);
+    if (x === W-1 && !(o & 2) && (isFriend || DUO)) segs.push([X+C,Y,X+C,Y+C,x,y,2]);
   }
   const trace = () => { ctx.beginPath(); for (const s of segs){ ctx.moveTo(s[0],s[1]); ctx.lineTo(s[2],s[3]); } };
   if (tex){
@@ -413,7 +499,7 @@ function drawMazeWalls(open, ox, color, isFriend){
 }
 function star(x,y,r){ ctx.beginPath(); for (let i=0;i<8;i++){ const a = i*Math.PI/4, rr = i%2 ? r*0.35 : r; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); }
 function drawDoor(){
-  const x = W*C, y = 0, open = S.door, whole = S.haveHalf && S.friendHalf;
+  const x = DOOR_PX, y = 0, open = S.door, whole = S.haveHalf && S.friendHalf;
   ctx.save(); ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath();
   for (let a = 0; a <= 6; a++){ const ang = Math.PI + a*Math.PI/6; ctx.moveTo(x + Math.cos(ang)*38, y - 44 + Math.sin(ang)*38); ctx.lineTo(x + Math.cos(ang)*47, y - 44 + Math.sin(ang)*47); }
   ctx.stroke();
@@ -431,11 +517,11 @@ function drawThornWall(){
   for (let y = 24; y < H*C; y += 40){ ctx.moveTo(x, y); ctx.lineTo(x-15, y-9); ctx.moveTo(x, y); ctx.lineTo(x+15, y-9); }
   ctx.stroke();
 }
-function drawFoot(){
-  const n = S.foot.length;
-  S.foot.forEach((f, i) => {
+function drawFoot(foot, color){
+  foot = foot || S.foot; const n = foot.length;
+  foot.forEach((f, i) => {
     const a = 0.06 + 0.8*(i+1)/n, d = DIRS[f.dir], px = -d.dy, py = d.dx, ang = Math.atan2(d.dy, d.dx) + Math.PI/2;
-    ctx.fillStyle = rgba(CONFIG.mazeArt.footprints, a);
+    ctx.fillStyle = rgba(color || CONFIG.mazeArt.footprints, a);
     for (const s of [1,-1]){ ctx.beginPath(); ctx.ellipse(f.x + px*5*s - d.dx*5*s, f.y + py*5*s - d.dy*5*s, 4, 6, ang, 0, Math.PI*2); ctx.fill(); }
   });
 }
@@ -448,7 +534,23 @@ function drawGems(){
     ctx.fillStyle = '#cfe6f7'; ctx.fill(); ctx.strokeStyle = '#3d7fb5'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke();
   }
 }
+function drawDuoKey(k, i){
+  const c = cellCenter(k.x, k.y), bob = Math.sin(S.now*2.4 + i*2)*3, col = PCOLOR(i);
+  ctx.fillStyle = rgba(col, .45); ctx.beginPath(); ctx.arc(c.x, c.y+bob, 24 + Math.sin(S.now*4 + i)*2, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.translate(c.x, c.y + bob); ctx.rotate(-Math.PI/4);
+  ctx.fillStyle = col; ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.6; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.arc(-8, 0, 9, 0, Math.PI*2); ctx.fill(); ctx.stroke();                          // bow
+  ctx.beginPath(); ctx.rect(0, -3.5, 17, 7); ctx.fill(); ctx.stroke();                                  // shaft
+  ctx.beginPath(); ctx.rect(10, 3.5, 4, 6); ctx.rect(15, 3.5, 3, 4); ctx.fill(); ctx.stroke();          // teeth
+  ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(-8, 0, 3, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
 function drawKey(){
+  if (S.duo){
+    if (!S.haveHalf) drawDuoKey(KEYCELLS[ME], ME);
+    if (!S.friendHalf) drawDuoKey(KEYCELLS[1-ME], 1-ME);
+    return;
+  }
   if (S.haveHalf) return;
   const c = cellCenter(KEY.x, KEY.y), bob = Math.sin(S.now*2.4)*3;
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(c.x, c.y+bob, 22 + Math.sin(S.now*4)*2, 0, Math.PI*2); ctx.fill();
@@ -458,10 +560,10 @@ function drawKey(){
   ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.8; ctx.lineJoin = 'round'; ctx.stroke();
   ctx.fillStyle = '#1a1a1a'; star(c.x+16, c.y-14+bob, 5);
 }
-function drawPlayer(){
-  const p = playerPix(), d = DIRS[S.facing];
-  ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc(p.x, p.y, 27, 0, Math.PI*2); ctx.fill();   // soft glow so you never lose yourself
-  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI*2); ctx.fill();
+function drawPlayer(p, facing, ring){
+  p = p || playerPix(); const d = DIRS[facing || S.facing]; ring = ring || (S.duo ? PCOLOR(ME) : '#ffffff');
+  ctx.fillStyle = rgba(ring, .22); ctx.beginPath(); ctx.arc(p.x, p.y, 27, 0, Math.PI*2); ctx.fill();   // soft glow so you never lose yourself
+  ctx.fillStyle = ring; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#ffffff';
   const off = d.dy !== 0 ? [[-6,0],[6,0]] : [[0,-5],[0,5]];
@@ -477,8 +579,8 @@ function buildLayer(){
   LAYER.width = Math.ceil((2*W*C + pad*2) / ps); LAYER.height = Math.ceil((H*C + pad*2) / ps);
   const main = ctx; ctx = LAYER.getContext('2d');
   ctx.setTransform(1/ps, 0, 0, 1/ps, pad/ps, pad/ps); ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = pattern('ground') || A.groundColor; ctx.fillRect(0, 0, 2*W*C, H*C);
-  if (S.duo) drawMazeWalls(theirs, W*C, '#b4b4b4', true);
+  ctx.fillStyle = pattern('ground') || A.groundColor; ctx.fillRect(0, 0, (DUO ? 1 : 2)*W*C, H*C);
+  if (!DUO && S.duo) drawMazeWalls(theirs, W*C, '#b4b4b4', true);
   drawMazeWalls(mine, 0, '#9a9a9a', false);
   ctx = main; layerDirty = false;
 }
@@ -502,16 +604,58 @@ function render(dt){
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(LAYER, -LAYER_PAD, -LAYER_PAD, LAYER.width * A.pixelScale, LAYER.height * A.pixelScale);
   ctx.imageSmoothingEnabled = true;
-  ctx.fillStyle = A.friendTint; ctx.fillRect(W*C, 0, W*C, H*C);      // the friend's side is dimmed: you can't go there
+  const mp = S.duo ? matePix() : null;
+  if (!S.duo){ ctx.fillStyle = A.friendTint; ctx.fillRect(W*C, 0, W*C, H*C); }   // solo: the right side is dimmed, you can't go there
+  if (mp) drawFoot(S.mate.foot, PCOLOR(1-ME));
   drawFoot(); drawGems(); drawKey();
-  drawThornWall(); drawDoor(); drawPlayer();
+  if (!S.duo) drawThornWall();
+  drawDoor();
+  if (mp) drawPlayer(mp, S.mate.facing, PCOLOR(1-ME));
+  drawPlayer();
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  const sx = cx + (p.x - cam.x)*z, sy = cy + (p.y - cam.y)*z, fogA = 0.96 * (1 - cam.peek), grow = 1 + (CONFIG.glowBoost - 1) * cam.glow;
-  if (fogA > 0.01){
-    const g = ctx.createRadialGradient(sx, sy, CONFIG.fogClear*grow, sx, sy, CONFIG.fogEdge*grow);
-    g.addColorStop(0, rgba(A.fog, 0)); g.addColorStop(1, rgba(A.fog, fogA));
-    ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
+  const toScreen = q => ({x: cx + (q.x - cam.x)*z, y: cy + (q.y - cam.y)*z});
+  const me = toScreen(p), fogA = 0.96 * (1 - cam.peek), grow = 1 + (CONFIG.glowBoost - 1) * cam.glow;
+  const lights = [{x:me.x, y:me.y, r0:CONFIG.fogClear*grow, r1:CONFIG.fogEdge*grow}];
+  const ms = mp ? toScreen(mp) : null;
+  if (ms) lights.push({x:ms.x, y:ms.y, r0:CONFIG.fogClear*0.45*z, r1:CONFIG.fogEdge*0.55*z});   // your friend carries a small light
+  if (fogA > 0.01) drawFog(lights, fogA);
+  if (ms) drawMateMarker(ms, top);
+}
+// Fog with a hole for each light (you, and your friend in duo)
+let FOG = null;
+function drawFog(lights, alpha){
+  FOG = FOG || document.createElement('canvas');
+  if (FOG.width !== canvas.width || FOG.height !== canvas.height){ FOG.width = canvas.width; FOG.height = canvas.height; }
+  const f = FOG.getContext('2d');
+  f.setTransform(1,0,0,1,0,0); f.globalCompositeOperation = 'source-over'; f.clearRect(0, 0, FOG.width, FOG.height);
+  f.fillStyle = rgba(CONFIG.mazeArt.fog, alpha); f.fillRect(0, 0, FOG.width, FOG.height);
+  f.setTransform(dpr,0,0,dpr,0,0); f.globalCompositeOperation = 'destination-out';
+  for (const l of lights){
+    const g = f.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r1);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(l.r0 / l.r1, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    f.fillStyle = g; f.fillRect(l.x - l.r1, l.y - l.r1, l.r1*2, l.r1*2);
   }
+  ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(FOG, 0, 0); ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+// Your friend's name over their faerie, or an arrow at the screen edge pointing to them
+function drawMateMarker(m, top){
+  const col = PCOLOR(1-ME), pad = 26, x0 = pad, x1 = vw - pad, y0 = top + pad, y1 = vh - 170;   // stay above the joystick
+  const inside = m.x > x0 && m.x < x1 && m.y > y0 && m.y < y1;
+  ctx.font = '600 12px "DM Sans", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (inside){
+    const w = ctx.measureText(FRIEND).width + 14, y = m.y - 40*cam.z - 4;
+    ctx.fillStyle = 'rgba(20,16,30,.78)'; ctx.beginPath(); ctx.roundRect(m.x - w/2, y - 10, w, 20, 10); ctx.fill();
+    ctx.fillStyle = col; ctx.fillText(FRIEND, m.x, y + 0.5); return;
+  }
+  const cxs = (x0 + x1)/2, cys = (y0 + y1)/2, dx = m.x - cxs, dy = m.y - cys;
+  const s = Math.min(Math.abs((x1 - cxs) / (dx || 1e-6)), Math.abs((y1 - cys) / (dy || 1e-6)));
+  const ex = cxs + dx*s, ey = cys + dy*s, ang = Math.atan2(dy, dx);
+  ctx.save(); ctx.translate(ex, ey);
+  ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.rotate(ang); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(17, -6); ctx.lineTo(17, 6); ctx.closePath(); ctx.fill();
+  ctx.rotate(-ang); ctx.fillStyle = col; ctx.font = '700 14px "DM Sans", system-ui, sans-serif'; ctx.fillText(FRIEND[0].toUpperCase(), 0, 1);
+  ctx.restore();
 }
 
 // ---------- loop + public API ----------
@@ -520,6 +664,7 @@ function loop(t){
   const dt = Math.min(0.05, (t - last)/1000); last = t;
   if (active && S){
     if (!S.paused){ S.now += dt; updatePlayer(dt); if (S.duo && !S.live) updateFriend(); if (S.live) liveTick(); updateStatus(); }
+    if (S.duo) updateMate(dt);
     render(dt);
   }
   requestAnimationFrame(loop);
@@ -530,30 +675,36 @@ requestAnimationFrame(loop);
 function liveTick(){ if (S.stuckUntil && (S.now > S.stuckUntil || S.haveHalf)){ S.stuckUntil = 0; Net.setMine({status:'solving'}); } }
 function netPlayers(friend){
   if (!active || !S || !S.live || !friend) return;
-  const was = S.remote; S.remote = {online: friend.online !== false, status: friend.status || 'solving', half: !!friend.half};
+  S.remote = {online: friend.online !== false, status: friend.status || 'solving', half: !!friend.half};
+  if (S.duo && typeof friend.x === 'number' && typeof friend.y === 'number') mateTo(friend.x, friend.y, friend.f);
   if (S.remote.half && !S.friendHalf){
     S.friendHalf = true; renderKey(true);
-    say(S.haveHalf ? 'The key is whole! Find the door' : `${FRIEND} found ${THEIR} half!`); checkDoor();
+    say(S.haveHalf ? 'Both keys found! Meet at the door' : `${FRIEND} found ${THEIR} key!`);
   }
+  checkDoor();
   updateStatus();
 }
 function netEvent(ev){
   if (!active || !S || !S.live) return;
   if (ev.type === 'scroll') receive({msg:ev.msg, emoji:ev.emoji, gift:ev.gift, gems:ev.gems, lend:ev.lend});
   if (ev.type === 'win') win(true);
+  if (ev.type === 'gem') S.gemCells.delete(ev.id);   // your friend grabbed it first
+  if (ev.type === 'snip' && DIRS[ev.dir]){ const d = DIRS[ev.dir], nx = ev.x + d.dx, ny = ev.y + d.dy;
+    if (nx >= 0 && ny >= 0 && nx < W && ny < H){ mine[ev.y*W+ev.x] |= d.bit; mine[ny*W+nx] |= d.opp; layerDirty = true; } }
 }
 
 function start(o){
   opts = o; const lv = CONFIG.levels[o.level];
   FRIEND = o.friendName || CONFIG.friendName; THEIR = o.live ? 'their' : 'her';
-  buildLevel(lv, o.live && Net.role === 'guest'); fresh(); layerDirty = true;
-  if (S.live) Net.setMine({half:false, status:'solving', won:false});
+  ME = o.live && Net.role === 'guest' ? 1 : 0;
+  buildLevel(lv, o.mode === 'duo'); fresh(); layerDirty = true;
+  if (S.live) Net.setMine({half:false, status:'solving', won:false, x:START.x, y:START.y, f:'up'});
   ['cheer','stuck','half'].forEach(k => { $(`#facOv [data-fac="${k}"]`).hidden = !!o.live; });
   inbox.length = 0; toastBusy = false; $('#toast').classList.remove('show'); closeSheet();
   screen.classList.toggle('solo', !S.duo);
   $('#introTitle').textContent = `Level ${o.level + 1} · ${lv.name}`;
   $('#introText').innerHTML = S.duo
-    ? `You and ${esc(FRIEND)} each have half of the maze. Find <b>your half of the key</b>. When both halves are found, meet at the door.`
+    ? `You and ${esc(FRIEND)} are in the <b>same maze</b>. Find <b>your ${PCOLOR_NAME(ME)} key</b>, then meet at the door. It only opens when you're <b>both</b> there.`
     : 'Find <b>the key</b> hidden in the maze, then make your way to the door.';
   $('#introScrollTip').hidden = !S.duo;
   $('#intro').hidden = false; $('#pauseOv').hidden = true; $('#facOv').hidden = true; $('#hint').hidden = false;

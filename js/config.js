@@ -5,7 +5,15 @@ const CONFIG = {
   // ----- two-phone play -----
   // Paste the firebaseConfig object from the Firebase console here (README → Two-phone play).
   // While this is null, "Play on two phones" is hidden, unless you add ?local to the URL to test in two tabs.
-  firebase: null,
+  firebase: {
+    apiKey: "AIzaSyDw9i_Wdpmo9d32qQMC2KeX8v190ZVdWnM",
+    authDomain: "faeriecharm.firebaseapp.com",
+    databaseURL: "https://faeriecharm-default-rtdb.firebaseio.com",
+    projectId: "faeriecharm",
+    storageBucket: "faeriecharm.firebasestorage.app",
+    messagingSenderId: "1054678511505",
+    appId: "1:1054678511505:web:8a18e4fb5e9d7b89743430"
+  },
 
   // ----- movement + view -----
   stepMs: 150,           // how long one step takes
@@ -52,7 +60,9 @@ const CONFIG = {
     thorn: '#d7c6f2',           // thorn spikes on the wall between you and your friend
     fog: '#0d1610',             // the dark that hides the maze outside your light
     footprints: '#f3e6d4',      // footprint color (they fade on their own)
-    friendTint: 'rgba(40,20,60,.55)'  // tint over the friend's half
+    friendTint: 'rgba(40,20,60,.55)', // solo: tint over the side you can't reach
+    playerColors: ['#9fe08a', '#c9b3ff'],   // duo: player 1 (host, or you vs. Anjalie) and player 2: faerie ring, key, footprints
+    playerColorNames: ['green', 'purple']
   },
 
   // ----- levels (seed = maze layout; change it to get a new maze) -----

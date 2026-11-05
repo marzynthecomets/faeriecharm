@@ -1,5 +1,5 @@
-// Two-phone play. Phones never sync movement, only small notes: who's in the room, status
-// ("solving" / "stuck"), "found my half", "won", and scrolls. Like passing notes through a mailbox.
+// Two-phone play. Both phones share one maze. Each phone writes its own spot in the maze (only when it
+// steps into a new space), its status, and "found my key"; events carry scrolls, gems picked up, snipped walls, and "won".
 //
 // Backends:
 //   firebase : real play across phones. Needs CONFIG.firebase (see README → Two-phone play).
@@ -68,7 +68,7 @@ const Net = (() => {
 
   function getBackend(){
     if (backend) return backend;
-    const wantLocal = /[?&]local\b/.test(location.search);
+    const wantLocal = /[?&]local\b/.test(location.search) || location.hash === '#local';   // #local works in the Claude preview too
     backend = wantLocal ? localBackend() : firebaseBackend();
     return backend;
   }

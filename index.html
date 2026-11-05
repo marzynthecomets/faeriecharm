@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=29">
+<link rel="stylesheet" href="css/style.css?v=30">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=29" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=30" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
@@ -181,7 +181,7 @@
       <div class="tips">
         <div><i>↕</i>Drag anywhere on the maze to move.</div>
         <div><i>👁</i>Tap a charm on your bracelet to use it.</div>
-        <div id="introScrollTip"><i>✉</i>Send <span class="friend-name">Anjalie</span> a Scroll to cheer her on or help.</div>
+        <div id="introScrollTip"><i>✉</i><span>Send <span class="friend-name">Anjalie</span> a Scroll to cheer them on or help.</span></div>
       </div>
       <button class="primary" id="startBtn">Start</button>
     </div>
@@ -293,13 +293,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=29"></script>
-<script src="js/ui.js?v=29"></script>
+<script src="js/config.js?v=30"></script>
+<script src="js/ui.js?v=30"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=29"></script>
-<script src="js/game.js?v=29"></script>
-<script src="js/app.js?v=29"></script>
+<script src="js/net.js?v=30"></script>
+<script src="js/game.js?v=30"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>
