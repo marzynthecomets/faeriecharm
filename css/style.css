@@ -552,3 +552,40 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .gate.open .gate-label{border-color:#ffd45a;color:#ffe08a}
 .gate.done .gate-label{border-color:rgba(255,228,140,.6)}
 .gate.locked .gate-label{background:rgba(18,14,32,.55);border-color:rgba(207,198,232,.35);color:#cfc6e8}
+
+/* ---------- dark glass everywhere: every card, sheet and popup matches the night-forest theme ---------- */
+:root{--d-bg:rgba(24,19,42,.94);--d-line:rgba(255,255,255,.16);--d-tile:rgba(255,255,255,.08);--d-body:#e6e0f4;--d-sub:#b9b0d6;--gold:#ffd45a}
+.brace-card,.bramble-bubble,.card,#sheet,#toast,.fc-bubble{background:var(--d-bg);color:#fff;border:1.5px solid var(--d-line);box-shadow:0 10px 30px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#sheet{border-bottom:none}
+.bramble-bubble::after{background:rgba(24,19,42,.94);border-top:1.5px solid var(--d-line);border-right:1.5px solid var(--d-line)}
+.fc-bubble{color:var(--d-body)}
+.bc-text .body,.bubble-text .body,.card p{color:var(--d-body)}
+.brace-card .preview-tile,.bramble-bubble .preview-tile{background:var(--d-tile)}
+.bc-tag{background:rgba(125,151,244,.22);color:#c3d0ff}
+.bc-tag.style{background:rgba(240,120,200,.2);color:#ffbfe9}
+.bc-note{color:#b8e6a0}
+.bc-choice{background:var(--d-tile);border-color:var(--d-line)}
+.bc-choice span{color:#fff}
+.bc-choice:active{border-color:var(--gold);background:rgba(255,212,90,.14)}
+/* buttons inside cards */
+.card .primary,#sheet .primary{background:var(--gold);color:#1a1a1a}
+.card .primary[disabled],#sheet .primary[disabled]{background:rgba(255,255,255,.16);color:rgba(255,255,255,.5)}
+#sendBtn path{stroke:currentColor}
+.card .secondary,.fac button{background:var(--d-tile);border:1.5px solid var(--d-line);color:#fff}
+.tips i{background:var(--d-tile);color:#fff}
+.overlay{background:rgba(8,6,16,.6)}
+/* Send a Scroll sheet */
+#sheet .label,#sheet .sub,#preview span:first-child,#toast .from{color:var(--d-sub)}
+#sheet::before,#toast::before{background:linear-gradient(#e9c06a,#b8862f);border:none;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+#sheet .round{background:var(--d-tile);border:1.5px solid var(--d-line)}
+#closeSheet path{stroke:#fff}
+.chip,.emo,.gift,.stepper button{background:var(--d-tile);border:1.5px solid var(--d-line);color:#fff}
+.chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1a1a1a}
+.emo[aria-pressed="true"],.gift[aria-pressed="true"]{border:2px solid var(--gold);background:rgba(255,212,90,.14)}
+.gift small{color:var(--d-sub)}
+.gift .check circle{fill:var(--gold)}
+.gift .check path{stroke:#1a1a1a}
+#preview{border-color:rgba(255,255,255,.3);color:#fff}
+#toast .gift{border-color:var(--d-line)}
+#scrollBtn{background:var(--gold);color:#1a1a1a}
+#callout{z-index:15}
