@@ -528,3 +528,4 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .fc-screen .win-actions[hidden]{display:none}
 .fc-card .fc-wait.err{color:#ffc2b8}
 .fc-card .fc-wait.ok{color:#c9f2bf}
+.has-art .entry-text h1{font-size:clamp(20px,6.4cqw,30px);white-space:nowrap}
