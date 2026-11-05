@@ -103,6 +103,8 @@ const Sound = (() => {
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3') };
   const music = mk('sound/bg-music.mp3'); music.loop = true;
+  const shine = mk('sound/bracelet-shine.mp3'); shine.loop = true;   // sparkly loop while you look at your bracelet
+  const SHINE_VOL = 0.5; let shineGain = null, shineOn = false, shineStop;
   let ctx = null, musicGain = null, playing = false;
   const AC = window.AudioContext || window.webkitAudioContext;
   function route(el, vol){   // send an element through its own gain node (falls back to el.volume)
@@ -113,7 +115,7 @@ const Sound = (() => {
   function setup(){
     if (ctx !== null || !AC) return;
     try { ctx = new AC(); } catch (e) { ctx = false; return; }
-    musicGain = route(music, MUSIC_VOL);
+    musicGain = route(music, MUSIC_VOL); shineGain = route(shine, 0);
     Object.keys(fx).forEach(k => route(fx[k], FX_VOL[k]));
   }
   if (!AC){ music.volume = MUSIC_VOL; Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]); }
@@ -131,8 +133,19 @@ const Sound = (() => {
   ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!playing || music.paused) start(); }, { passive: true }));
   document.addEventListener('visibilitychange', () => { if (document.hidden){ music.pause(); playing = false; } else start(); });
   let duck;
+  const fadeShine = v => { if (shineGain) shineGain.gain.setTargetAtTime(v, ctx.currentTime, 0.25); else shine.volume = v; };
   return {
     start,
+    // the bracelet screen's shimmer: fades in over the (quieter) music, fades out when you leave
+    shimmer(onScreen){
+      if (onScreen === shineOn) return; shineOn = onScreen; clearTimeout(shineStop);
+      if (onScreen){
+        setup(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+        if (!shineGain) shine.volume = SHINE_VOL;
+        try { shine.currentTime = 0; const p = shine.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+        fadeShine(SHINE_VOL); setMusicVol(MUSIC_VOL * 0.5);
+      } else { fadeShine(0); setMusicVol(MUSIC_VOL); shineStop = setTimeout(() => shine.pause(), 1200); }
+    },
     play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
       if (name === 'key'){ setMusicVol(MUSIC_VOL * 0.3); clearTimeout(duck); duck = setTimeout(() => setMusicVol(MUSIC_VOL), 4200); } },
     get musicOn(){ return on(); },

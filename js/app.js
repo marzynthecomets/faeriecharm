@@ -5,7 +5,7 @@ let entryLevel = 0, lastResult = null, stallTab = 'boost', stallPick = 'dash', b
 
 function go(name){
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === 'scr-' + name));
-  renderGemPills();
+  renderGemPills(); Sound.shimmer(name === 'bracelet');
   (render[name] || (() => {}))();
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b){ e.preventDefault(); go(b.dataset.go); } });
