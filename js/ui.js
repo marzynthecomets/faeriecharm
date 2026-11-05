@@ -94,18 +94,23 @@ function renderHang(el, slots, interactive){
 }
 
 // ---------- sound ----------
-// Background music loops at 4%; effects play over it (the music dips while the key sound plays).
+// Two music tracks: "Quest Begins" on the loading screen, map and menus, and the maze music inside a level.
+// Switching screens crossfades between them. Effects play over the music (it dips while the key, buy or power-up sound plays).
 // Volumes go through Web Audio gain, because iPhones ignore an <audio> element's own volume.
 // Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
-  const MUSIC_VOL = 0.04, FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7 };
+  const TRACK_VOL = { menu: 0.065, maze: 0.04 };   // menu track is a quieter recording, so it gets a bit more gain
+  const FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7, enter: 1 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
-  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3') };
-  const music = mk('sound/bg-music.mp3'); music.loop = true;
+  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3') };
+  const tracks = { menu: mk('sound/menu-music.mp3'), maze: mk('sound/bg-music.mp3') };
+  Object.values(tracks).forEach(t => t.loop = true);
+  const gains = {}; let cur = 'menu', level = 1;   // level = how loud the current track is relative to its normal volume
+  const music = () => tracks[cur];
   const shine = mk('sound/bracelet-shine.mp3'); shine.loop = true;   // sparkly loop while you look at your bracelet
   const SHINE_VOL = 0.2; let shineGain = null, shineOn = false, shineStop;
-  let ctx = null, musicGain = null, playing = false;
+  let ctx = null, playing = false;
   const AC = window.AudioContext || window.webkitAudioContext;
   function route(el, vol){   // send an element through its own gain node (falls back to el.volume)
     if (!ctx){ el.volume = vol; return null; }
@@ -115,27 +120,38 @@ const Sound = (() => {
   function setup(){
     if (ctx !== null || !AC) return;
     try { ctx = new AC(); } catch (e) { ctx = false; return; }
-    musicGain = route(music, MUSIC_VOL); shineGain = route(shine, 0);
+    Object.keys(tracks).forEach(k => gains[k] = route(tracks[k], k === cur ? TRACK_VOL[k] * level : 0));
+    shineGain = route(shine, 0);
     Object.keys(fx).forEach(k => route(fx[k], FX_VOL[k]));
   }
-  if (!AC){ music.volume = MUSIC_VOL; Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]); }
+  if (!AC){ Object.keys(tracks).forEach(k => tracks[k].volume = TRACK_VOL[k]); Object.keys(fx).forEach(k => fx[k].volume = FX_VOL[k]); }
   const on = () => Profile.data.music !== false;
-  const setMusicVol = v => { if (musicGain) musicGain.gain.setTargetAtTime(v, ctx.currentTime, 0.15); else music.volume = v; };
+  const fadeTrack = (k, v, t = 0.15) => { if (gains[k]) gains[k].gain.setTargetAtTime(v, ctx.currentTime, t); else tracks[k].volume = v; };
+  const setMusicVol = m => { level = m; fadeTrack(cur, TRACK_VOL[cur] * m); };
   // try to start the music; resolves true if it's actually playing
   function start(){
     if (!on() || document.hidden) return Promise.resolve(false);
     setup(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
     try {
-      const p = music.play();
+      const p = music().play();
       return (p && p.then ? p : Promise.resolve()).then(() => { playing = !(ctx && ctx.state === 'suspended'); return playing; }, () => (playing = false));
     } catch (e) { return Promise.resolve(false); }
   }
-  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!playing || music.paused) start(); }, { passive: true }));
-  document.addEventListener('visibilitychange', () => { if (document.hidden){ music.pause(); playing = false; } else start(); });
+  // switch between the menu and maze music: the old one fades out, the new one fades in from the top
+  function track(name){
+    if (name === cur || !tracks[name]) return;
+    const old = cur; cur = name;
+    fadeTrack(old, 0, 0.3); setTimeout(() => { if (cur !== old) tracks[old].pause(); }, 1200);
+    if (!gains[name]) tracks[name].volume = TRACK_VOL[name] * level; else gains[name].gain.value = 0;
+    try { tracks[name].currentTime = 0; } catch (e) {}
+    if (playing) { start(); fadeTrack(name, TRACK_VOL[name] * level, 0.3); }
+  }
+  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!playing || music().paused) start(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => { if (document.hidden){ music().pause(); playing = false; } else start(); });
   let duck;
   const fadeShine = v => { if (shineGain) shineGain.gain.setTargetAtTime(v, ctx.currentTime, 0.25); else shine.volume = v; };
   return {
-    start,
+    start, track,
     // the bracelet screen's shimmer: fades in over the (quieter) music, fades out when you leave
     shimmer(onScreen){
       if (onScreen === shineOn) return; shineOn = onScreen; clearTimeout(shineStop);
@@ -143,17 +159,17 @@ const Sound = (() => {
         setup(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
         if (!shineGain) shine.volume = SHINE_VOL;
         try { shine.currentTime = 0; const p = shine.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-        fadeShine(SHINE_VOL); setMusicVol(MUSIC_VOL * 0.5);
-      } else { fadeShine(0); setMusicVol(MUSIC_VOL); shineStop = setTimeout(() => shine.pause(), 1200); }
+        fadeShine(SHINE_VOL); setMusicVol(0.5);
+      } else { fadeShine(0); setMusicVol(1); shineStop = setTimeout(() => shine.pause(), 1200); }
     },
     play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-      // the music steps back while the key or power-up sound plays, then comes back when it ends
+      // the music steps back while the key, buy or power-up sound plays, then comes back when it ends
       const dip = { key: 0.3, powerup: 0, buy: 0.3 }[name];
-      if (dip !== undefined){ setMusicVol(MUSIC_VOL * dip); clearTimeout(duck);
-        const back = () => { clearTimeout(duck); a.onended = null; setMusicVol(shineOn ? MUSIC_VOL * 0.5 : MUSIC_VOL); };
+      if (dip !== undefined){ setMusicVol(dip); clearTimeout(duck);
+        const back = () => { clearTimeout(duck); a.onended = null; setMusicVol(shineOn ? 0.5 : 1); };
         a.onended = back; duck = setTimeout(back, ((a.duration || 6) + 0.5) * 1000); } },
     get musicOn(){ return on(); },
-    setMusic(v){ Profile.data.music = v; Profile.save(); if (v) start(); else { music.pause(); playing = false; } }
+    setMusic(v){ Profile.data.music = v; Profile.save(); if (v) start(); else { music().pause(); playing = false; } }
   };
 })();
 

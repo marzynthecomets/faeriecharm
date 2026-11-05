@@ -5,7 +5,7 @@ let entryLevel = 0, lastResult = null, stallTab = 'boost', stallPick = 'dash', b
 
 function go(name){
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === 'scr-' + name));
-  renderGemPills(); Sound.shimmer(name === 'bracelet');
+  renderGemPills(); Sound.shimmer(name === 'bracelet'); Sound.track(name === 'game' ? 'maze' : 'menu');
   (render[name] || (() => {}))();
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b){ e.preventDefault(); go(b.dataset.go); } });
@@ -147,6 +147,7 @@ function fitEntry(){
 }
 addEventListener('resize', () => { if ($('#scr-entry').classList.contains('on')) fitEntry(); });
 function play(mode, live){
+  Sound.play('enter');
   go('game');
   FRIEND = live ? live.friendName : CONFIG.friendName;
   Game.start({ level: live ? live.level : entryLevel, mode, live: !!live, friendName: FRIEND, onWin: finished, onLeave: () => { Net.leave(); go('map'); } });
