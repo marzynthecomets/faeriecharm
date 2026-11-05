@@ -26,7 +26,7 @@ render.load = () => {
   }), 1700);
 };
 let loadReady = false;
-$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); Sound.start(); afterLoad(); });
+$('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); Sound.start(); Sound.play('enter'); afterLoad(); });
 function afterLoad(){ go(okName(Profile.data.name) ? 'map' : 'name'); }   // a typed name from an older version gets picked again
 
 // ---------- faerie name ----------
