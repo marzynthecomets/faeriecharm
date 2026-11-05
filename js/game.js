@@ -199,7 +199,7 @@ function arrive(){
     if (!S.mateKeyWarned){ S.mateKeyWarned = true; say(`That's ${FRIEND}'s key! Leave it for ${THEIR === 'their' ? 'them' : 'her'}`); }
   } else S.mateKeyWarned = false;
   if (!S.haveHalf && S.px === KEY.x && S.py === KEY.y){
-    S.haveHalf = true; S.playerHalfAt = S.now;
+    S.haveHalf = true; S.playerHalfAt = S.now; playSound(keySound);
     if (!S.duo) S.friendHalf = true;
     renderKey(true);
     if (S.live) Net.setMine({half:true, status:'solving'});
@@ -540,6 +540,9 @@ function drawDuoKey(k, i){
   ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(-8, 0, 3, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
+// sounds (phones only allow sound after a tap, and every game starts with one, so this just works)
+const keySound = new Audio('sound/key-found.mp3'); keySound.preload = 'auto';
+function playSound(a){ try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function drawKey(){
   if (S.duo){
     if (!S.haveHalf) drawDuoKey(KEYCELLS[ME], ME);
