@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=37">
+<link rel="stylesheet" href="css/style.css?v=38">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=37" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=38" alt="" draggable="false">
     </button>
   </div>
   <div id="mapFade" aria-hidden="true"></div>
@@ -266,35 +266,18 @@
 </section>
 
 <!-- ================= BRACELET ================= -->
-<section class="screen pad" id="scr-bracelet" aria-label="My bracelet">
-  <div class="col">
-    <div class="titlebar"><button class="round" data-go="map" aria-label="Back to map"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>My Bracelet</h2><div class="gem-pill small"><img class="gem-img" src="art/gem.webp" width="16" height="16" alt=""><span class="gem-count">0</span></div></div>
-    <div class="ring">
-      <svg viewBox="0 0 358 372" aria-hidden="true">
-        <circle cx="179" cy="190" r="110" fill="none" stroke="#8a6a24" stroke-width="8"/><circle cx="179" cy="190" r="110" fill="none" stroke="#d4b061" stroke-width="4" stroke-dasharray="10 4"/>
-        <g fill="#fff" stroke="#8a6a24" stroke-width="3"><circle cx="179" cy="80" r="6"/><circle cx="243.7" cy="101" r="6"/><circle cx="283.6" cy="156" r="6"/><circle cx="283.6" cy="224" r="6"/><circle cx="243.7" cy="279" r="6"/><circle cx="179" cy="300" r="6"/><circle cx="114.3" cy="279" r="6"/><circle cx="74.4" cy="224" r="6"/><circle cx="74.4" cy="156" r="6"/><circle cx="114.3" cy="101" r="6"/></g>
-      </svg>
-      <div id="ringSlots"></div>
-    </div>
-    <div class="ring-key">
-      <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/><path transform="translate(4 4)" d="M8 1 3 8h4l-1 5 5-7H7Z" fill="#1a1a1a"/></svg><span><b>Boost</b>: use in the maze</span></div>
-      <div><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="#fff" stroke="#9a9a9a" stroke-width="2" stroke-dasharray="3 3"/><path transform="translate(4 4)" d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z" fill="#9a9a9a"/></svg><span><b>Style</b>: just for looks</span></div>
-    </div>
-    <div class="info-panel" id="braceInfo" hidden>
-      <button class="round info-close" id="braceClose" aria-label="Close"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg></button>
-      <div id="braceDetail" class="col tight">
-        <div class="row-gap"><div class="preview-tile small" id="braceIcon"></div><div class="col tight"><div class="row-gap tight"><span class="h3" id="braceName"></span><em class="chip-tag" id="braceType"></em></div><div class="body" id="braceSay"></div></div></div>
-        <button class="secondary" id="toggleBtn">Take off</button>
-      </div>
-      <div id="bracePick" class="col tight" hidden>
-        <div class="h3" id="bracePickTitle">Pick a charm</div>
-        <div class="tray" id="slotChoices"></div>
-        <div class="body" id="bracePickEmpty" hidden></div>
-        <button class="secondary" id="bracePickStall" data-go="stall" hidden>Visit Bramble's stall</button>
-      </div>
-    </div>
-    <div class="grow"></div>
-    <button class="primary" data-go="stall">+ Get more charms</button>
+<section class="screen" id="scr-bracelet" aria-label="My bracelet">
+  <header class="stall-head">
+    <button class="px-close" data-go="map" aria-label="Back to map"><svg width="22" height="22" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h2v1h1v1h1v1h1v1h1V3h1V2h1V1h1V0h2v2h-1v1H9v1H8v1H7v1h1v1h1v1h1v1h1v2H9v-1H8V9H7V8H6V7H5v1H4v1H3v1H2v1H0V9h1V8h1V7h1V6h1V5H3V4H2V3H1V2H0Z"/></svg></button>
+    <h2>My Bracelet</h2>
+    <div class="gem-pill glass"><img class="gem-img" src="art/gem.webp" width="22" height="22" alt=""><span class="gem-count">0</span></div>
+  </header>
+  <div class="brace-stage" id="braceStage">
+    <canvas id="braceCanvas" aria-label="Your bracelet. Drag to spin it, tap a charm to see it."></canvas>
+    <div class="brace-hint" id="braceHint">Drag to spin · tap a charm</div>
+  </div>
+  <div class="brace-panel" id="bracePanel" role="region" aria-live="polite">
+    <div class="brace-card" id="braceCard"></div>
   </div>
 </section>
 
@@ -302,13 +285,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=37"></script>
-<script src="js/ui.js?v=37"></script>
+<script src="js/config.js?v=38"></script>
+<script src="js/ui.js?v=38"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=37"></script>
-<script src="js/game.js?v=37"></script>
-<script src="js/app.js?v=37"></script>
+<script src="js/net.js?v=38"></script>
+<script src="js/game.js?v=38"></script>
+<script src="js/app.js?v=38"></script>
 </body>
 </html>

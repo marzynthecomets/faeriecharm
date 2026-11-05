@@ -272,54 +272,197 @@ $('#buyBtn').onclick = () => {
 };
 document.addEventListener('click', e => { if (e.target.closest('[data-go="stall"]')) stallFresh = true; }, true);
 
-// ---------- bracelet ----------
-const RING = [[179,52],[260.1,78.4],[310.3,147.4],[310.3,232.6],[260.1,301.6],[179,328],[97.9,301.6],[47.7,232.6],[47.7,147.4],[97.9,78.4]];
-// Nothing is selected until you tap: a worn charm shows its card (Take off), an empty slot shows the charms that fit it.
-let braceSel = null;   // null | { id } | { type, index }
+// ---------- bracelet (3D: drag to spin and tilt, tap a charm to see it) ----------
+// 10 spots around the band, boost and style taking turns (boost spots 0-4, style spots 0-4).
+// The band is drawn as gold links around a tilted circle; charms hang straight down from it.
+const BR = { rot: 0, tilt: 0.5, vRot: 0, target: null, sel: null, idle: true, imgs: {}, hits: [], drag: null, raf: 0, last: 0 };
+const BR_SPOTS = Array.from({length: 10}, (_, i) => ({ type: i % 2 ? 'style' : 'boost', index: i >> 1, ang: i * Math.PI * 2 / 10 }));
+const brImg = src => { if (!BR.imgs[src]){ const im = new Image(); im.src = src; BR.imgs[src] = im; } return BR.imgs[src]; };
+let braceSel = null;   // null | { spot }  (spot = index into BR_SPOTS)
+
 render.bracelet = () => {
-  const d = Profile.data, wrap = $('#ringSlots'); wrap.innerHTML = '';
-  if (braceSel && braceSel.id && !Profile.isOn(braceSel.id)) braceSel = null;
-  RING.forEach(([x, y], i) => {
-    const boost = i % 2 === 0, type = boost ? 'boost' : 'style', index = boost ? i/2 : (i-1)/2, id = d[type][index];
-    const picked = braceSel && (id ? braceSel.id === id : braceSel.type === type && braceSel.index === index);
-    const b = document.createElement('button');
-    b.className = 'ring-slot ' + type + (id ? ' full' : '') + (picked ? ' picked' : '') + (id && hasArt(id) ? ' has-art' : '');
-    b.style.left = (x / 358 * 100) + '%'; b.style.top = (y / 372 * 100) + '%';
-    b.setAttribute('aria-label', id ? `${CONFIG.charms[id].name}, on your bracelet` : `Empty ${type} slot`);
-    b.setAttribute('aria-pressed', String(!!picked));
-    b.innerHTML = id ? icon(id, hasArt(id) ? 38 : 24) : (boost ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8 1 3 8h4l-1 5 5-7H7Z"/></svg>' : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5Z"/></svg>');
-    // art charms point outward from the band, ring toward the hoop (slot i sits at -90° + 36°·i)
-    if (id && hasArt(id)) b.querySelector('img').style.transform = `rotate(${-180 + 36*i}deg)`;
-    b.onclick = () => { braceSel = picked ? null : (id ? { id } : { type, index }); render.bracelet(); };
-    wrap.appendChild(b);
+  braceSel = null; BR.idle = true; BR.target = null; BR.vRot = 0;
+  Object.values(CONFIG.charms).forEach(c => c.art && brImg(c.art));
+  $('#braceHint').classList.remove('gone');
+  braceCard(); braceSize();
+  cancelAnimationFrame(BR.raf); BR.last = performance.now(); BR.raf = requestAnimationFrame(braceLoop);
+};
+function braceSize(){
+  const st = $('#braceStage'), cv = $('#braceCanvas'), r = st.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  if (!r.width) return;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+  BR.w = r.width; BR.h = r.height; BR.dpr = dpr;
+}
+addEventListener('resize', () => { if ($('#scr-bracelet').classList.contains('on')) braceSize(); });
+
+// 3D → screen. The band lies flat (y = 0); tilt tips it toward you; F = how strong the perspective is.
+function brGeom(){
+  const W = BR.w, H = BR.h, R = Math.min(W * 0.4, H * 0.36, 200), charmH = R * 0.66;
+  const st = Math.sin(BR.tilt), cy = H/2 - charmH * 0.6;
+  return { W, H, R, charmH, cx: W/2, cy, F: R * 5.5, st, ct: Math.cos(BR.tilt) };
+}
+function brProj(g, x, y, z){   // returns screen x, y, perspective scale, depth (bigger = closer)
+  const yy = y * g.ct - z * g.st, zz = y * g.st + z * g.ct, s = g.F / (g.F + zz);
+  return { x: g.cx + x * s, y: g.cy + yy * s, s, near: -zz };
+}
+const brPoint = (g, a) => brProj(g, g.R * Math.sin(a), 0, -g.R * Math.cos(a));   // a = 0 is the front
+
+function braceLoop(t){
+  if (!$('#scr-bracelet').classList.contains('on')) return;
+  const dt = Math.min(0.05, (t - BR.last) / 1000); BR.last = t;
+  if (!BR.drag){
+    if (BR.target !== null){
+      let d = BR.target - BR.rot; d = Math.atan2(Math.sin(d), Math.cos(d));
+      BR.rot += d * Math.min(1, dt * 7); if (Math.abs(d) < 0.002){ BR.rot = BR.target; BR.target = null; }
+    } else if (Math.abs(BR.vRot) > 0.02){ BR.rot += BR.vRot * dt; BR.vRot *= Math.pow(0.04, dt); }
+    else if (BR.idle && !matchMedia('(prefers-reduced-motion: reduce)').matches) BR.rot += dt * 0.25;
+  }
+  braceDraw(t / 1000);
+  BR.raf = requestAnimationFrame(braceLoop);
+}
+
+function braceDraw(time){
+  const cv = $('#braceCanvas'), ctx = cv.getContext('2d'), g = brGeom(), d = Profile.data;
+  ctx.setTransform(BR.dpr, 0, 0, BR.dpr, 0, 0); ctx.clearRect(0, 0, g.W, g.H);
+  // soft golden light behind the bracelet
+  const glow = ctx.createRadialGradient(g.cx, g.cy + g.R * 0.25, 0, g.cx, g.cy + g.R * 0.25, g.R * 1.6);
+  glow.addColorStop(0, 'rgba(255,214,110,.22)'); glow.addColorStop(1, 'rgba(255,214,110,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, g.W, g.H);
+  const items = [];
+  // chain links
+  const N = 46;
+  for (let i = 0; i < N; i++){
+    const a = i / N * Math.PI * 2 + BR.rot, p = brPoint(g, a), q = brPoint(g, a + 0.02);
+    const tx = q.x - p.x, ty = q.y - p.y, tl = Math.hypot(tx, ty) || 1;
+    // the link's short side: along the band's radius (flat links) or straight up (standing links)
+    const flat = i % 2 === 0;
+    const m = flat ? brProj(g, g.R * 1.03 * Math.sin(a), 0, -g.R * 1.03 * Math.cos(a)) : brProj(g, g.R * Math.sin(a), g.R * 0.03, -g.R * Math.cos(a));
+    const mx = m.x - p.x, my = m.y - p.y, perp = Math.abs(mx * ty - my * tx) / tl / (g.R * 0.03);
+    items.push({ z: p.near, kind: 'link', p, ang: Math.atan2(ty, tx), long: (Math.PI * 2 * g.R / N) * 0.95 * p.s, short: Math.max(0.16, Math.min(1, perp)) * g.R * 0.075 * p.s });
+  }
+  // charms + empty spots
+  BR_SPOTS.forEach((sp, i) => {
+    const a = sp.ang + BR.rot, p = brPoint(g, a), id = d[sp.type][sp.index];
+    items.push({ z: p.near - 0.5, kind: 'charm', p, i, id, sp, a });
   });
-  const info = $('#braceInfo'); info.hidden = !braceSel;
-  if (!braceSel) return;
-  const showCharm = !!braceSel.id;
-  $('#braceDetail').hidden = !showCharm; $('#bracePick').hidden = showCharm;
-  if (showCharm){
-    const c = CONFIG.charms[braceSel.id];
-    $('#braceIcon').innerHTML = icon(braceSel.id, 40);
-    $('#braceName').textContent = c.name;
-    $('#braceType').textContent = c.type === 'boost' ? 'Boost' : 'Style';
-    $('#braceSay').textContent = c.say;
+  items.sort((A, B) => A.z - B.z);
+  BR.hits = [];
+  for (const it of items){
+    const shade = 0.5 + 0.5 * Math.max(0, Math.min(1, (it.z / g.R + 1) / 2));   // back is darker
+    if (it.kind === 'link') brLink(ctx, it, shade);
+    else brCharm(ctx, g, it, shade, time);
+  }
+}
+function brLink(ctx, it, shade){
+  ctx.save(); ctx.translate(it.p.x, it.p.y); ctx.rotate(it.ang);
+  const rx = it.long * 0.62, ry = Math.max(1.2, it.short), w = Math.max(1.4, it.long * 0.2);
+  ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+  ctx.lineWidth = w + 2; ctx.strokeStyle = `rgba(70,46,10,${0.9})`; ctx.stroke();
+  const gr = ctx.createLinearGradient(0, -ry - w, 0, ry + w);
+  gr.addColorStop(0, '#fbe7a1'); gr.addColorStop(0.45, '#d9ad4f'); gr.addColorStop(1, '#8c6420');
+  ctx.lineWidth = w; ctx.strokeStyle = gr; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, Math.PI * 1.05, Math.PI * 1.6); ctx.lineWidth = Math.max(0.8, w * 0.3); ctx.strokeStyle = 'rgba(255,250,220,.85)'; ctx.stroke();
+  if (shade < 1){ ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.lineWidth = w + 2; ctx.strokeStyle = `rgba(12,24,16,${(1 - shade) * 0.9})`; ctx.stroke(); }
+  ctx.restore();
+}
+// a darker copy of a charm for the back of the bracelet (shading only the charm, not the box around it)
+const BR_TMP = document.createElement('canvas');
+function brShaded(im, shade){
+  const c = BR_TMP, x = c.getContext('2d'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+  x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'source-atop'; x.fillStyle = `rgba(12,24,16,${(1 - shade) * 0.85})`; x.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+function brCharm(ctx, g, it, shade, time){
+  const { p, id, i } = it, picked = braceSel && braceSel.spot === i, sway = Math.sin(time * 1.6 + i * 1.3) * 0.05;
+  const topY = p.y + g.R * 0.035 * p.s;
+  ctx.save(); ctx.translate(p.x, topY); ctx.rotate(sway);
+  if (id && CONFIG.charms[id].art){
+    const im = brImg(CONFIG.charms[id].art), h = g.charmH * p.s, w = im.naturalWidth ? h * im.naturalWidth / im.naturalHeight : h * 0.7;
+    if (picked){ const gl = ctx.createRadialGradient(0, h * 0.55, 0, 0, h * 0.55, h * 0.8); gl.addColorStop(0, `rgba(255,224,110,${0.75 + 0.2 * Math.sin(time * 4)})`); gl.addColorStop(1, 'rgba(255,214,90,0)'); ctx.fillStyle = gl; ctx.fillRect(-h, -h * 0.3, h * 2, h * 1.8); }
+    if (im.complete && im.naturalWidth){
+      ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 8 * p.s; ctx.shadowOffsetY = 4 * p.s;
+      ctx.drawImage(shade < 0.98 ? brShaded(im, shade) : im, -w/2, -h * 0.02, w, h); ctx.shadowColor = 'transparent';
+    }
+    BR.hits.push({ i, x: p.x - w/2, y: topY, w, h, z: it.z });
+  } else {
+    // empty spot: a dashed ring on a short gold drop, with a little boost / style mark
+    const r = g.charmH * 0.2 * p.s, cy = r * 1.9;
+    ctx.globalAlpha = 0.45 + 0.55 * shade;
+    ctx.strokeStyle = '#c9a24e'; ctx.lineWidth = 2 * p.s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, cy - r); ctx.stroke();
+    ctx.setLineDash([4 * p.s, 3 * p.s]); ctx.strokeStyle = picked ? '#fff3b0' : 'rgba(240,214,140,.95)'; ctx.lineWidth = (picked ? 3 : 2) * p.s;
+    ctx.fillStyle = picked ? 'rgba(255,224,110,.3)' : 'rgba(255,255,255,.08)';
+    ctx.beginPath(); ctx.arc(0, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(244,239,226,.85)'; ctx.beginPath();
+    const k = r * 0.5;
+    if (it.sp.type === 'boost'){ ctx.moveTo(k*0.15, cy - k); ctx.lineTo(-k*0.55, cy + k*0.15); ctx.lineTo(0, cy + k*0.15); ctx.lineTo(-k*0.15, cy + k); ctx.lineTo(k*0.55, cy - k*0.15); ctx.lineTo(0, cy - k*0.15); }
+    else { for (let j = 0; j < 8; j++){ const aa = j * Math.PI / 4, rr = j % 2 ? k * 0.32 : k; ctx.lineTo(Math.sin(aa) * rr, cy - Math.cos(aa) * rr); } }
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    BR.hits.push({ i, x: p.x - r * 1.3, y: topY, w: r * 2.6, h: cy + r * 1.3, z: it.z });
+  }
+  ctx.restore();
+}
+
+// drag to spin (sideways) and tilt (up and down); a quick tap picks a charm
+(() => {
+  const cv = $('#braceCanvas');
+  cv.addEventListener('pointerdown', e => {
+    cv.setPointerCapture(e.pointerId);
+    BR.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: 0 };
+    BR.vRot = 0; BR.target = null; BR.idle = false; $('#braceHint').classList.add('gone');
+  });
+  cv.addEventListener('pointermove', e => {
+    const dr = BR.drag; if (!dr || e.pointerId !== dr.id) return;
+    const dx = e.clientX - dr.x, dy = e.clientY - dr.y, now = performance.now(), g = brGeom();
+    BR.rot += dx / g.R * 0.9; BR.tilt = Math.max(0.22, Math.min(1.05, BR.tilt + dy * 0.004));
+    BR.vRot = 0.8 * BR.vRot + 0.2 * (dx / g.R * 0.9) / Math.max(0.008, (now - dr.t) / 1000);
+    dr.x = e.clientX; dr.y = e.clientY; dr.t = now; dr.moved = Math.max(dr.moved, Math.hypot(e.clientX - dr.sx, e.clientY - dr.sy));
+  });
+  const up = e => {
+    const dr = BR.drag; if (!dr || e.pointerId !== dr.id) return; BR.drag = null;
+    if (performance.now() - dr.t > 80) BR.vRot = 0;   // let go after stopping: no spin
+    if (dr.moved < 8){
+      BR.vRot = 0;
+      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      const hit = BR.hits.filter(h => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h).sort((a, b) => b.z - a.z)[0];
+      braceTap(hit ? hit.i : null);
+    }
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+})();
+function braceTap(i){
+  braceSel = i === null || (braceSel && braceSel.spot === i) ? null : { spot: i };
+  if (braceSel) BR.target = -BR_SPOTS[i].ang;   // spin it round to the front
+  braceCard();
+}
+
+// the bottom 30%: what's picked, and what you can do with it
+function braceCard(){
+  const card = $('#braceCard'), d = Profile.data;
+  const worn = t => d[t].filter(Boolean).length;
+  if (!braceSel){
+    card.innerHTML = `<div class="bc-row"><div class="bc-text"><div class="eyebrow">YOUR BRACELET</div><div class="h3">Spin it round!</div>
+      <div class="body">Drag to spin, then tap a charm to see what it does. Boost ${worn('boost')}/5 · Style ${worn('style')}/5</div></div></div>
+      <button class="px-btn blue" data-go="stall"><span>Get more charms</span></button>`;
     return;
   }
-  const { type, index } = braceSel, label = type === 'boost' ? 'boost' : 'style';
-  const choices = Object.keys(CONFIG.charms).filter(id => CONFIG.charms[id].type === type && Profile.owns(id) && !Profile.isOn(id));
-  $('#bracePickTitle').textContent = `Pick a ${label} charm for this spot`;
-  const list = $('#slotChoices'); list.innerHTML = ''; list.hidden = !choices.length;
-  choices.forEach(id => {
-    const b = document.createElement('button'); b.className = 'tray-item';
-    b.innerHTML = `${icon(id, 26)}<span>${esc(CONFIG.charms[id].name)}</span>`;
-    b.onclick = () => { Profile.data[type][index] = id; Profile.save(); braceSel = { id }; render.bracelet(); say(`${CONFIG.charms[id].name} is on!`); };
-    list.appendChild(b);
-  });
-  $('#bracePickEmpty').hidden = !!choices.length; $('#bracePickStall').hidden = !!choices.length;
-  $('#bracePickEmpty').textContent = `You don't have any other ${label} charms yet. Bramble sells them at her stall!`;
-};
-$('#toggleBtn').onclick = () => { if (braceSel && braceSel.id){ Profile.unequip(braceSel.id); braceSel = null; render.bracelet(); } };
-$('#braceClose').onclick = () => { braceSel = null; render.bracelet(); };
+  const sp = BR_SPOTS[braceSel.spot], id = d[sp.type][sp.index];
+  if (id){
+    const c = CONFIG.charms[id], inMaze = sp.type === 'boost' && hangSlots(d.boost).includes(id);
+    card.innerHTML = `<div class="bc-row"><div class="preview-tile">${icon(id, 44)}</div><div class="bc-text">
+      <div class="bc-name"><span class="h3">${esc(c.name)}</span><em class="bc-tag ${c.type}">${c.type === 'boost' ? 'Boost' : 'Style'}</em></div>
+      <div class="body">${esc(c.say)}</div>${sp.type === 'boost' ? `<div class="bc-note">${inMaze ? 'Comes into the maze with you' : 'Only your first 3 boost charms come into the maze'}</div>` : ''}</div></div>
+      <button class="px-btn green" id="braceOff"><span>Take it off</span></button>`;
+    $('#braceOff').onclick = () => { Profile.unequip(id); braceCard(); };
+    return;
+  }
+  const label = sp.type, choices = Object.keys(CONFIG.charms).filter(k => CONFIG.charms[k].type === label && Profile.owns(k) && !Profile.isOn(k));
+  card.innerHTML = `<div class="bc-text"><div class="eyebrow">EMPTY ${label.toUpperCase()} SPOT</div><div class="h3">${choices.length ? `Pick a ${label} charm` : `No ${label} charms to add`}</div>
+    ${choices.length ? '' : `<div class="body">Bramble sells ${label} charms at her stall.</div>`}</div>
+    ${choices.length ? `<div class="bc-tray">${choices.map(k => `<button class="bc-choice" data-put="${k}">${icon(k, 40)}<span>${esc(CONFIG.charms[k].name)}</span></button>`).join('')}</div>`
+      : `<button class="px-btn blue" data-go="stall"><span>Visit Bramble's stall</span></button>`}`;
+  $$('#braceCard [data-put]').forEach(b => b.onclick = () => { const k = b.dataset.put; d[sp.type][sp.index] = k; Profile.save(); braceCard(); });
+}
 
 go('load');
 })();

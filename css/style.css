@@ -461,3 +461,28 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .has-art .entry-text h1{font-size:clamp(22px,7cqw,30px);margin:0}
 .has-art .entry-text p{font-size:clamp(13px,3.9cqw,16px);line-height:1.35}
 .has-art .play-btn{transform:translateX(-50%)}
+
+/* ---------- My Bracelet: 3D bracelet on top (70%), details card below (30%) ---------- */
+#scr-bracelet{background:#14261a url('../art/bracelet-bg.webp') center bottom / cover no-repeat;display:none;flex-direction:column}
+#scr-bracelet.on{display:flex}
+#scr-bracelet .stall-head{position:relative;flex-shrink:0;padding-bottom:4px;background:linear-gradient(rgba(14,26,18,.9),rgba(14,26,18,0))}
+.brace-stage{position:relative;flex:1 1 70%;min-height:0;touch-action:none}
+#braceCanvas{position:absolute;inset:0;display:block;touch-action:none;cursor:grab}
+#braceCanvas:active{cursor:grabbing}
+.brace-hint{position:absolute;left:50%;bottom:10px;translate:-50% 0;padding:6px 14px;border-radius:16px;background:rgba(14,12,24,.55);color:#f4efe2;font-size:13px;font-weight:600;pointer-events:none;transition:opacity .4s;white-space:nowrap}
+.brace-hint.gone{opacity:0}
+.brace-panel{flex:0 0 auto;min-height:30%;display:flex;align-items:flex-end;padding:0 max(14px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));box-sizing:border-box}
+.brace-card{width:100%;display:flex;flex-direction:column;gap:12px;background:#fff;border-radius:20px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);box-sizing:border-box}
+.bc-row{display:flex;gap:12px;align-items:center}
+.bc-row .preview-tile{width:72px;height:72px;border-radius:14px;background:#f1eef7;border:none}
+.bc-text{min-width:0;display:flex;flex-direction:column;gap:3px}
+.bc-text .body{font-size:14px;line-height:1.35;color:#2a2a2a}
+.bc-name{display:flex;align-items:center;gap:8px}
+.bc-tag{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:8px;background:#e4ecff;color:#2a45b0}
+.bc-tag.style{background:#fbe4f4;color:#9a2a7a}
+.bc-note{font-size:12px;color:#5a6b4e;font-weight:600;margin-top:2px}
+.bc-tray{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none}
+.bc-choice{flex:0 0 auto;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px 8px;border-radius:14px;border:2px solid #e6e1ef;background:#faf8fd}
+.bc-choice span{font-family:var(--font-display);font-size:13px}
+.bc-choice:active{border-color:#ffd45a;background:#fff8dc}
+.brace-card .px-btn{height:58px}

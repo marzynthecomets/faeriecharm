@@ -222,10 +222,6 @@ function tryMove(dir, joy){
   if (startMove(dir, STEP_MS)) return true;
   if (joy){
     for (const alt of joyDirs().slice(1)) if (startMove(alt, STEP_MS)) return true;   // blocked: try the way the stick leans
-    // still blocked at a bend in the path (only one way on that isn't back): follow the bend
-    const back = S.lastDir && DLIST.find(k => DIRS[k].bit === DIRS[S.lastDir].opp);
-    const ways = DLIST.filter(k => canGo(S.px, S.py, k) && k !== back && k !== DIRS[dir] && DIRS[k].bit !== DIRS[dir].opp);
-    if (ways.length === 1 && DLIST.filter(k => canGo(S.px, S.py, k)).length === 2 && startMove(ways[0], STEP_MS)) return true;
   }
   S.facing = dir; return false;
 }
