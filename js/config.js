@@ -66,10 +66,12 @@ const CONFIG = {
   },
 
   // ----- levels (seed = maze layout; change it to get a new maze) -----
-  // entryArt (optional) = background for the level's start screen; the card sits on its door
+  // entryArt (optional) = background for the level's start screen; entryDoor says where its door is so the text and
+  // play button line up with it (see the Thorn Maze line). The card sits on its door
   // (portrait, door centered in roughly the middle third, path below it)
   levels: [
-    { name: 'Thorn Maze',   blurb: 'Enter the Thorn Maze and find the key to free the forest.', width: 7, height: 12, seed: 2718, friendSeed: 9001, entryArt: 'art/entry-thorn.webp' },
+    { name: 'Thorn Maze',   blurb: 'Enter the Thorn Maze and find the key to free the forest.', width: 7, height: 12, seed: 2718, friendSeed: 9001, entryArt: 'art/entry-thorn.webp',
+      entryDoor: { image: [832, 1456], text: [222, 430, 610, 880], play: [416, 1060], playSize: 300 } },   // door art layout, in the art's own pixels: text box inside the door, play button centre + size
     { name: 'Fern Tangle',  blurb: 'The ferns have grown over the path. Find the key hidden in the green.', width: 7, height: 14, seed: 4242, friendSeed: 7777 },
     { name: 'Moonroot Maze', blurb: 'The roots only glow at night. Find the key before the moon sets.', width: 8, height: 16, seed: 1312, friendSeed: 5150 }
   ],

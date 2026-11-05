@@ -48,16 +48,21 @@ render.map = () => {
   });
   fitStage();
 };
-// The map starts just under the hanging bracelet (so the charms never cover a gate) and is scaled to fill the
-// rest of the screen; tall phones crop a little off the sides, short ones a little off the bottom.
+// Fit the map between the hanging bracelet and the bottom of the screen so every gate (badge on top, name below)
+// is fully visible, however short the phone's browser window is. The art fills the width; if a very short
+// screen needs it smaller, a sliver of the dark background shows at the sides.
 function fitStage(){
   const scr = $('#scr-map'), st = $('#mapStage'); if (!scr.classList.contains('on')) return;
   const M = CONFIG.map, r = scr.getBoundingClientRect(), W = r.width, H = r.height;
   const chainW = Math.min(W * 0.62, 300), charmH = Math.min(W * 0.25, 118, H * 0.14);
-  const off = Math.round(chainW / 2.288 * 0.716 + charmH - 44);   // bottom of the lower middle charm, less the sky at the top of the art
-  const s = Math.max(W / M.width, (H - off) / M.height);
-  st.style.transform = `translate(${(W - M.width*s)/2}px, ${off}px) scale(${s})`;
-  $('#mapFade').style.height = (off + 56) + 'px';
+  const charmsBottom = chainW / 2.288 * 0.716 - 4 + charmH;                   // bottom of the lower middle charm
+  const top = Math.min(...M.gates.map(g => g.y - g.h/2 - 42));               // highest gate badge, in art pixels
+  const bottom = Math.max(...M.gates.map(g => g.y + g.h/2 + 56));            // lowest gate name tag
+  const fit = (H - 14 - charmsBottom) / (bottom - top);                        // largest scale that shows every gate
+  const s = Math.min(fit, Math.max(W / M.width, (H - charmsBottom + 40) / M.height));
+  const y = Math.max(charmsBottom + 8 - top * s, H - M.height * s);           // no gap at the bottom when there's room
+  st.style.transform = `translate(${(W - M.width*s)/2}px, ${y}px) scale(${s})`;
+  $('#mapFade').style.height = (Math.max(0, y) + 56) + 'px';
 }
 addEventListener('resize', fitStage);
 
@@ -80,7 +85,26 @@ render.entry = () => {
   const bg = $('#entryBg'), scr = $('#scr-entry');
   scr.classList.toggle('has-art', !!lv.entryArt); bg.hidden = !lv.entryArt;
   if (lv.entryArt && bg.getAttribute('src') !== lv.entryArt) bg.src = lv.entryArt;
+  fitEntry();
 };
+// Lay the level screen out on the door art itself: the text sits inside the door, the play button on the path
+// below it, and the art is scaled and nudged so the whole thing fits above the "Play with a friend" button.
+function fitEntry(){
+  const scr = $('#scr-entry'), lv = CONFIG.levels[entryLevel], D = lv.entryDoor, bg = $('#entryBg'), card = $('.entry-card'), play = $('#entryPlay');
+  [bg, card, play].forEach(el => el.removeAttribute('style'));
+  if (!scr.classList.contains('on') || !lv.entryArt || !D) return;
+  const r = scr.getBoundingClientRect(), W = r.width, H = r.height, [iw, ih] = D.image;
+  const friendTop = H - 36 - 64 - 14;                                   // keep clear of the friend button
+  const s = Math.max(W / iw, H / ih);                                   // always fill the screen
+  const tx = W/2 - D.play[0]*s;                                         // the door's centre on the screen's centre
+  // slide the art up so the play button sits just above the friend button (short screens crop leaves off the top)
+  const ty = Math.min(0, Math.max(H - ih*s, friendTop - (D.play[1] + D.playSize/2)*s));
+  Object.assign(bg.style, { inset: 'auto', objectFit: 'fill', width: iw*s + 'px', height: ih*s + 'px', left: tx + 'px', top: ty + 'px' });
+  Object.assign(card.style, { left: tx + D.text[0]*s + 'px', top: ty + D.text[1]*s + 'px', width: (D.text[2] - D.text[0])*s + 'px', height: (D.text[3] - D.text[1])*s + 'px', transform: 'none', padding: '0' });
+  const ps = Math.min(D.playSize*s, 170);
+  Object.assign(play.style, { width: ps + 'px', left: (D.play[0] - D.text[0])*s + 'px', top: (D.play[1] - D.text[1])*s - ps/2 + 'px', bottom: 'auto' });
+}
+addEventListener('resize', () => { if ($('#scr-entry').classList.contains('on')) fitEntry(); });
 function play(mode, live){
   go('game');
   FRIEND = live ? live.friendName : CONFIG.friendName;

@@ -142,22 +142,32 @@ function fresh(){
 // ---------- input ----------
 let joyDir = null, keyDir = null, joyId = null, jx = 0, jy = 0;
 const stick = $('#stick'), knob = $('#knob'), arrows = {up:stick.querySelector('.up'),down:stick.querySelector('.down'),left:stick.querySelector('.left'),right:stick.querySelector('.right')};
-function idleStick(){ const r = screen.getBoundingClientRect(); stick.style.left = 'calc(84px + env(safe-area-inset-left, 0px))'; stick.style.top = 'calc(' + (r.height - 112) + 'px - env(safe-area-inset-bottom, 0px))'; stick.classList.add('idle'); knob.style.transform = ''; for (const k in arrows) arrows[k].classList.remove('on'); }
+function idleStick(){ const r = screen.getBoundingClientRect(); stick.style.left = 'calc(' + (r.width - 84) + 'px - env(safe-area-inset-right, 0px))'; stick.style.top = 'calc(' + (r.height - 112) + 'px - env(safe-area-inset-bottom, 0px))'; stick.classList.add('idle'); knob.style.transform = ''; for (const k in arrows) arrows[k].classList.remove('on'); }
 canvas.addEventListener('pointerdown', e => {
   if (!S || S.paused || S.won || joyId !== null) return;
   joyId = e.pointerId; canvas.setPointerCapture(e.pointerId);
-  const r = screen.getBoundingClientRect(); jx = e.clientX - r.left; jy = e.clientY - r.top;   // drag anywhere; the stick itself stays put at the bottom left
+  const r = screen.getBoundingClientRect(); jx = e.clientX - r.left; jy = e.clientY - r.top;   // drag anywhere; the stick itself stays put at the bottom right
   stick.classList.remove('idle'); $('#hint').hidden = true;
 });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerId !== joyId) return;
   const r = screen.getBoundingClientRect(); let dx = e.clientX - r.left - jx, dy = e.clientY - r.top - jy;
-  const d = Math.hypot(dx,dy), m = 38; if (d > m){ dx = dx/d*m; dy = dy/d*m; }
-  knob.style.transform = `translate(${dx}px,${dy}px)`;
-  joyDir = d < 18 ? null : (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  const d = Math.hypot(dx,dy), m = 24;
+  // the centre follows your thumb, so turning back the other way only takes a small move (about 30px)
+  if (d > m){ jx += dx * (d - m) / d; jy += dy * (d - m) / d; dx = dx/d*m; dy = dy/d*m; }
+  knob.style.transform = `translate(${dx*38/m}px,${dy*38/m}px)`;
+  joyVec = Math.hypot(dx,dy) < 7 ? null : {x:dx, y:dy};
+  joyDir = joyVec ? joyDirs()[0] : null;
   for (const k in arrows) arrows[k].classList.toggle('on', k === joyDir);
 });
-const endJoy = e => { if (e.pointerId !== joyId) return; joyId = null; joyDir = null; idleStick(); };
+const endJoy = e => { if (e.pointerId !== joyId) return; joyId = null; joyDir = null; joyVec = null; idleStick(); };
+// The stick's main direction first, then the side it leans toward (so pushing up-right goes up if right is a wall)
+let joyVec = null;
+function joyDirs(){
+  if (!joyVec) return [];
+  const ax = Math.abs(joyVec.x), ay = Math.abs(joyVec.y), h = joyVec.x > 0 ? 'right' : 'left', v = joyVec.y > 0 ? 'down' : 'up';
+  return ax >= ay ? (ay > ax * 0.3 ? [h, v] : [h]) : (ax > ay * 0.3 ? [v, h] : [v]);
+}
 canvas.addEventListener('pointerup', endJoy); canvas.addEventListener('pointercancel', endJoy);
 const KEYS = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
 const held = [];
@@ -171,7 +181,7 @@ function startMove(dir, dur){
   const d = DIRS[dir];
   S.foot.push({...cellCenter(S.px,S.py), dir}); if (S.foot.length > 12) S.foot.shift();
   S.anim = {fx:S.px, fy:S.py, tx:S.px+d.dx, ty:S.py+d.dy, t:0, dur};
-  S.facing = dir;
+  S.facing = dir; S.lastDir = dir;
   if (S.live && S.duo) Net.setMine({x:S.anim.tx, y:S.anim.ty, f:dir});   // your friend sees you move
   return true;
 }
@@ -200,12 +210,24 @@ function checkDoor(){
   if (!meAtDoor()) S.waitSaid = false;
 }
 function updatePlayer(dt){
-  const dir = sheetOpen ? null : (joyDir || keyDir);
-  if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + HOLD_DELAY; } }
+  const joy = !sheetOpen && !!joyDir, dir = sheetOpen ? null : (joyDir || keyDir);
+  // the stick keeps walking for as long as you hold it; arrow keys take one step, then repeat after a short pause
+  if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + (joy ? 0 : HOLD_DELAY); } }
   if (S.anim){ S.anim.t += dt*1000/S.anim.dur; if (S.anim.t >= 1) arrive(); return; }
   if (S.queue.length){ startMove(S.queue.shift(), 75); return; }
-  if (S.pendDir){ const d = S.pendDir; S.pendDir = null; if (!startMove(d, STEP_MS)) S.facing = d; return; }
-  if (dir && S.now >= S.repNext){ if (startMove(dir, STEP_MS)) S.repNext = S.now + REPEAT; }
+  if (S.pendDir){ const d = S.pendDir; S.pendDir = null; tryMove(d, joy); return; }
+  if (dir && S.now >= S.repNext){ if (tryMove(dir, joy)) S.repNext = S.now + (joy ? 0 : REPEAT); }
+}
+function tryMove(dir, joy){
+  if (startMove(dir, STEP_MS)) return true;
+  if (joy){
+    for (const alt of joyDirs().slice(1)) if (startMove(alt, STEP_MS)) return true;   // blocked: try the way the stick leans
+    // still blocked at a bend in the path (only one way on that isn't back): follow the bend
+    const back = S.lastDir && DLIST.find(k => DIRS[k].bit === DIRS[S.lastDir].opp);
+    const ways = DLIST.filter(k => canGo(S.px, S.py, k) && k !== back && k !== DIRS[dir] && DIRS[k].bit !== DIRS[dir].opp);
+    if (ways.length === 1 && DLIST.filter(k => canGo(S.px, S.py, k)).length === 2 && startMove(ways[0], STEP_MS)) return true;
+  }
+  S.facing = dir; return false;
 }
 function playerPix(){
   if (!S.anim) return cellCenter(S.px, S.py);
