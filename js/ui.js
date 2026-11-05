@@ -104,7 +104,7 @@ const Sound = (() => {
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3'), powerup: mk('sound/powerup.mp3') };
   const music = mk('sound/bg-music.mp3'); music.loop = true;
   const shine = mk('sound/bracelet-shine.mp3'); shine.loop = true;   // sparkly loop while you look at your bracelet
-  const SHINE_VOL = 0.5; let shineGain = null, shineOn = false, shineStop;
+  const SHINE_VOL = 0.2; let shineGain = null, shineOn = false, shineStop;
   let ctx = null, musicGain = null, playing = false;
   const AC = window.AudioContext || window.webkitAudioContext;
   function route(el, vol){   // send an element through its own gain node (falls back to el.volume)
