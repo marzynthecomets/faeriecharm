@@ -17,7 +17,8 @@ const CONFIG = {
 
   // ----- movement + view -----
   stepMs: 150,           // how long one step takes (Dash and the scripted friend)
-  slideMs: 80,           // swipe to slide: how long each space of a slide takes (bigger = slower slide)
+  slideMs: 170,          // swipe to slide: how long each space of a slide takes (bigger = slower, gentler)
+  slideStartMs: 140,     // plus this much per slide, for speeding up at the start and easing to a stop
   swipeDistance: 28,     // how far (px) a finger moves before it counts as a swipe (bigger = needs a longer swipe)
   fogClear: 96,          // radius (px) around the player that is fully visible
   fogEdge: 240,          // radius (px) where the fog is fully opaque

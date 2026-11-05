@@ -93,6 +93,28 @@ function renderHang(el, slots, interactive){
   el.innerHTML = h;
 }
 
+// ---------- sound ----------
+// Background music loops quietly; effects play over it (the music dips while the key sound plays).
+// Phones only allow sound after the first tap, so the music starts on the first touch anywhere.
+const Sound = (() => {
+  const mk = (src, vol) => { const a = new Audio(src); a.preload = 'auto'; a.volume = vol; return a; };
+  const fx = { key: mk('sound/key-found.mp3', 0.9), gem: mk('sound/gem.mp3', 0.55) };
+  const music = mk('sound/bg-music.mp3', 0.16); music.loop = true; music.preload = 'auto';
+  const MUSIC_VOL = 0.16; let started = false;
+  const on = () => Profile.data.music !== false;
+  const tryPlay = a => { try { const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
+  function startMusic(){ if (on() && !document.hidden){ started = true; tryPlay(music); } }
+  ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (!started || music.paused) startMusic(); }, { passive: true }));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) music.pause(); else if (started) startMusic(); });
+  let duck;
+  return {
+    play(name){ const a = fx[name]; if (!a) return; try { a.currentTime = 0; } catch (e) {} tryPlay(a);
+      if (name === 'key'){ music.volume = MUSIC_VOL * 0.3; clearTimeout(duck); duck = setTimeout(() => music.volume = MUSIC_VOL, 4200); } },
+    get musicOn(){ return on(); },
+    setMusic(v){ Profile.data.music = v; Profile.save(); if (v) startMusic(); else music.pause(); }
+  };
+})();
+
 // ---------- little helpers ----------
 let toastT;
 function say(text){ const c = $('#callout'); c.textContent = text; c.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => c.classList.remove('show'), 2200); }

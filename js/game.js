@@ -96,19 +96,19 @@ let S = null, opts = null, active = false;
 const cam = {x:0, y:0, z:1, peek:0, glow:0};
 const cellCenter = (x,y) => ({x:x*C + C/2, y:y*C + C/2});
 function mkMate(c){ return {x:c.x, y:c.y, from:cellCenter(c.x,c.y), t:1, dur:1, facing:'up', foot:[]}; }
-function mateTo(x, y, facing){   // move the friend's faerie (scripted or live); animates from wherever it's drawn now
+function mateTo(x, y, facing, ms){   // move the friend's faerie (scripted or live); animates from wherever it's drawn now
   const m = S.mate; if (!m) return;
   if (facing) m.facing = facing;
   if (x === m.x && y === m.y) return;
   const from = matePix(), steps = Math.abs(x - m.x) + Math.abs(y - m.y);
   m.foot.push({...cellCenter(m.x, m.y), dir: m.facing}); if (m.foot.length > 10) m.foot.shift();
-  m.from = from; m.x = x; m.y = y; m.t = 0; m.dur = Math.min(600, STEP_MS * Math.max(1, steps));
+  m.from = from; m.x = x; m.y = y; m.t = 0; m.n = Math.max(1, steps); m.dur = ms ? Math.min(3000, ms) : Math.min(600, STEP_MS * m.n);
   if (!S.friendHalf && !S.live && x === KEYCELLS[1-ME].x && y === KEYCELLS[1-ME].y) setTimeout(() => S && S.mate && !S.friendHalf && friendFinds(), m.dur);
   checkDoorSoon(m.dur);
 }
 function matePix(){
   const m = S.mate, b = cellCenter(m.x, m.y); if (m.t >= 1) return b;
-  const t = m.t, e = t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+  const e = runEase(m.t, m.n || 1);
   return {x:m.from.x + (b.x-m.from.x)*e, y:m.from.y + (b.y-m.from.y)*e};
 }
 function updateMate(dt){ const m = S.mate; if (m && m.t < 1) m.t = Math.min(1, m.t + dt*1000/m.dur); }
@@ -182,24 +182,36 @@ const stopsHere = (x, y) => S.haveHalf && (S.duo ? atDoor(x, y) : (x === DOOR.x 
 
 // ---------- movement ----------
 function canGo(x,y,dir){ return !!(mine[y*W+x] & DIRS[dir].bit); }
-function startMove(dir, dur){
+// A move is one smooth run along a corridor: it speeds up gently, glides, then eases to a stop.
+// Cells are still "arrived at" one by one as you pass them (gems, keys, the door).
+function runEase(t, n){
+  t = Math.min(1, Math.max(0, t));
+  const a = Math.min(0.5, 0.9 / n), v = 1 / (1 - a);   // a = share of the run spent speeding up (and slowing down)
+  if (t < a) return 0.5 * v * t * t / a;
+  if (t > 1 - a) return 1 - 0.5 * v * (1 - t) * (1 - t) / a;
+  return v * (t - a / 2);
+}
+const runMs = n => CONFIG.slideStartMs + CONFIG.slideMs * n;
+function startMove(dir, dur, n = 1){
   if (!canGo(S.px, S.py, dir)) return false;
   const d = DIRS[dir];
-  S.foot.push({...cellCenter(S.px,S.py), dir}); if (S.foot.length > 12) S.foot.shift();
-  S.anim = {fx:S.px, fy:S.py, tx:S.px+d.dx, ty:S.py+d.dy, t:0, dur};
+  S.anim = {fx:S.px, fy:S.py, dir, n, done:0, t:0, dur: dur || runMs(n)};
   S.facing = dir; S.lastDir = dir;
-  if (S.live && S.duo) Net.setMine({x:S.anim.tx, y:S.anim.ty, f:dir});   // your friend sees you move
+  if (S.live && S.duo) Net.setMine({x:S.px + d.dx*n, y:S.py + d.dy*n, f:dir, ms:Math.round(S.anim.dur)});   // your friend sees the whole run
   return true;
 }
-function arrive(){
-  S.px = S.anim.tx; S.py = S.anim.ty; S.anim = null;
+function arrive(){   // you've just reached the next space of a run
+  const d = DIRS[S.anim.dir];
+  S.foot.push({...cellCenter(S.px,S.py), dir:S.anim.dir}); if (S.foot.length > 12) S.foot.shift();
+  S.px += d.dx; S.py += d.dy; S.anim.done++;
+  if (S.anim.done >= S.anim.n) S.anim = null;   // the run is over, so door checks below see you standing still
   const id = S.px + ',' + S.py;
-  if (S.gemCells.has(id)){ S.gemCells.delete(id); S.gemsFound++; Profile.addGems(1); popGems(); say('+1 gem'); if (S.live) Net.send({type:'gem', id}); }
+  if (S.gemCells.has(id)){ S.gemCells.delete(id); S.gemsFound++; Profile.addGems(1); Sound.play('gem'); popGems(); say('+1 gem'); if (S.live) Net.send({type:'gem', id}); }
   if (S.duo && !S.friendHalf && S.px === KEYCELLS[1-ME].x && S.py === KEYCELLS[1-ME].y){
     if (!S.mateKeyWarned){ S.mateKeyWarned = true; say(`That's ${FRIEND}'s key! Leave it for ${THEIR === 'their' ? 'them' : 'her'}`); }
   } else S.mateKeyWarned = false;
   if (!S.haveHalf && S.px === KEY.x && S.py === KEY.y){
-    S.haveHalf = true; S.playerHalfAt = S.now; playSound(keySound);
+    S.haveHalf = true; S.playerHalfAt = S.now; Sound.play('key');
     if (!S.duo) S.friendHalf = true;
     flyKey(cellCenter(KEY.x, KEY.y));
     if (S.live) Net.setMine({half:true, status:'solving'});
@@ -216,8 +228,13 @@ function checkDoor(){
   if (!meAtDoor()) S.waitSaid = false;
 }
 function updatePlayer(dt){
-  if (S.anim){ S.anim.t += dt*1000/S.anim.dur; if (S.anim.t >= 1) arrive(); return; }
-  if (S.queue.length){ startMove(S.queue.shift(), CONFIG.slideMs); return; }
+  if (S.anim){
+    const A = S.anim; A.t += dt*1000/A.dur;
+    const reached = A.t >= 1 ? A.n : Math.min(A.n - 1, Math.floor(runEase(A.t, A.n) * A.n + 0.5));   // count a space once you're halfway onto it
+    while (S.anim === A && A.done < reached) arrive();
+    return;
+  }
+  if (S.queue.length){ const dir = S.queue[0], n = S.queue.length; S.queue = []; startMove(dir, 0, n); return; }
   if (nextSlide){ const d = nextSlide; nextSlide = null; slide(d); }
 }
 function playerPix(){
@@ -226,9 +243,8 @@ function playerPix(){
     if (k >= 1) return c;
     const o = Math.sin(k * Math.PI) * 8; return {x: c.x + DIRS[b.dir].dx * o, y: c.y + DIRS[b.dir].dy * o};
   }
-  const t = Math.min(1, S.anim.t), e = t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
-  const a = cellCenter(S.anim.fx, S.anim.fy), b = cellCenter(S.anim.tx, S.anim.ty);
-  return {x:a.x + (b.x-a.x)*e, y:a.y + (b.y-a.y)*e};
+  const A = S.anim, d = DIRS[A.dir], e = runEase(A.t, A.n) * A.n, a = cellCenter(A.fx, A.fy);
+  return {x:a.x + d.dx*C*e, y:a.y + d.dy*C*e};
 }
 
 // ---------- charms ----------
@@ -581,9 +597,6 @@ function drawDuoKey(k, i){
   ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(-8, 0, 3, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
-// sounds (phones only allow sound after a tap, and every game starts with one, so this just works)
-const keySound = new Audio('sound/key-found.mp3'); keySound.preload = 'auto';
-function playSound(a){ try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function drawKey(){
   if (S.duo){
     if (!S.haveHalf) drawDuoKey(KEYCELLS[ME], ME);
@@ -602,7 +615,7 @@ function drawKey(){
 }
 // Each player is their faerie, seen from above (player 1 = pink, player 2 = purple). She leans into sideways moves,
 // flutters her wings, and sits on a soft glow in her color so you never lose her in the fog.
-const TILT = {};
+const ANG = {}, FACE_ANG = {up:Math.PI, right:-Math.PI/2, down:0, left:Math.PI/2};   // the art faces down
 function drawPlayer(p, facing, ring, who, moving){
   p = p || playerPix(); facing = facing || S.facing;
   who = who === undefined ? (S.duo ? ME : 0) : who; moving = moving === undefined ? !!S.anim : moving;
@@ -618,13 +631,14 @@ function drawPlayer(p, facing, ring, who, moving){
     for (const o of off){ ctx.beginPath(); ctx.arc(p.x + o[0] + d.dx*3, p.y + o[1] + d.dy*3 - (d.dy===0?2:0), 3, 0, Math.PI*2); ctx.fill(); }
     return;
   }
-  const want = moving ? DIRS[facing].dx * 0.26 : 0;
-  TILT[who] = (TILT[who] || 0) + (want - (TILT[who] || 0)) * 0.2;
+  const want = FACE_ANG[facing] || 0; if (ANG[who] === undefined) ANG[who] = want;
+  let diff = want - ANG[who]; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+  ANG[who] += diff * 0.22;
   const w = 76, h = w * im.height / im.width, bob = Math.sin(S.now * 4 + who * 2) * 2.5;
   const flap = 1 - 0.06 * (0.5 + 0.5 * Math.sin(S.now * (moving ? 26 : 12) + who));
-  ctx.save(); ctx.translate(p.x, p.y + bob); ctx.rotate(TILT[who]); ctx.scale(flap, 1);
+  ctx.save(); ctx.translate(p.x, p.y + bob); ctx.rotate(ANG[who]); ctx.scale(flap, 1);
   ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 5;
-  ctx.drawImage(im, -w/2, -h/2 - 4, w, h);
+  ctx.drawImage(im, -w/2, -h/2, w, h);
   ctx.restore();
 }
 // The floor and walls don't move, so they're drawn once into a small layer at chunky pixel size
@@ -736,7 +750,7 @@ function liveTick(){ if (S.stuckUntil && (S.now > S.stuckUntil || S.haveHalf)){ 
 function netPlayers(friend){
   if (!active || !S || !S.live || !friend) return;
   S.remote = {online: friend.online !== false, status: friend.status || 'solving', half: !!friend.half};
-  if (S.duo && typeof friend.x === 'number' && typeof friend.y === 'number') mateTo(friend.x, friend.y, friend.f);
+  if (S.duo && typeof friend.x === 'number' && typeof friend.y === 'number') mateTo(friend.x, friend.y, friend.f, friend.ms);
   if (S.remote.half && !S.friendHalf){
     S.friendHalf = true; renderKey(true);
     say(S.haveHalf ? 'Both keys found! Meet at the door' : `${FRIEND} found ${THEIR} key!`);

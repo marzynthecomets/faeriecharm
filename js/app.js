@@ -89,7 +89,9 @@ function fitStage(){
 addEventListener('resize', fitStage);
 
 // settings
-$('#settingsBtn').onclick = () => { $('#resetBtn').textContent = 'Reset my progress'; $('#resetBtn').dataset.armed = ''; $('#settingsOv').hidden = false; };
+const musicLabel = () => { $('#musicBtn').textContent = 'Music: ' + (Sound.musicOn ? 'on' : 'off'); };
+$('#musicBtn').onclick = () => { Sound.setMusic(!Sound.musicOn); musicLabel(); };
+$('#settingsBtn').onclick = () => { musicLabel(); $('#resetBtn').textContent = 'Reset my progress'; $('#resetBtn').dataset.armed = ''; $('#settingsOv').hidden = false; };
 $('#settingsClose').onclick = () => { $('#settingsOv').hidden = true; };
 $('#nameBtn').onclick = () => { $('#settingsOv').hidden = true; go('name'); };
 $('#resetBtn').onclick = e => {
