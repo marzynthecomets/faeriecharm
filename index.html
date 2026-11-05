@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>FaerieCharm</title>
-<link rel="stylesheet" href="css/style.css?v=30">
+<link rel="stylesheet" href="css/style.css?v=31">
 </head>
 <body>
 <div id="app">
@@ -27,7 +27,7 @@
     <img class="map-art" id="mapArt" alt="" draggable="false">
     <div id="levelSpots"></div>
     <button class="cloud-stall" data-go="stall" aria-label="Charm Stall">
-      <img src="art/stall-map.webp?v=30" alt="" draggable="false">
+      <img src="art/stall-map.webp?v=31" alt="" draggable="false">
     </button>
   </div>
   <header class="topbar">
@@ -209,27 +209,34 @@
 </section>
 
 <!-- ================= LEVEL COMPLETE ================= -->
-<section class="screen pad" id="scr-win" aria-label="Level complete">
-  <div class="col center-col">
-    <div class="win-art-wrap"><svg class="win-art" viewBox="40 60 330 220" aria-hidden="true">
-      <g fill="#1a1a1a"><rect x="60" y="80" width="8" height="14" rx="2" transform="rotate(25 64 87)"/><rect x="330" y="90" width="8" height="14" rx="2" transform="rotate(-30 334 97)"/><rect x="80" y="170" width="7" height="12" rx="2" transform="rotate(-15 83 176)"/><circle cx="110" cy="70" r="4"/><circle cx="280" cy="76" r="5"/><circle cx="350" cy="160" r="4"/><path d="M70 120l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2Z"/><path d="M196 64l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2Z"/></g>
-      <g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><path d="M128 160H119M133 136l-8 -4M146 116l-7 -6M165 102l-4 -8M195 96V87M225 102l4 -8M244 116l7 -6M257 136l8 -4M262 160H271M128 190l-9 -4M128 220l-9 -4M262 190l9 -4M262 220l9 -4"/></g>
-      <path d="M128 260V160A67 67 0 0 1 262 160V260Z" fill="#fff" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/><path d="M140 260V162A55 55 0 0 1 250 162V260Z" fill="#efefef"/><path d="M140 260V162Q140 120 168 112V250Z" fill="#9a9a9a" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/><circle cx="160" cy="190" r="3" fill="#1a1a1a"/><path d="M110 260H280" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
-      
-    </svg><img class="bramble win-bramble" src="art/bramble.webp" alt="Bramble the faerie" draggable="false"></div>
-    <div class="faces" id="winDuoFaces"><span class="face you">You</span><span class="face" id="winFaceB">A</span></div>
-    <h1 class="win-title" id="winTitle">Level complete!</h1>
-    <p class="win-sub" id="winSub"></p>
-    <div class="reward">
-      <div class="r"><img class="gem-img" src="art/gem.webp" width="30" height="30" alt=""><span>Gems</span><b id="winGems">+5</b></div>
-      <div class="r" id="winFriendRow"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M16 5a12 12 0 0 0 0 24Z" fill="#1a1a1a"/><path d="M18 5a12 12 0 0 1 0 24Z" fill="#9a9a9a"/></svg><span>Friendship charm<small id="winFriendNote"></small></span><em>Style</em></div>
+<section class="screen" id="scr-win" aria-label="Level complete">
+  <!-- step 1: the "you did it" moment -->
+  <div class="win-step" id="winStep1">
+    <div class="win-bg" style="background-image:url(art/map.webp)"></div>
+    <div class="win-shade"></div>
+    <div class="win-rays" aria-hidden="true"></div>
+    <div class="win-sparks" id="winSparks" aria-hidden="true"></div>
+    <div class="win-body">
+      <img class="win-faerie" src="art/bramble.webp" alt="" draggable="false">
+      <h1 class="px-title" id="winTitle">You did it!</h1>
+      <p class="win-sub" id="winSub"></p>
+      <div class="five" id="winHigh"><span id="winHighLabel">Send a high five</span><div class="five-btns"><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div></div>
+      <div id="hiReply" role="status"></div>
+      <div class="stats" id="winStats"></div>
     </div>
-    <div class="five" id="winHigh"><span id="winHighLabel">Send a high five</span><button data-hi="🙌" aria-label="Send raised hands">🙌</button><button data-hi="🎉" aria-label="Send party">🎉</button><button data-hi="💖" aria-label="Send heart">💖</button></div>
-    <div id="hiReply"></div>
-    <div class="stats" id="winStats"></div>
-    <div class="grow"></div>
-    <button class="primary" data-go="map">Back to map</button>
-    <button class="secondary" data-go="stall">Get more charms</button>
+    <div class="win-actions"><button class="px-btn green" id="winContinue"><span>Continue</span></button></div>
+  </div>
+  <!-- step 2: gems earned -->
+  <div class="win-step" id="winStep2" hidden>
+    <div class="win-bg" style="background-image:url(art/forest-bg.webp)"></div>
+    <div class="win-shade soft"></div>
+    <div class="win-body">
+      <div class="gem-stage"><div class="gem-glow" aria-hidden="true"></div><img class="big-gem" src="art/gem.webp" alt=""></div>
+      <h1 class="px-title"><span id="winGemCount">0</span> gems!</h1>
+      <p class="win-sub" id="winGemNote"></p>
+      <div class="friend-earned" id="winFriendRow"><span class="friend-earned-icon" id="winFriendIcon"></span><span id="winFriendNote"></span></div>
+    </div>
+    <div class="win-actions"><button class="px-btn blue" data-go="stall"><span>Get more charms</span></button><button class="px-btn green" data-go="map"><span>Back to map</span></button></div>
   </div>
 </section>
 
@@ -293,13 +300,13 @@
 </div>
 
 <!-- config.js holds everything you'd want to tweak. ui.js = shared pieces, game.js = maze engine, app.js = screen flow. -->
-<script src="js/config.js?v=30"></script>
-<script src="js/ui.js?v=30"></script>
+<script src="js/config.js?v=31"></script>
+<script src="js/ui.js?v=31"></script>
 <script>$$('.friend-name').forEach(el => el.textContent = CONFIG.friendName);</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="js/net.js?v=30"></script>
-<script src="js/game.js?v=30"></script>
-<script src="js/app.js?v=30"></script>
+<script src="js/net.js?v=31"></script>
+<script src="js/game.js?v=31"></script>
+<script src="js/app.js?v=31"></script>
 </body>
 </html>

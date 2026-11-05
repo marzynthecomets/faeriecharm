@@ -78,9 +78,9 @@ const CONFIG = {
   // art (optional) = a transparent portrait charm image with its own ring at the top; charms without art use a line icon
   charms: {
     peek:   { type: 'boost', name: 'Peek',       price: 0,  art: 'art/charm-peek.webp', say: 'See more of the maze around you for 3 seconds. Once per level.' },
-    dash:   { type: 'boost', name: 'Dash',       price: 5,  say: 'Zip two spaces in a straight line. Perfect for escaping a dead end.' },
-    snip:   { type: 'boost', name: 'Thorn Snip', price: 10, say: 'Snip through one thorny wall right in front of you. Once per level.' },
-    glow:   { type: 'boost', name: 'Glow',       price: 15, say: 'Light up a big circle around you for 10 seconds. Once per level.' },
+    dash:   { type: 'boost', name: 'Dash',       price: 5,  art: 'art/charm-dash.webp', say: 'Zip two spaces in a straight line. Perfect for escaping a dead end.' },
+    snip:   { type: 'boost', name: 'Thorn Snip', price: 10, art: 'art/charm-snip.webp', say: 'Snip through one thorny wall right in front of you. Once per level.' },
+    glow:   { type: 'boost', name: 'Glow',       price: 15, art: 'art/charm-glow.webp', say: 'Light up a big circle around you for 10 seconds. Once per level.' },
     leaf:   { type: 'style', name: 'Leaf',       price: 3,  art: 'art/charm-leaf.webp', say: 'A tiny leaf from the oldest tree in the forest. Just for looks!' },
     star:   { type: 'style', name: 'Star',       price: 3,  say: 'A star that fell into my garden. It twinkles on your bracelet.' },
     moon:   { type: 'style', name: 'Moon',       price: 4,  say: 'A sliver of moon. Faeries wear these for luck.' },

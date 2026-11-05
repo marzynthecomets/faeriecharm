@@ -52,7 +52,7 @@ h1,h2{margin:0;text-wrap:balance}
 .avatar{width:42px;height:42px;border-radius:21px;background:var(--soft);border:2px solid var(--ink);box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0;position:relative}
 .avatar.big{width:48px;height:48px;border-radius:24px;font-size:20px}
 .avatar.online::after{content:"";position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:7px;background:var(--ok);border:2.5px solid #fff}
-#callout{position:absolute;left:50%;top:calc(var(--top) + 80px);transform:translate(-50%,-8px);background:var(--ink);color:#fff;font-size:15px;font-weight:700;padding:10px 16px;border-radius:20px;z-index:50;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;text-align:center;max-width:calc(100% - 40px);box-sizing:border-box}
+#callout{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 186px);transform:translate(-50%,-8px);background:var(--ink);color:#fff;font-size:15px;font-weight:700;padding:10px 16px;border-radius:20px;z-index:50;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;text-align:center;max-width:calc(100% - 40px);box-sizing:border-box}
 #callout.show{opacity:1;transform:translate(-50%,0)}
 
 /* top bar with the hanging bracelet */
@@ -159,7 +159,7 @@ h1,h2{margin:0;text-wrap:balance}
 #stick .right{top:50%;right:10px;margin-top:-6px;border-left:8px solid var(--ink);border-right:0}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:24px;background:var(--ink)}
 #hint{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.75);z-index:5;pointer-events:none}
-#toast{position:absolute;left:14px;right:14px;top:calc(var(--top) + 74px);z-index:12;background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:16px 14px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;gap:12px;align-items:center;transform:translateY(-14px) scaleY(.6);transform-origin:top;opacity:0;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1);pointer-events:none}
+#toast{position:absolute;left:14px;right:14px;top:calc(env(safe-area-inset-top,0px) + 180px);z-index:12;background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:16px 14px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;gap:12px;align-items:center;transform:translateY(-14px) scaleY(.6);transform-origin:top;opacity:0;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1);pointer-events:none}
 #toast.show{opacity:1;transform:none;pointer-events:auto}
 #toast::before{content:"";position:absolute;left:-6px;right:-6px;top:-9px;height:14px;border-radius:7px;background:var(--soft);border:2px solid var(--ink)}
 #toast .from{font-size:12px;font-weight:700;letter-spacing:.04em;color:#6b6b6b}
@@ -211,25 +211,76 @@ h1,h2{margin:0;text-wrap:balance}
 
 /* ---------- level complete ---------- */
 .center-col{align-items:stretch}
-.win-art-wrap{position:relative;width:100%;max-width:330px;align-self:center}
-.win-art{display:block;width:100%;height:auto}
-.win-bramble{position:absolute;right:-4%;bottom:-2%;width:26%}
-.faces{display:flex;justify-content:center;margin-top:-4px}
-.face{width:40px;height:40px;border-radius:20px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;border:3px solid #fff;box-shadow:0 0 0 2px var(--ink);font-size:16px}
-.face.you{background:var(--ink);color:#fff;font-size:13px;margin-right:-8px;position:relative;z-index:1}
-.win-title{font-size:28px;font-weight:800;text-align:center}
-.win-sub{margin:-6px 0 0;font-size:15px;line-height:1.4;color:var(--muted);text-align:center}
-.reward{border:2px solid var(--ink);border-radius:18px;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
-.reward .r{display:flex;align-items:center;gap:12px;font-weight:600;font-size:16px}
-.reward .r span{flex:1;display:flex;flex-direction:column;gap:1px}
-.reward .r small{font-size:13px;color:var(--muted);font-weight:400}
-.reward .r b{font-size:20px;font-weight:800}
-.reward .r em,.chip-tag{font-style:normal;font-size:12px;font-weight:700;border:1.5px solid var(--ink);border-radius:8px;padding:2px 6px}
-.five{display:flex;gap:8px;align-items:center}
-.five span{flex:1;font-size:14px;font-weight:600}
-.five button{width:48px;height:48px;border-radius:14px;border:2px solid var(--ink);background:var(--paper);font-size:22px;padding:0}
-#hiReply{font-size:14px;font-weight:600;text-align:center;min-height:18px;color:var(--muted)}
-.stats{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip-tag{font-style:normal;font-size:12px;font-weight:700;border:1.5px solid var(--ink);border-radius:8px;padding:2px 6px}
+
+/* ---------- level complete (two steps: "You did it!" then gems earned) ---------- */
+#scr-win{background:#0f1a12;color:#fff}
+.win-step{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.win-step[hidden]{display:none}
+.win-bg{position:absolute;inset:-2%;background-size:cover;background-position:center 40%}
+.win-shade{position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 40%,rgba(10,22,14,.25),rgba(8,16,10,.82) 70%),linear-gradient(rgba(8,16,10,.35),rgba(8,16,10,.75))}
+.win-shade.soft{background:radial-gradient(90% 55% at 50% 38%,rgba(10,22,14,.05),rgba(8,16,10,.65) 75%),linear-gradient(rgba(8,16,10,.1) 50%,rgba(8,16,10,.75))}
+.win-body{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(24px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 12px max(24px,env(safe-area-inset-left,0px));text-align:center;min-height:0}
+.win-actions{position:relative;display:flex;flex-direction:column;gap:10px;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.px-title{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(44px,13vw,58px);line-height:1;color:#fff;letter-spacing:.01em;text-shadow:0 4px 0 rgba(10,8,20,.55)}
+.win-sub{margin:0;max-width:30ch;font-size:17px;line-height:1.4;color:#e9f3e4;text-wrap:balance}
+.win-sub b{font-weight:700;color:#fff}
+.win-faerie{width:min(62vw,250px);height:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45));margin-bottom:6px}
+.win-rays{position:absolute;left:50%;top:38%;width:720px;height:720px;margin:-360px 0 0 -360px;border-radius:50%;opacity:0;
+  background:repeating-conic-gradient(rgba(255,244,190,.16) 0 9deg,rgba(255,244,190,0) 9deg 22deg);
+  -webkit-mask:radial-gradient(closest-side,#000 25%,transparent);mask:radial-gradient(closest-side,#000 25%,transparent)}
+.win-sparks{position:absolute;left:50%;top:38%;width:0;height:0}
+.win-sparks i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;background:#fff6c8;opacity:0;transform:scale(var(--s));
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 4px #ffe680)}
+.win-sparks i:nth-child(3n){background:#c9f7b8}.win-sparks i:nth-child(4n){background:#d9ccff}
+.stats{font-size:12px;color:rgba(233,243,228,.6);font-variant-numeric:tabular-nums;margin-top:2px}
+.five{display:flex;align-items:center;gap:10px;margin-top:6px;padding:8px 8px 8px 16px;border-radius:30px;background:rgba(10,8,20,.5);border:1.5px solid rgba(255,255,255,.18)}
+.five[hidden]{display:none}
+.five span{font-size:14px;font-weight:600;color:#fff}
+.five-btns{display:flex;gap:6px}
+.five button{width:44px;height:44px;border-radius:22px;border:none;background:rgba(255,255,255,.14);font-size:22px;padding:0}
+.five button:active{transform:scale(.9)}
+#hiReply{font-size:14px;font-weight:600;min-height:18px;color:#e9f3e4}
+/* step 2: gems */
+.gem-stage{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.gem-glow{position:absolute;inset:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(140,190,255,.55),rgba(140,190,255,0));opacity:0}
+.big-gem{position:relative;width:132px;height:132px;image-rendering:pixelated;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4))}
+.friend-earned{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 16px;border-radius:16px;background:rgba(10,8,20,.55);border:1.5px solid rgba(255,255,255,.2);font-size:14px;line-height:1.35;text-align:left;max-width:320px}
+.friend-earned[hidden]{display:none}
+.friend-earned-icon{width:38px;height:38px;border-radius:19px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* animations play each time the step opens (.play is re-added) */
+.play .win-faerie{animation:faerieIn 1s cubic-bezier(.2,.9,.3,1.2) both,faerieFloat 3.2s ease-in-out 1s infinite}
+.play .win-rays{animation:raysIn .9s ease-out .25s forwards,spin 26s linear .25s infinite}
+.play .win-sparks i{animation:spark 1.3s cubic-bezier(.15,.7,.3,1) calc(.35s + var(--d)) both}
+.play .px-title{animation:titlePop .6s cubic-bezier(.3,1.6,.5,1) .55s both}
+.play .win-sub,.play .five,.play .stats,.play .friend-earned{animation:fadeUp .5s ease-out .85s both}
+.play .win-actions{animation:fadeUp .5s ease-out 1.1s both}
+.play .big-gem{animation:gemDrop .8s cubic-bezier(.3,1.5,.5,1) both,gemBob 2.6s ease-in-out .9s infinite}
+.play .gem-glow{animation:glowIn 1s ease-out .45s forwards}
+#winStep2.play .px-title{animation-delay:.35s}
+#winStep2.play .win-sub,#winStep2.play .friend-earned{animation-delay:1.5s}
+#winStep2.play .win-actions{animation-delay:1.7s}
+@keyframes faerieIn{0%{transform:translateY(160px) scale(.5) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes faerieFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes raysIn{to{opacity:1}}
+@keyframes spin{to{rotate:360deg}}
+@keyframes spark{0%{opacity:0;translate:0 0}15%{opacity:1}100%{opacity:0;translate:var(--dx) var(--dy)}}
+@keyframes titlePop{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
+@keyframes fadeUp{0%{transform:translateY(12px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes gemDrop{0%{transform:translateY(-260px) rotate(-20deg);opacity:0}60%{opacity:1}100%{transform:none}}
+@keyframes gemBob{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes glowIn{to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.play *,.play{animation:none !important}.win-rays,.gem-glow{opacity:1}.win-sparks{display:none}}
+
+/* ---------- chunky pixel buttons (stepped corners, dark outline, light top, dark bottom) ---------- */
+.px-btn{--c:#58c24c;--hi:#8fe07f;--lo:#2f7a38;position:relative;display:block;width:100%;height:64px;border:0;padding:0;background:#16121f;cursor:pointer;flex-shrink:0;
+  clip-path:polygon(0 8px,4px 8px,4px 4px,8px 4px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 4px,calc(100% - 4px) 4px,calc(100% - 4px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 4px) calc(100% - 8px),calc(100% - 4px) calc(100% - 4px),calc(100% - 8px) calc(100% - 4px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 4px),4px calc(100% - 4px),4px calc(100% - 8px),0 calc(100% - 8px))}
+.px-btn.blue{--c:#3d63e6;--hi:#7d97f4;--lo:#22389a}
+.px-btn span{position:absolute;inset:4px;display:flex;align-items:center;justify-content:center;padding-bottom:6px;background:var(--c);box-shadow:inset 0 4px 0 var(--hi),inset 0 -8px 0 var(--lo);
+  color:#fff;font-family:var(--font-display);font-size:19px;letter-spacing:.07em;text-transform:uppercase;text-shadow:0 2px 0 rgba(0,0,0,.22)}
+.px-btn:active span{box-shadow:inset 0 8px 0 var(--lo);padding:6px 0 0}
+.px-btn:focus-visible{outline:none}
+.px-btn:focus-visible span{box-shadow:inset 0 0 0 3px #fff,inset 0 -8px 0 var(--lo)}
 
 /* ---------- stall ---------- */
 #scr-stall{background:#8d95cf url('../art/stall-bg.webp') center bottom / cover no-repeat}
@@ -280,9 +331,9 @@ h1,h2{margin:0;text-wrap:balance}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
 /* ---------- display font ---------- */
-h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
+h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .primary,.secondary,.pill-btn,.outline-pill,.dashed-btn,.chip,.tabs button,#scrollBtn,
-.friend-info b,.reward .r,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div,.face{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
+.friend-info b,.tray-item span,.stall-charm .price,#toast .from,#toast .msg,.load-bottom > div{font-family:var(--font-display);font-weight:400;letter-spacing:.01em}
 
 .gem-img{display:inline-block;flex-shrink:0;vertical-align:middle;object-fit:contain}
 
@@ -308,3 +359,26 @@ h1,h2,.h2,.h3,.win-title,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .room-box .primary{width:100%;max-width:240px}
 #roomWait.ok,#joinMsg.ok{color:var(--ink);font-weight:700}
 #joinMsg.err{color:#b3261e}
+
+/* ---------- playing screen: the bracelet hangs over the dark maze (no white bar) ---------- */
+#gameTop{background:none;border-bottom:none;pointer-events:none;height:calc(64px + env(safe-area-inset-top,0px));align-items:flex-start;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+#gameTop > *{pointer-events:auto}
+#gameArc{top:calc(env(safe-area-inset-top,0px) - 4px);bottom:auto;transform:translateX(-50%) scale(1.32);transform-origin:50% 0}
+#gameArc .charm{filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+#gameArc .charm-art{height:50px !important}
+#gameArc .charm.spent{opacity:.35;filter:grayscale(1)}
+#pauseBtn,#keyBtn{width:44px;height:44px;border-radius:22px;background:rgba(14,12,24,.55);border:1.5px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;padding:0;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#pauseBtn svg{width:16px;height:18px}
+#pauseBtn path{stroke:#f4efe2}
+#keyBtn svg{width:34px;height:34px}
+#keyBtn > svg > g:not(.half){stroke:rgba(255,255,255,.28)}
+#keyBtn .half{stroke:#ffd45a}
+#status{top:calc(env(safe-area-inset-top,0px) + 118px);left:12px;right:12px;height:52px;border-radius:26px;background:rgba(14,12,24,.72);border:1.5px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:0 4px 0 16px}
+#scrollBtn{height:42px;border-radius:21px}
+/* the stick stays at the bottom left; drag anywhere on the maze to steer it */
+#stick{background:rgba(14,12,24,.45);border:2px solid rgba(255,255,255,.3)}
+#stick.idle{opacity:.7}
+#stick .up{border-bottom-color:#f4efe2}#stick .down{border-top-color:#f4efe2}#stick .left{border-right-color:#f4efe2}#stick .right{border-left-color:#f4efe2}
+#knob{background:rgba(244,239,226,.92);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+#hint{color:rgba(244,239,226,.7)}
+#gameArc .arc-art circle[stroke-dasharray]{fill:rgba(255,255,255,.06);stroke:rgba(224,194,122,.8)}   /* empty bracelet slot */

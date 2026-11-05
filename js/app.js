@@ -155,16 +155,37 @@ function finished(r){
 }
 render.win = () => {
   const r = lastResult, lv = CONFIG.levels[r.level], duo = r.mode === 'duo';
-  $('#winTitle').textContent = duo ? `You and ${FRIEND} did it!` : `Level ${r.level + 1} complete!`;
-  $('#winSub').textContent = `${lv.name} is open. The forest is a little more free.`;
-  $('#winDuoFaces').hidden = !duo; $('#winFriendRow').hidden = !duo; $('#winHigh').hidden = !duo;
-  $('#winFaceB').textContent = FRIEND[0];
-  $('#winGems').textContent = '+' + CONFIG.levelReward;
-  $('#winFriendNote').textContent = r.newFriendCharm ? `New! You and ${FRIEND} each get a matching half` : `You and ${FRIEND} each have a matching half`;
+  // step 1: "You did it!"
+  $('#callout').classList.remove('show');   // don't leave "The door opens!" floating over the faerie
+  $('#winStep1').hidden = false; $('#winStep2').hidden = true;
+  $('#winTitle').textContent = 'You did it!';
+  $('#winSub').innerHTML = duo ? `You and <b>${esc(FRIEND)}</b> opened the ${esc(lv.name)}!` : `${esc(lv.name)} completed!`;
+  $('#winHigh').hidden = !duo; $('#winHighLabel').textContent = `High five ${FRIEND}`; $('#hiReply').textContent = '';
   const t = Math.round(r.time), mm = Math.floor(t/60), ss = String(t%60).padStart(2,'0');
-  $('#winStats').innerHTML = `<span>Time ${mm}:${ss}</span><span>Gems found ${r.gemsFound}</span>` + (duo ? `<span>Scrolls sent ${r.sent}</span><span>Received ${r.received}</span>` : '');
-  $('#hiReply').textContent = '';
-  $('#winHighLabel').textContent = `Send ${FRIEND} a high five`;
+  $('#winStats').textContent = [`${mm}:${ss}`, `${r.gemsFound} found`].concat(duo ? [`${r.sent} scrolls sent`, `${r.received} received`] : []).join(' · ');
+  const sp = $('#winSparks'); sp.innerHTML = '';   // a burst of sparkles out from behind the faerie
+  for (let i = 0; i < 26; i++){
+    const a = (i / 26) * Math.PI * 2 + Math.random()*0.3, d = 110 + Math.random()*120, e = document.createElement('i');
+    e.style.cssText = `--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;--d:${(Math.random()*0.35).toFixed(2)}s;--s:${(0.6 + Math.random()*0.9).toFixed(2)}`;
+    sp.appendChild(e);
+  }
+  replay($('#winStep1'));
+  // step 2 content (shown after Continue)
+  const earned = CONFIG.levelReward + (r.gemsFound || 0), cheapest = Math.min(...Object.values(CONFIG.charms).map(c => c.price).filter(p => p > 0));
+  $('#winGemCount').dataset.to = earned;
+  $('#winGemNote').textContent = Profile.data.gems >= cheapest ? "You can buy a new charm at Bramble's stall." : `Save ${cheapest - Profile.data.gems} more for a charm at Bramble's stall.`;
+  $('#winFriendRow').hidden = !duo;
+  $('#winFriendIcon').innerHTML = icon('friend', 22);
+  $('#winFriendNote').innerHTML = r.newFriendCharm ? `<b>New!</b> A Friendship charm. ${esc(FRIEND)} has the matching half.` : `You and ${esc(FRIEND)} both wear the Friendship charm.`;
+};
+function replay(el){ el.classList.remove('play'); void el.offsetWidth; el.classList.add('play'); }
+$('#winContinue').onclick = () => {
+  $('#winStep1').hidden = true; const st = $('#winStep2'); st.hidden = false; replay(st);
+  const out = $('#winGemCount'), to = +out.dataset.to || 0, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce){ out.textContent = to; return; }
+  out.textContent = 0; const t0 = performance.now() + 650;
+  const tick = now => { const k = Math.max(0, Math.min(1, (now - t0) / 900)); out.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1 && !st.hidden) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
 };
 $$('[data-hi]').forEach(b => b.onclick = () => {
   const e = b.dataset.hi; $('#hiReply').textContent = `Sent ${e} to ${FRIEND}…`;

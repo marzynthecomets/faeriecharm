@@ -140,12 +140,12 @@ function fresh(){
 // ---------- input ----------
 let joyDir = null, keyDir = null, joyId = null, jx = 0, jy = 0;
 const stick = $('#stick'), knob = $('#knob'), arrows = {up:stick.querySelector('.up'),down:stick.querySelector('.down'),left:stick.querySelector('.left'),right:stick.querySelector('.right')};
-function idleStick(){ const r = screen.getBoundingClientRect(); stick.style.left = '92px'; stick.style.top = (r.height - 110) + 'px'; stick.classList.add('idle'); knob.style.transform = ''; for (const k in arrows) arrows[k].classList.remove('on'); }
+function idleStick(){ const r = screen.getBoundingClientRect(); stick.style.left = 'calc(84px + env(safe-area-inset-left, 0px))'; stick.style.top = 'calc(' + (r.height - 112) + 'px - env(safe-area-inset-bottom, 0px))'; stick.classList.add('idle'); knob.style.transform = ''; for (const k in arrows) arrows[k].classList.remove('on'); }
 canvas.addEventListener('pointerdown', e => {
   if (!S || S.paused || S.won || joyId !== null) return;
   joyId = e.pointerId; canvas.setPointerCapture(e.pointerId);
-  const r = screen.getBoundingClientRect(); jx = e.clientX - r.left; jy = e.clientY - r.top;
-  stick.style.left = jx + 'px'; stick.style.top = jy + 'px'; stick.classList.remove('idle'); $('#hint').hidden = true;
+  const r = screen.getBoundingClientRect(); jx = e.clientX - r.left; jy = e.clientY - r.top;   // drag anywhere; the stick itself stays put at the bottom left
+  stick.classList.remove('idle'); $('#hint').hidden = true;
 });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerId !== joyId) return;
