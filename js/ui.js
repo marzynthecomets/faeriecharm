@@ -101,10 +101,10 @@ function renderHang(el, slots, interactive){
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
   const TRACK_VOL = { menu: 0.065, maze: 0.04 };   // menu track is a quieter recording, so it gets a bit more gain
-  const FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7, enter: 1 };
+  const FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7, enter: 0.5 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
-  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3') };
-  const tracks = { menu: mk('sound/menu-music.mp3'), maze: mk('sound/bg-music.mp3') };
+  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3'), enter: mk('sound/enter-chime.mp3?v=2') };
+  const tracks = { menu: mk('sound/menu-music.mp3?v=2'), maze: mk('sound/bg-music.mp3') };
   Object.values(tracks).forEach(t => t.loop = true);
   const gains = {}; let cur = 'menu', level = 1;   // level = how loud the current track is relative to its normal volume
   const music = () => tracks[cur];
