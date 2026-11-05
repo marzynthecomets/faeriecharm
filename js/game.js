@@ -152,21 +152,24 @@ canvas.addEventListener('pointerdown', e => {
 canvas.addEventListener('pointermove', e => {
   if (e.pointerId !== joyId) return;
   const r = screen.getBoundingClientRect(); let dx = e.clientX - r.left - jx, dy = e.clientY - r.top - jy;
-  const d = Math.hypot(dx,dy), m = 24;
-  // the centre follows your thumb, so turning back the other way only takes a small move (about 30px)
+  const d = Math.hypot(dx,dy), m = CONFIG.stickReach;
+  // the centre follows your thumb, so turning back the other way only takes a short move
   if (d > m){ jx += dx * (d - m) / d; jy += dy * (d - m) / d; dx = dx/d*m; dy = dy/d*m; }
   knob.style.transform = `translate(${dx*38/m}px,${dy*38/m}px)`;
-  joyVec = Math.hypot(dx,dy) < 7 ? null : {x:dx, y:dy};
+  joyVec = Math.hypot(dx,dy) < CONFIG.stickDeadZone ? null : {x:dx, y:dy};
   joyDir = joyVec ? joyDirs()[0] : null;
   for (const k in arrows) arrows[k].classList.toggle('on', k === joyDir);
 });
 const endJoy = e => { if (e.pointerId !== joyId) return; joyId = null; joyDir = null; joyVec = null; idleStick(); };
 // The stick's main direction first, then the side it leans toward (so pushing up-right goes up if right is a wall)
 let joyVec = null;
-function joyDirs(){
+function joyDirs(){   // the one direction the stick points; a wobble doesn't flip it until the other way clearly wins
   if (!joyVec) return [];
   const ax = Math.abs(joyVec.x), ay = Math.abs(joyVec.y), h = joyVec.x > 0 ? 'right' : 'left', v = joyVec.y > 0 ? 'down' : 'up';
-  return ax >= ay ? (ay > ax * 0.3 ? [h, v] : [h]) : (ax > ay * 0.3 ? [v, h] : [v]);
+  const wasH = joyDir === 'left' || joyDir === 'right', wasV = joyDir === 'up' || joyDir === 'down', k = 1.35;
+  if (wasH && ax * k >= ay) return [h];
+  if (wasV && ay * k >= ax) return [v];
+  return [ax >= ay ? h : v];
 }
 canvas.addEventListener('pointerup', endJoy); canvas.addEventListener('pointercancel', endJoy);
 const KEYS = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
@@ -211,18 +214,15 @@ function checkDoor(){
 }
 function updatePlayer(dt){
   const joy = !sheetOpen && !!joyDir, dir = sheetOpen ? null : (joyDir || keyDir);
-  // the stick keeps walking for as long as you hold it; arrow keys take one step, then repeat after a short pause
-  if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + (joy ? 0 : HOLD_DELAY); } }
+  // one step straight away, then a short pause, then steady steps while you hold (stick and arrow keys alike)
+  if (dir !== S.repDir){ S.repDir = dir; if (dir){ S.pendDir = dir; S.repNext = S.now + HOLD_DELAY; } }
   if (S.anim){ S.anim.t += dt*1000/S.anim.dur; if (S.anim.t >= 1) arrive(); return; }
   if (S.queue.length){ startMove(S.queue.shift(), 75); return; }
   if (S.pendDir){ const d = S.pendDir; S.pendDir = null; tryMove(d, joy); return; }
-  if (dir && S.now >= S.repNext){ if (tryMove(dir, joy)) S.repNext = S.now + (joy ? 0 : REPEAT); }
+  if (dir && S.now >= S.repNext){ if (tryMove(dir, joy)) S.repNext = S.now + REPEAT; }
 }
-function tryMove(dir, joy){
+function tryMove(dir){   // goes only the way you point; a wall stops you
   if (startMove(dir, STEP_MS)) return true;
-  if (joy){
-    for (const alt of joyDirs().slice(1)) if (startMove(alt, STEP_MS)) return true;   // blocked: try the way the stick leans
-  }
   S.facing = dir; return false;
 }
 function playerPix(){
