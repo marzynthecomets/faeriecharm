@@ -99,9 +99,9 @@ function renderHang(el, slots, interactive){
 // Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
-  const MUSIC_VOL = 0.04, FX_VOL = { key: 0.9, gem: 1, powerup: 0.8 };
+  const MUSIC_VOL = 0.04, FX_VOL = { key: 0.9, gem: 1, powerup: 0.8, buy: 0.7 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
-  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3') };
+  const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3?v=2'), powerup: mk('sound/powerup.mp3'), buy: mk('sound/buy-charm.mp3') };
   const music = mk('sound/bg-music.mp3'); music.loop = true;
   const shine = mk('sound/bracelet-shine.mp3'); shine.loop = true;   // sparkly loop while you look at your bracelet
   const SHINE_VOL = 0.2; let shineGain = null, shineOn = false, shineStop;
@@ -148,7 +148,7 @@ const Sound = (() => {
     },
     play(name){ const a = fx[name]; if (!a) return; setup(); try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
       // the music steps back while the key or power-up sound plays, then comes back when it ends
-      const dip = { key: 0.3, powerup: 0 }[name];
+      const dip = { key: 0.3, powerup: 0, buy: 0.3 }[name];
       if (dip !== undefined){ setMusicVol(MUSIC_VOL * dip); clearTimeout(duck);
         const back = () => { clearTimeout(duck); a.onended = null; setMusicVol(shineOn ? MUSIC_VOL * 0.5 : MUSIC_VOL); };
         a.onended = back; duck = setTimeout(back, ((a.duration || 6) + 0.5) * 1000); } },

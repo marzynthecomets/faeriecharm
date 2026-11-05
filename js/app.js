@@ -304,7 +304,7 @@ render.stall = () => {
 $$('#stallTabs [role="tab"]').forEach(t => t.onclick = () => { stallTab = t.dataset.tab; stallPick = null; render.stall(); });
 $('#buyBtn').onclick = () => {
   const c = CONFIG.charms[stallPick]; if (!stallPick || Profile.owns(stallPick) || c.price == null || Profile.data.gems < c.price) return;
-  Profile.addGems(-c.price); Profile.give(stallPick); renderGemPills();
+  Profile.addGems(-c.price); Profile.give(stallPick); renderGemPills(); Sound.play('buy');
   bracePick = stallPick; render.stall();
   // Bramble says it in her bubble, so no pop-up covers it
   $('#brambleTitle').textContent = `Yay! The ${c.name} charm is yours!`;
