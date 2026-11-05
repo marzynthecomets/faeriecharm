@@ -541,3 +541,14 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .bc-choice span{font-size:15px}
 .brace-card .px-btn span{font-size:20px}
 .bc-choice{width:96px}
+
+/* map level markers: dark glass + gold, to match the bracelet and the door screens */
+.gate-badge{background:rgba(18,14,32,.72);border:4px solid #e2b54c;box-shadow:0 0 0 3px rgba(18,14,32,.55),0 6px 14px rgba(0,0,0,.45);color:#ffe08a;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.gate.open .gate-badge{background:radial-gradient(circle at 50% 40%,#3a2a5c,#1a1330);color:#ffe08a;border:4px solid #ffd45a;text-shadow:0 0 10px rgba(255,212,90,.8);animation:gateglow 1.8s ease-in-out infinite}
+@keyframes gateglow{0%,100%{box-shadow:0 0 0 3px rgba(18,14,32,.55),0 0 14px 4px rgba(255,212,90,.55)}50%{box-shadow:0 0 0 3px rgba(18,14,32,.55),0 0 30px 12px rgba(255,212,90,.85)}}
+.gate.done .gate-badge{background:linear-gradient(#ffe48c,#e2a93a);border:4px solid #fff3c4;box-shadow:0 0 0 3px rgba(58,38,0,.5),0 6px 14px rgba(0,0,0,.4)}
+.gate.locked .gate-badge{background:rgba(18,14,32,.6);border:4px solid rgba(207,198,232,.55);box-shadow:0 0 0 3px rgba(18,14,32,.4)}
+.gate-label{background:rgba(18,14,32,.72);border:2px solid rgba(255,255,255,.35);border-radius:14px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.6);box-shadow:0 6px 14px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.gate.open .gate-label{border-color:#ffd45a;color:#ffe08a}
+.gate.done .gate-label{border-color:rgba(255,228,140,.6)}
+.gate.locked .gate-label{background:rgba(18,14,32,.55);border-color:rgba(207,198,232,.35);color:#cfc6e8}

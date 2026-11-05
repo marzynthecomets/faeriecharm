@@ -23,8 +23,8 @@ $('#scr-load').addEventListener('click', () => { clearTimeout(render.load.t); go
 // ---------- map ----------
 // Each level sits on a gate in the map art (positions in js/config.js → map.gates).
 function gateBadge(state, n){
-  if (state === 'locked') return '<svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><rect x="3" y="10" width="16" height="12" rx="2" fill="#fff"/><path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#fff" stroke-width="2.6"/></svg>';
-  if (state === 'done') return '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M6 13.5l5 5 9-10" fill="none" stroke="#1a1a1a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (state === 'locked') return '<svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><rect x="3" y="10" width="16" height="12" rx="2" fill="#cfc6e8"/><path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#cfc6e8" stroke-width="2.6"/></svg>';
+  if (state === 'done') return '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M6 13.5l5 5 9-10" fill="none" stroke="#3a2600" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   return String(n);
 }
 render.map = () => {
