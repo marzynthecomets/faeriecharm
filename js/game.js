@@ -118,7 +118,9 @@ const mateAtDoor = () => !!S.mate && atDoor(S.mate.x, S.mate.y);
 let doorTimer = null;
 function checkDoorSoon(ms){ clearTimeout(doorTimer); doorTimer = setTimeout(() => { if (active && S) { checkDoor(); updateStatus(); } }, ms + 20); }
 function fresh(){
-  const duo = opts.mode === 'duo', slots = Profile.data.boost.slice(), uses = {};
+  const duo = opts.mode === 'duo', uses = {};
+  // In the maze the bracelet hangs 3 charms: the first 3 boost charms you're wearing
+  const slots = Profile.data.boost.filter(Boolean).slice(0, HANG.length); while (slots.length < HANG.length) slots.push(null);
   slots.forEach(id => { if (id) uses[id] = 1; });
   S = {
     duo, live:!!opts.live, remote:{online:true, status:'solving', half:false}, stuckUntil:0, slots, uses, lent:null,
@@ -238,8 +240,20 @@ function useCharm(id){
   }
   renderCharms();
 }
+// The big bracelet over the maze: the gold chain with 3 charms hanging off it (left, middle a bit lower, right).
+// x / top are in the chain image's own units (230 × 100.5): where each charm's ring hooks onto the chain.
+const HANG = [{x:42, top:36}, {x:115, top:72}, {x:188, top:36}];
+function renderHang(){
+  let h = '<img class="hang-chain" src="art/chain.webp" alt="" draggable="false">';
+  HANG.forEach((p, i) => {
+    const id = S.slots[i], pos = `left:${(p.x/230*100).toFixed(2)}%;top:${(p.top/100.5*100).toFixed(2)}%`;
+    h += id ? `<button class="charm hang-charm" data-charm="${id}" style="${pos}" aria-label="Use ${esc(CONFIG.charms[id].name)}">${icon(id, 40)}<span class="badge" hidden></span></button>`
+            : `<span class="hang-empty" style="${pos}" aria-hidden="true"></span>`;
+  });
+  $('#gameArc').innerHTML = h;
+}
 function renderCharms(){
-  renderArc($('#gameArc'), S.slots, true);
+  renderHang();
   $$('#gameArc [data-charm]').forEach(b => {
     const id = b.dataset.charm, n = S.uses[id] || 0;
     b.classList.toggle('spent', n < 1 || S.lent === id);
@@ -248,7 +262,7 @@ function renderCharms(){
 }
 function giveTempCharm(id){
   S.uses[id] = (S.uses[id] || 0) + 1;
-  if (!S.slots.includes(id)){ const i = S.slots.indexOf(null); if (i >= 0) S.slots[i] = id; }
+  if (!S.slots.includes(id)){ const i = S.slots.indexOf(null); S.slots[i >= 0 ? i : S.slots.length - 1] = id; }   // full? it borrows the last spot for this level
   renderCharms();
 }
 

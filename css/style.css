@@ -347,10 +347,6 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 /* ---------- playing screen: the bracelet hangs over the dark maze (no white bar) ---------- */
 #gameTop{background:none;border-bottom:none;pointer-events:none;height:calc(64px + env(safe-area-inset-top,0px));align-items:flex-start;padding-top:calc(10px + env(safe-area-inset-top,0px))}
 #gameTop > *{pointer-events:auto}
-#gameArc{top:calc(env(safe-area-inset-top,0px) - 4px);bottom:auto;transform:translateX(-50%) scale(1.32);transform-origin:50% 0}
-#gameArc .charm{filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
-#gameArc .charm-art{height:50px !important}
-#gameArc .charm.spent{opacity:.35;filter:grayscale(1)}
 #pauseBtn,#keyBtn{width:44px;height:44px;border-radius:22px;background:rgba(14,12,24,.55);border:1.5px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;padding:0;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 #pauseBtn svg{width:16px;height:18px}
 #pauseBtn path{stroke:#f4efe2}
@@ -365,7 +361,6 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #stick .up{border-bottom-color:#f4efe2}#stick .down{border-top-color:#f4efe2}#stick .left{border-right-color:#f4efe2}#stick .right{border-left-color:#f4efe2}
 #knob{background:rgba(244,239,226,.92);box-shadow:0 2px 6px rgba(0,0,0,.4)}
 #hint{color:rgba(244,239,226,.7)}
-#gameArc .arc-art circle[stroke-dasharray]{fill:rgba(255,255,255,.06);stroke:rgba(224,194,122,.8)}   /* empty bracelet slot */
 
 /* ---------- Bramble's stall: the stall art zoomed in to fill the screen ---------- */
 #scr-stall{background:#6f7fb8 url('../art/stall-bg.webp') center / cover no-repeat;container-type:size}
@@ -377,7 +372,7 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .stall-head{position:absolute;left:0;right:0;top:0;z-index:7;display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px))}
 .stall-head h2{flex:1;min-width:0;margin:0;color:#fff;font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.25)}
 .px-close{width:44px;height:44px;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
-.gem-pill.glass{display:flex;align-items:center;height:42px;padding:0 12px;gap:6px;border-radius:12px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.55);color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.gem-pill.glass{display:flex;align-items:center;justify-content:center;height:42px;font-size:18px;padding:0 12px;gap:6px;border-radius:12px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.55);color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .stall-tabs{position:absolute;z-index:7;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 74px);display:flex;padding:3px;border-radius:20px;background:rgba(14,20,30,.5);border:1.5px solid rgba(255,255,255,.25)}
 .stall-tabs button{height:34px;padding:0 16px;border-radius:17px;border:none;background:none;color:rgba(255,255,255,.8);font-family:var(--font-display);font-size:15px}
 .stall-tabs button[aria-selected="true"]{background:#fff;color:var(--ink)}
@@ -404,3 +399,19 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .px-btn:disabled span{color:rgba(255,255,255,.85)}
 .px-btn span .gem-img{margin-left:6px}
 @media (prefers-reduced-motion: reduce){.stall-charm,.stall-bramble,.stall-charm.picked .charm-glow{animation:none}}
+
+/* the big 3-charm bracelet hanging over the maze */
+#scr-game{container-type:size}
+#gameArc{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) - 4px);bottom:auto;transform:translateX(-50%);width:min(62cqw,300px);height:auto;aspect-ratio:230/100.5}
+.hang-chain{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));-webkit-user-drag:none}
+#gameArc .hang-charm{position:absolute;width:auto;height:auto;transform:translateX(-50%);transform-origin:50% 0;filter:drop-shadow(0 4px 5px rgba(0,0,0,.55));animation:sway 3.6s ease-in-out infinite alternate}
+#gameArc .hang-charm:nth-of-type(1){--sway:2deg}#gameArc .hang-charm:nth-of-type(2){--sway:-1.5deg;animation-delay:-1.2s}#gameArc .hang-charm:nth-of-type(3){--sway:2.4deg;animation-delay:-2.1s}
+#gameArc .hang-charm .charm-art{height:min(25cqw,118px,14cqh) !important}
+#gameArc .hang-charm.spent{opacity:.35;filter:grayscale(1)}
+#gameArc .hang-charm .badge{right:-6px;top:30%}
+.hang-empty{position:absolute;width:min(11cqw,46px);aspect-ratio:1;transform:translate(-50%,24px);border-radius:50%;border:2px dashed rgba(224,194,122,.85);background:rgba(255,255,255,.05)}
+.hang-empty::before{content:"";position:absolute;left:50%;bottom:100%;width:2px;height:22px;margin-left:-1px;background:#c9a24e}
+#gameGems .gem-img{width:22px;height:22px}
+#status{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 20px)}
+#toast{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 82px)}
+@media (prefers-reduced-motion: reduce){#gameArc .hang-charm{animation:none}}
