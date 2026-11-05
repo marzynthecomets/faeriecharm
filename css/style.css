@@ -437,3 +437,19 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #mapArc{cursor:pointer}
 #mapTop .gem-pill.glass{background:rgba(14,12,24,.45)}
 #mapFade{position:absolute;left:0;right:0;top:0;height:140px;z-index:9;pointer-events:none;background:linear-gradient(#14261a 0,#14261a calc(100% - 64px),rgba(20,38,26,.55) calc(100% - 30px),rgba(20,38,26,0))}
+
+/* level entry: the vine-and-gem play button glows and gently pulses; "Play with a friend" is a blue pixel button */
+.play-btn,.has-art .play-btn{width:min(44cqw,170px);height:auto;aspect-ratio:298/313;border:none;border-radius:0;background:none;box-shadow:none;padding:0;bottom:calc(min(44cqw,170px) * -0.52)}
+#scr-entry{container-type:inline-size}
+.play-btn img{position:relative;z-index:1;display:block;width:100%;height:100%;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:playPulse 1.8s ease-in-out infinite}
+.play-glow{position:absolute;inset:-28%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,224,90,.95),rgba(255,200,40,.55) 45%,rgba(255,190,30,0) 100%);animation:playGlow 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes playPulse{0%,100%{scale:1}50%{scale:1.07}}
+@keyframes playGlow{0%,100%{opacity:.55;scale:.9}50%{opacity:1;scale:1.08}}
+.play-btn:active img{scale:.94;animation:none}
+.play-btn:focus-visible{outline:none}.play-btn:focus-visible img{filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 6px #fff)}
+.entry-friend{width:min(100%,320px)}
+.has-art .entry-friend{position:absolute;left:50%;top:auto;bottom:calc(36px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(calc(100% - 64px),300px)}
+@media (prefers-reduced-motion: reduce){.play-btn img,.play-glow{animation:none}.play-glow{opacity:.8}}
+.has-art .entry-card{padding-bottom:calc(min(44cqw,170px) * 0.48 + 22px)}   /* room for the play button under the reward line */
+.entry-card + .entry-friend{margin-top:calc(min(44cqw,170px) * 0.52)}        /* levels without door art: keep the button below the play button */
+.has-art .entry-card + .entry-friend{margin-top:0}
