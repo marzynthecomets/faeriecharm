@@ -438,8 +438,9 @@ function braceCard(){
   const card = $('#braceCard'), d = Profile.data;
   const worn = t => d[t].filter(Boolean).length;
   if (!braceSel){
-    card.innerHTML = `<div class="bc-row"><div class="bc-text"><div class="eyebrow">YOUR BRACELET</div><div class="h3">Spin it round!</div>
-      <div class="body">Drag to spin, then tap a charm to see what it does. Boost ${worn('boost')}/5 · Style ${worn('style')}/5</div></div></div>
+    card.innerHTML = `<div class="bc-row"><div class="bc-text"><div class="h3">Spin it round!</div>
+      <div class="body">Drag to spin. Tap a charm to see it.</div>
+      <div class="bc-counts"><em class="bc-tag boost">Boost ${worn('boost')}/5</em><em class="bc-tag style">Style ${worn('style')}/5</em></div></div></div>
       <button class="px-btn blue" data-go="stall"><span>Get more charms</span></button>`;
     return;
   }
@@ -454,7 +455,7 @@ function braceCard(){
     return;
   }
   const label = sp.type, choices = Object.keys(CONFIG.charms).filter(k => CONFIG.charms[k].type === label && Profile.owns(k) && !Profile.isOn(k));
-  card.innerHTML = `<div class="bc-text"><div class="eyebrow">EMPTY ${label.toUpperCase()} SPOT</div><div class="h3">${choices.length ? `Pick a ${label} charm` : `No ${label} charms to add`}</div>
+  card.innerHTML = `<div class="bc-text"><div class="h3">${choices.length ? `Pick a ${label} charm` : `No ${label} charms to add`}</div>
     ${choices.length ? '' : `<div class="body">Bramble sells ${label} charms at her stall.</div>`}</div>
     ${choices.length ? `<div class="bc-tray">${choices.map(k => `<button class="bc-choice" data-put="${k}">${icon(k, 40)}<span>${esc(CONFIG.charms[k].name)}</span></button>`).join('')}</div>`
       : `<button class="px-btn blue" data-go="stall"><span>Visit Bramble's stall</span></button>`}`;

@@ -529,3 +529,15 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 .fc-card .fc-wait.err{color:#ffc2b8}
 .fc-card .fc-wait.ok{color:#c9f2bf}
 .has-art .entry-text h1{font-size:clamp(20px,6.4cqw,30px);white-space:nowrap}
+
+/* bracelet card: bigger, clearer text for young readers */
+.brace-card{padding:18px;gap:14px}
+.brace-card .h3{font-size:23px}
+.bc-text{gap:6px}
+.bc-text .body{font-size:17px;line-height:1.4;color:#1f1f1f}
+.bc-tag{font-size:13px;padding:4px 10px}
+.bc-counts{display:flex;gap:8px;margin-top:4px}
+.bc-note{font-size:15px}
+.bc-choice span{font-size:15px}
+.brace-card .px-btn span{font-size:20px}
+.bc-choice{width:96px}
