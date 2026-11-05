@@ -415,3 +415,12 @@ h1,h2,.h2,.h3,.eyebrow,.label,.gate-label,.gem-pill,#callout,
 #status{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 20px)}
 #toast{top:calc(env(safe-area-inset-top,0px) + min(37cqw,176px) + 82px)}
 @media (prefers-reduced-motion: reduce){#gameArc .hang-charm{animation:none}}
+
+/* usable charms glow softly so kids know to tap them; a used-up charm goes grey and stops glowing */
+#gameArc .hang-charm:not(.spent) .charm-art{animation:charmGlow 2.2s ease-in-out infinite}
+@keyframes charmGlow{0%,100%{filter:drop-shadow(0 0 3px rgba(255,214,90,.45)) drop-shadow(0 0 1px rgba(255,214,90,.6))}50%{filter:drop-shadow(0 0 10px rgba(255,214,90,.85)) drop-shadow(0 0 3px rgba(255,236,150,.9))}}
+#gameArc .hang-charm:nth-of-type(2) .charm-art{animation-delay:-.7s}#gameArc .hang-charm:nth-of-type(3) .charm-art{animation-delay:-1.4s}
+#gameArc .hang-charm.fired .charm-art{animation:charmFire .6s ease-out}
+@keyframes charmFire{0%{scale:1;filter:drop-shadow(0 0 4px #fff3b0) brightness(1.1)}35%{scale:1.22;filter:drop-shadow(0 0 18px #ffe066) drop-shadow(0 0 6px #fff) brightness(1.5)}100%{scale:1;filter:none}}
+#gameArc .hang-charm .charm-art{transform-origin:50% 10%}
+@media (prefers-reduced-motion: reduce){#gameArc .hang-charm:not(.spent) .charm-art{animation:none;filter:drop-shadow(0 0 6px rgba(255,214,90,.7))}#gameArc .hang-charm.fired .charm-art{animation:none}}

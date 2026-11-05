@@ -239,6 +239,7 @@ function useCharm(id){
     if (S.live && S.duo) Net.send({type:'snip', x:S.px, y:S.py, dir:S.facing});
   }
   renderCharms();
+  const fired = $(`#gameArc [data-charm="${id}"]`); if (fired){ fired.classList.remove('spent'); fired.classList.add('fired'); setTimeout(() => { if (active && S) renderCharms(); }, 650); }   // flash first, then grey out if it's used up
 }
 // The big bracelet over the maze: the gold chain with 3 charms hanging off it (left, middle a bit lower, right).
 // x / top are in the chain image's own units (230 × 100.5): where each charm's ring hooks onto the chain.
