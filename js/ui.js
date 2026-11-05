@@ -94,12 +94,12 @@ function renderHang(el, slots, interactive){
 }
 
 // ---------- sound ----------
-// Background music loops at 30%; effects play over it (the music dips while the key sound plays).
+// Background music loops at 10%; effects play over it (the music dips while the key sound plays).
 // Volumes go through Web Audio gain, because iPhones ignore an <audio> element's own volume.
 // Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
-  const MUSIC_VOL = 0.3, FX_VOL = { key: 0.9, gem: 0.55 };
+  const MUSIC_VOL = 0.1, FX_VOL = { key: 0.9, gem: 0.55 };
   const mk = src => { const a = new Audio(src); a.preload = 'auto'; return a; };
   const fx = { key: mk('sound/key-found.mp3'), gem: mk('sound/gem.mp3') };
   const music = mk('sound/bg-music.mp3'); music.loop = true;
