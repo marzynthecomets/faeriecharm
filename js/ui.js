@@ -100,6 +100,9 @@ function renderHang(el, slots, interactive){
 // Phones only allow sound after a tap: the game tries to start the music straight away, and if the phone says no,
 // the loading screen waits for "Tap to start" (see app.js), and that tap starts it.
 const Sound = (() => {
+  // iPhones mute Web Audio when the ring/silent switch is on silent; "playback" tells Safari (16.4+) this is
+  // media like a video, so the game is heard even on a silenced phone. Older browsers just ignore it.
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
   const TRACK_VOL = { menu: 0.065, maze: 0.04 };   // menu track is a quieter recording, so it gets a bit more gain
   // effect volumes are set so each lands at a similar, soft loudness (the clips themselves vary a lot)
   const FX_VOL = { key: 0.06, gem: 1, powerup: 0.056, buy: 0.28, enter: 0.098, maze: 0.128 };
